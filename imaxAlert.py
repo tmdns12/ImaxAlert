@@ -152,9 +152,8 @@ def init_driver():
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--disable-software-rasterizer")
         chrome_options.add_argument("--disable-extensions")
-        # webdriver-manager로 자동 설치
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Render 환경에서는 시스템 ChromeDriver 사용
+        driver = webdriver.Chrome(options=chrome_options)
     else:
         # 로컬 환경
         chrome_options.add_argument("--start-maximized")
