@@ -43,11 +43,16 @@ def load_previous_state():
     return {}
 
 
-def save_current_state(current_state):
-    """현재 상태를 파일에 저장"""
+def save_current_state(date_states, movie_states):
+    """현재 상태를 파일에 저장 (날짜 활성화 상태 + 영화 정보)"""
     try:
+        state = {
+            'dates': date_states,
+            'movies': movie_states,
+            'last_updated': datetime.now().isoformat()
+        }
         with open(STATE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(current_state, f, ensure_ascii=False, indent=2)
+            json.dump(state, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"상태 파일 저장 실패: {e}")
 
@@ -56,30 +61,22 @@ def compare_states(previous_state, current_state):
     """이전 상태와 현재 상태를 비교하여 새로 추가된 항목 찾기"""
     new_items = []
     
-    # 이전 상태가 비어있으면 모든 현재 상태를 새 항목으로 처리
+    # 이전 상태가 비어있으면 초기화만 하고 알림 없음
     if not previous_state:
-        if current_state:
-            # 날짜별로 그룹화
-            by_date = {}
-            for movie in current_state:
-                date = movie.get('date', '')
-                if date not in by_date:
-                    by_date[date] = []
-                by_date[date].append(movie)
-            
-            for date, movies in by_date.items():
-                new_items.append({
-                    'type': 'new_date',
-                    'date': date,
-                    'movies': movies
-                })
-        return new_items
+        print("첫 실행: 현재 상태를 저장합니다 (알림 없음)")
+        return []
     
     # 이전 상태를 리스트로 변환
     if isinstance(previous_state, dict):
-        prev_list = list(previous_state.values())
+        if 'dates' in previous_state:
+            prev_dates = previous_state['dates']
+            prev_movies = previous_state.get('movies', [])
+        else:
+            prev_dates = {}
+            prev_movies = list(previous_state.values()) if previous_state else []
     else:
-        prev_list = previous_state if isinstance(previous_state, list) else []
+        prev_dates = {}
+        prev_movies = previous_state if isinstance(previous_state, list) else []
     
     # 현재 상태를 날짜별로 정리
     current_by_date = {}
@@ -91,7 +88,7 @@ def compare_states(previous_state, current_state):
     
     # 이전 상태도 날짜별로 정리
     previous_by_date = {}
-    for movie in prev_list:
+    for movie in prev_movies:
         date = movie.get('date', '')
         if date not in previous_by_date:
             previous_by_date[date] = []
@@ -318,16 +315,31 @@ def scrape_imax_shows(driver):
         return []
 
 
-def get_all_available_dates(driver):
-    """예매 가능한 모든 날짜 버튼 가져오기"""
+def get_all_date_info(driver):
+    """모든 날짜의 활성화 상태 가져오기"""
     try:
-        date_buttons = driver.find_elements(
-            By.CSS_SELECTOR,
-            ".dayScroll_scrollItem__IZ35T:not(.dayScroll_disabled__t8HIQ)"
-        )
-        return date_buttons
+        all_dates = []
+        date_items = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_scrollItem__IZ35T")
+        
+        for item in date_items:
+            try:
+                is_disabled = "dayScroll_disabled__t8HIQ" in item.get_attribute("class")
+                day_txt = item.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text
+                day_num = item.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text
+                date_key = f"{day_txt} {day_num}"
+                
+                all_dates.append({
+                    'date': date_key,
+                    'enabled': not is_disabled,
+                    'button': item if not is_disabled else None
+                })
+            except Exception as e:
+                print(f"날짜 파싱 중 오류: {e}")
+                continue
+        
+        return all_dates
     except Exception as e:
-        print(f"날짜 버튼 찾기 실패: {e}")
+        print(f"날짜 정보 가져오기 실패: {e}")
         return []
 
 
@@ -345,98 +357,109 @@ def main():
     click_imax_filter(driver)
     time.sleep(2)
 
-    # 모든 예매 가능한 날짜 가져오기
-    date_buttons = get_all_available_dates(driver)
-    print(f"예매 가능한 날짜 수: {len(date_buttons)}개")
+    # 모든 날짜 정보 가져오기 (활성화 여부 포함)
+    all_date_info = get_all_date_info(driver)
+    print(f"전체 날짜 수: {len(all_date_info)}개")
     
-    all_shows = []
-    
-    # 각 날짜를 순회하며 상영 정보 수집
-    for idx, date_btn in enumerate(date_buttons):
-        try:
-            # 날짜 버튼 클릭
-            driver.execute_script("arguments[0].scrollIntoView(true);", date_btn)
-            time.sleep(0.5)
-            date_btn.click()
-            time.sleep(2)
-            
-            # 해당 날짜의 상영 정보 수집
-            shows = scrape_imax_shows(driver)
-            all_shows.extend(shows)
-            
-            print(f"날짜 {idx+1}/{len(date_buttons)} 체크 완료")
-            
-        except Exception as e:
-            print(f"날짜 {idx+1} 처리 중 오류: {e}")
-            continue
-    
-    shows = all_shows
-
     # 이전 상태 로드
     previous_state = load_previous_state()
     
-    # 현재 상태를 리스트로 변환 (비교를 위해)
-    current_state_list = shows
+    # 이전에 비활성화였던 날짜 중 새로 활성화된 날짜 찾기
+    newly_enabled_dates = []
+    current_date_states = {}
     
-    # 새로 추가된 항목 찾기
-    new_items = compare_states(previous_state, current_state_list)
-    
-    if new_items:
-        # 새로 추가된 항목이 있으면 알림 전송
-        msg_parts = ["🔔 새로운 IMAX 상영 정보가 추가되었습니다!\n"]
+    for date_info in all_date_info:
+        date_key = date_info['date']
+        is_enabled = date_info['enabled']
+        current_date_states[date_key] = is_enabled
         
-        for item in new_items:
-            if item['type'] == 'new_date':
-                msg_parts.append(f"📅 새 날짜: {item['date']}")
-                for movie in item['movies']:
-                    if movie['theater_info']:
-                        msg_parts.append(f"  {movie['title']} ({movie['theater_info']})")
-                    else:
-                        msg_parts.append(f"  {movie['title']}")
-                    for time_info in movie['times']:
-                        msg_parts.append(f"    {time_info}")
-                msg_parts.append("")
-            
-            elif item['type'] == 'new_movie':
-                msg_parts.append(f"🎬 새 영화 추가 ({item['date']})")
-                movie = item['movie']
+        # 이전 상태가 있고, 이전에는 비활성화였는데 지금 활성화된 경우
+        if previous_state and 'dates' in previous_state:
+            prev_enabled = previous_state['dates'].get(date_key, False)
+            if not prev_enabled and is_enabled:
+                newly_enabled_dates.append(date_info)
+                print(f"🆕 새로 열린 날짜 발견: {date_key}")
+    
+    # 새로 열린 날짜가 있으면 해당 날짜의 상영 정보만 수집
+    all_shows = []
+    
+    if newly_enabled_dates:
+        print(f"새로 열린 날짜 {len(newly_enabled_dates)}개의 상영 정보 수집 중...")
+        for date_info in newly_enabled_dates:
+            if date_info['button']:
+                try:
+                    # 날짜 버튼 클릭
+                    driver.execute_script("arguments[0].scrollIntoView(true);", date_info['button'])
+                    time.sleep(0.5)
+                    date_info['button'].click()
+                    time.sleep(2)
+                    
+                    # 해당 날짜의 상영 정보 수집
+                    shows = scrape_imax_shows(driver)
+                    all_shows.extend(shows)
+                    
+                    print(f"날짜 '{date_info['date']}' 체크 완료: {len(shows)}개 영화")
+                    
+                except Exception as e:
+                    print(f"날짜 '{date_info['date']}' 처리 중 오류: {e}")
+                    continue
+    else:
+        print("새로 열린 날짜 없음")
+    
+    # 새로 열린 날짜의 상영 정보만 알림
+    if all_shows:
+        # 날짜별로 그룹화
+        by_date = {}
+        for movie in all_shows:
+            date = movie.get('date', '')
+            if date not in by_date:
+                by_date[date] = []
+            by_date[date].append(movie)
+        
+        # 알림 메시지 생성
+        msg_parts = ["🔔 새로운 예매 날짜가 열렸습니다!\n"]
+        
+        for date, movies in by_date.items():
+            msg_parts.append(f"📅 {date}")
+            for movie in movies:
                 if movie['theater_info']:
-                    msg_parts.append(f"  {movie['title']} ({movie['theater_info']})")
+                    msg_parts.append(f"\n{movie['title']} ({movie['theater_info']})")
                 else:
-                    msg_parts.append(f"  {movie['title']}")
+                    msg_parts.append(f"\n{movie['title']}")
                 for time_info in movie['times']:
-                    msg_parts.append(f"    {time_info}")
-                msg_parts.append("")
-            
-            elif item['type'] == 'new_showtime':
-                msg_parts.append(f"⏰ 새 상영시간 추가 ({item['date']})")
-                movie = item['movie']
-                if movie['theater_info']:
-                    msg_parts.append(f"  {movie['title']} ({movie['theater_info']})")
-                else:
-                    msg_parts.append(f"  {movie['title']}")
-                for time_info in movie['times']:
-                    msg_parts.append(f"    {time_info}")
-                msg_parts.append("")
+                    msg_parts.append(f"  {time_info}")
+            msg_parts.append("")
         
         msg = "\n".join(msg_parts).strip()
         send_telegram_message(msg)
-        print("새로운 상영 정보 알림 전송 완료")
+        print("새로운 날짜 오픈 알림 전송 완료")
         
         # 콘솔에도 출력
-        for item in new_items:
-            print(f"새 항목: {item['type']}")
-            if item['type'] == 'new_date':
-                print(f"  날짜: {item['date']}")
-            elif item['type'] == 'new_movie':
-                print(f"  날짜: {item['date']}, 영화: {item['movie']['title']}")
-            elif item['type'] == 'new_showtime':
-                print(f"  날짜: {item['date']}, 영화: {item['movie']['title']}, 새 시간: {len(item['movie']['times'])}개")
+        for date, movies in by_date.items():
+            print(f"📅 새 날짜: {date}")
+            for movie in movies:
+                print(f"  - {movie['title']}: {len(movie['times'])}개 상영")
     else:
-        print("새로 추가된 상영 정보 없음")
+        print("새로 열린 날짜 없음")
     
-    # 현재 상태 저장
-    save_current_state(current_state_list)
+    # 현재 상태 저장 (날짜 활성화 상태 + 영화 정보)
+    # 모든 날짜의 상영 정보를 저장하기 위해 전체 날짜 순회
+    all_movies_for_state = []
+    enabled_dates = [d for d in all_date_info if d['enabled'] and d['button']]
+    
+    for date_info in enabled_dates:
+        try:
+            driver.execute_script("arguments[0].scrollIntoView(true);", date_info['button'])
+            time.sleep(0.5)
+            date_info['button'].click()
+            time.sleep(2)
+            shows = scrape_imax_shows(driver)
+            all_movies_for_state.extend(shows)
+        except Exception as e:
+            print(f"상태 저장용 날짜 '{date_info['date']}' 처리 중 오류: {e}")
+            continue
+    
+    save_current_state(current_date_states, all_movies_for_state)
     print("상태 저장 완료")
 
     driver.quit()
