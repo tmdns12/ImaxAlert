@@ -1,9 +1,9 @@
 services:
-  - type: cron
+  - type: web
     name: cgv-imax-alert
     env: docker
-    schedule: "* * * * *"  # 1분마다 실행
     dockerfilePath: ./Dockerfile
+    plan: free
     envVars:
       - key: TELEGRAM_TOKEN
         sync: false

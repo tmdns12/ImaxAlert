@@ -27,5 +27,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["python", "imaxAlert.py"]
+# 스크립트 실행 권한 부여
+RUN chmod +x run_cron.sh
+
+CMD ["./run_cron.sh"]
 
