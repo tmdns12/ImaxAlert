@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 import json
 import os
@@ -143,21 +144,27 @@ def init_driver():
     chrome_options = Options()
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     
-    # GitHub Actions 환경에서는 headless 모드 사용
-    if os.getenv("GITHUB_ACTIONS"):
-        chrome_options.add_argument("--headless")
+    # 서버 환경 (GitHub Actions, Render 등)에서는 headless 모드 사용
+    if os.getenv("GITHUB_ACTIONS") or os.getenv("RENDER"):
+        chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
-    else:
-        chrome_options.add_argument("--start-maximized")
-
-    # ChromeDriver 경로가 시스템 PATH에 있으면 자동 감지
-    if os.getenv("GITHUB_ACTIONS"):
-        driver = webdriver.Chrome(options=chrome_options)
-    else:
-        service = Service(CHROMEDRIVER_PATH)
+        chrome_options.add_argument("--disable-software-rasterizer")
+        chrome_options.add_argument("--disable-extensions")
+        # webdriver-manager로 자동 설치
+        service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
+    else:
+        # 로컬 환경
+        chrome_options.add_argument("--start-maximized")
+        if os.path.exists(CHROMEDRIVER_PATH):
+            service = Service(CHROMEDRIVER_PATH)
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+        else:
+            # ChromeDriver 없으면 자동 설치
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=chrome_options)
     
     return driver
 
