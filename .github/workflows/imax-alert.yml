@@ -2,8 +2,8 @@ name: CGV IMAX Alert
 
 on:
   schedule:
-    # 5분마다 실행 (UTC 기준)
-    - cron: '*/5 * * * *'
+    # 30분마다 실행 (UTC 기준) - 월 약 1,440분 사용 (무료 한도 안전)
+    - cron: '*/30 * * * *'
   workflow_dispatch:  # 수동 실행 가능
 
 jobs:

@@ -1,0 +1,17 @@
+services:
+  - type: cron
+    name: cgv-imax-alert
+    env: python
+    schedule: "* * * * *"  # 1분마다 실행
+    buildCommand: pip install -r requirements.txt && apt-get update && apt-get install -y wget unzip && wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt-get install -y ./google-chrome-stable_current_amd64.deb && wget -q https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip && unzip -q chromedriver_linux64.zip && mv chromedriver /usr/local/bin/ && chmod +x /usr/local/bin/chromedriver
+    startCommand: python imaxAlert.py
+    envVars:
+      - key: TELEGRAM_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: CHROMEDRIVER_PATH
+        value: /usr/local/bin/chromedriver
+
+
+
