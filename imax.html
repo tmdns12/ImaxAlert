@@ -1,0 +1,888 @@
+<html lang="ko" style="">
+
+<head>
+    <style data-rc-order="prependQueue" data-rc-priority="-999" data-css-hash="4fsy00" data-token-hash="8x2idg">
+        :where(.css-ni1kz0) a{color:#1677ff;text-decoration:none;background-color:transparent;outline:none;cursor:pointer;transition:color 0.3s;-webkit-text-decoration-skip:objects;}:where(.css-ni1kz0) a:hover{color:#69b1ff;}:where(.css-ni1kz0) a:active{color:#0958d9;}:where(.css-ni1kz0) a:active,:where(.css-ni1kz0) a:hover{text-decoration:none;outline:0;}:where(.css-ni1kz0) a:focus{text-decoration:none;outline:0;}:where(.css-ni1kz0) a[disabled]{color:rgba(0, 0, 0, 0.25);cursor:not-allowed;}
+    </style>
+    <style data-rc-order="prependQueue" data-rc-priority="-999" data-css-hash="pfcq3b" data-token-hash="8x2idg">
+        :where(.css-ni1kz0).ant-qrcode{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';font-size:14px;box-sizing:border-box;}:where(.css-ni1kz0).ant-qrcode::before,:where(.css-ni1kz0).ant-qrcode::after{box-sizing:border-box;}:where(.css-ni1kz0).ant-qrcode [class^="ant-qrcode"],:where(.css-ni1kz0).ant-qrcode [class*=" ant-qrcode"]{box-sizing:border-box;}:where(.css-ni1kz0).ant-qrcode [class^="ant-qrcode"]::before,:where(.css-ni1kz0).ant-qrcode [class*=" ant-qrcode"]::before,:where(.css-ni1kz0).ant-qrcode [class^="ant-qrcode"]::after,:where(.css-ni1kz0).ant-qrcode [class*=" ant-qrcode"]::after{box-sizing:border-box;}:where(.css-ni1kz0).ant-qrcode{box-sizing:border-box;margin:0;padding:12px;color:rgba(0, 0, 0, 0.88);font-size:14px;line-height:1.5714285714285714;list-style:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';display:flex;justify-content:center;align-items:center;background-color:#fff;border-radius:8px;border:1px solid rgba(5, 5, 5, 0.06);position:relative;overflow:hidden;}:where(.css-ni1kz0).ant-qrcode>.ant-qrcode-mask{position:absolute;inset-block-start:0;inset-inline-start:0;z-index:10;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;height:100%;color:rgba(0, 0, 0, 0.88);line-height:1.5714285714285714;background:rgba(255, 255, 255, 0.96);text-align:center;}:where(.css-ni1kz0).ant-qrcode>.ant-qrcode-mask>.ant-qrcode-expired,:where(.css-ni1kz0).ant-qrcode>.ant-qrcode-mask>.ant-qrcode-scanned{color:rgba(0, 0, 0, 0.88);}:where(.css-ni1kz0).ant-qrcode >canvas{align-self:stretch;flex:auto;min-width:0;}:where(.css-ni1kz0).ant-qrcode-icon{margin-block-end:8px;font-size:32px;}:where(.css-ni1kz0).ant-qrcode-borderless{border-color:transparent;padding:0;border-radius:0;}
+    </style>
+    <style data-rc-order="prependQueue" data-css-hash="fihtjb" data-token-hash="8x2idg">
+        .anticon{display:inline-flex;align-items:center;color:inherit;font-style:normal;line-height:0;text-align:center;text-transform:none;vertical-align:-0.125em;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}.anticon >*{line-height:1;}.anticon svg{display:inline-block;}.anticon .anticon .anticon-icon{display:block;}
+    </style>
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/73c00cd95dc66651.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/346ce3ff3071b386.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/27518a2b452f3dff.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/ec53887ad1a0ccae.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/0384a69b673f44ac.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/f2a2bc8c6d97b4eb.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/f5692389893e2d7f.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/4383b17cbd625970.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/dfe4d9b417fd1947.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/8a39234445b7c30a.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/c7b168f64df3d464.css" data-precedence="next">
+    <link rel="stylesheet" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/79cfc8ec8d260d66.css" data-precedence="next">
+    <link rel="preload" as="script" fetchpriority="low" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/webpack-51bc1d526dfaf13d.js">
+    <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-HV92ZRC3WF&amp;cx=c&amp;gtm=4e5bj1"></script>
+    <script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-TGN3SSFZ"></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/fd9d1056-602a533fd6469a84.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/8346-8cc4fff128ec0d80.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/main-app-dc7ae2e06adc0f2d.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/e37a0b60-6433ce50218ced03.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/aaea2bcf-a2546d1cebd288c0.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/4271-fca72108a9374a27.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/6656-ebf37beb3a720889.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/1885-a7e5c19d033924f3.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/8633-2f26ee5fab49c15d.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/6962-114c2af815a312d3.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/5564-6ba851e8fe1cc5f4.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/6187-f0fcff49f4d7ac8a.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/2488-025f8c48619dae23.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/9058-e0f824aef3a21f5d.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/8013-96b89f02823010f3.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/3673-dfc01600016638a4.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/8111-42d13e5458a1f856.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/7077-85608eebaf406da6.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/3122-d4065905c60503c0.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/6387-98214fb1755574f1.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/4396-2277bac3d03a255f.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/3604-f2c487ca13f3b986.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/1453-8feccb8ced971266.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/6126-2bbbd224c947fbc6.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/7816-ff45b22b3832019a.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/4231-3991f43ba51dbcc1.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/9033-e17f8b4133eea84f.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/6318-3ee53d91d0c30711.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/2461-f153ae5667195a92.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/5806-9d50fd4b5dcba113.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/app/(home)/layout-f74bbeebbb856651.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/9247-2473c39166a1289d.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/7915-ae158a5c80779e05.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/app/layout-c9546648539e3250.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/6415-d6aea8ad25b5abb4.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/5422-817756a712bd3f9c.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/5383-a9f20d6b0dc95795.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/app/error-329a4bbd940228d3.js" async=""></script>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/app/not-found-5a0559cc42ce9b24.js" async=""></script>
+    <link rel="preload" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/ec53887ad1a0ccae.css" as="style">
+    <link rel="preload" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/0384a69b673f44ac.css" as="style">
+    <link rel="preload" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/f2a2bc8c6d97b4eb.css" as="style">
+    <link rel="icon" href="/favicon.ico">
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js" nomodule=""></script>
+    <link rel="preload" as="style" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/f5692389893e2d7f.css">
+    <link rel="preload" as="style" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/dfe4d9b417fd1947.css">
+    <link rel="preload" as="style" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/4383b17cbd625970.css">
+    <link rel="preload" as="style" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/8a39234445b7c30a.css">
+    <link rel="preload" as="style" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/79cfc8ec8d260d66.css">
+    <link rel="preload" as="style" href="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/c7b168f64df3d464.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+    <meta charset="utf-8">
+    <title>깊이 빠져 보다, CGV</title>
+    <meta name="description" content="Generated by create next app">
+    <meta property="og:title" content="깊이 빠져 보다, CGV">
+    <meta property="og:description" content="영화 그 이상의 다양한 몰입의 경험을 만듭니다. DEEP DIVE SPACE, CGV">
+    <meta property="og:url" content="https://www.cgv.co.kr/">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:image" content="http://localhost:3000/opengraph.png">
+    <meta property="og:image:width" content="1600">
+    <meta property="og:image:height" content="1600">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="깊이 빠져 보다, CGV">
+    <meta name="twitter:description" content="영화 그 이상의 다양한 몰입의 경험을 만듭니다. DEEP DIVE SPACE, CGV">
+    <meta name="twitter:image" content="http://localhost:3000/opengraph.png">
+    <meta name="twitter:image:width" content="1600">
+    <meta name="twitter:image:height" content="1600">
+    <link rel="icon" href="/favicon.ico">
+    <script src="https://waiting.cgv.co.kr:443/ts.wseq?opcode=5004&amp;key=F79F2D701B2CE1A84F7513EE7831FB4763548AEEFA3D00277854AF4040C09CE7F0270EC4636A16CECF59A4C9C338F43D0995ABA6C83C0F07BA47549E982B9467C6D535B5C404984243128B57C27393B29052A8CE9894B4E91BFA5DD0CA89152E9078F45F6AEA9FA76609441EE08DBED92C312C302C30&amp;nfid=0&amp;prefix=NetFunnel.gRtype=5004;&amp;js=yes&amp;1764727203009"></script>
+</head>
+
+<body class="">
+    <div>
+        <div class="">
+            <div>
+                <div class="mets01390_pcPage__Lpbde">
+                    <div class="mets01390_container__IcOpA">
+                        <div id="skip-wrapper" class="skip-wrapper">
+                            <button type="button" data-href="#contentArea" class="skip-nav">본문 바로가기</button>
+                            <button type="button" id="btnSkipGnb" data-href="#cgvGnb" class="skip-nav">주요메뉴 바로가기</button>
+                            <button type="button" data-href="#cgvPcGnb" class="skip-nav pc-skip">주요메뉴 바로가기</button>
+                        </div>
+                        <div class="mets01390_leftContentArea__urjHN">
+                            <div class="mets01390_headerContent__08xyW">
+                                <h1><a href="/"><img alt="CGV" loading="lazy" width="200" height="88" decoding="async" data-nimg="1" class="mets01390_logo__sm8Za" src="https://cdn.cgv.co.kr/cgvpomscontent/ips/unitCnts/2025/1114/4c8da3708290405bb6400a6a553cade2.svg" style="color: transparent;"></a></h1>
+                                <ul class="mets01390_linkArea___7aEf" id="cgvPcGnb">
+                                    <li class="mets01390_linkItem__RyBIj">
+                                        <button type="button">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <circle aria-hidden="true" cx="12" cy="16" r="2" fill="#242424"></circle>
+                                                <path aria-hidden="true" d="M20.6393 19.3811C20.3993 20.8179 19.0293 22 17.5993 22H6.39929C4.95929 22 3.59929 20.8281 3.35929 19.3811L2.02929 11.2695C1.85929 10.2708 2.35929 8.93587 3.13929 8.30406L10.0693 2.64837C11.1293 1.78219 12.8593 1.78219 13.9293 2.65856L20.8593 8.30406C21.6293 8.93587 22.1293 10.2708 21.9693 11.2695L21.3493 15.0603"
+                                                stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg><span>홈</span></button>
+                                    </li>
+                                    <li class="mets01390_linkItem__RyBIj">
+                                        <button type="button">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path aria-hidden="true" d="M15.0603 19.3916C14.4403 19.8116 13.6603 20.1616 12.7103 20.4716L11.1303 20.9916C7.16034 22.2716 5.07034 21.2016 3.78034 17.2316L2.50034 13.2816C1.22034 9.31156 2.28034 7.21156 6.25034 5.93156L7.83034 5.41156C8.24034 5.28156 8.63034 5.17156 9.00034 5.10156C8.70034 5.71156 8.46034 6.45156 8.26034 7.30156L7.28034 11.4916C6.30034 15.6716 7.59034 17.7316 11.7603 18.7216L13.4403 19.1216C14.0203 19.2616 14.5603 19.3516 15.0603 19.3916Z"
+                                                stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                <path aria-hidden="true" d="M12.6406 8.53125L17.4906 9.76125" stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                <path aria-hidden="true" d="M11.6602 12.3984L14.5602 13.1384" stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                <path aria-hidden="true" d="M20.9602 5.09854C22.0402 6.29854 22.2302 8.01854 21.6602 10.4385L20.6802 14.6185C19.8402 18.2285 18.1802 19.6885 15.0602 19.3885C14.5602 19.3485 14.0202 19.2585 13.4402 19.1185L11.7602 18.7185C7.59018 17.7285 6.30018 15.6685 7.28018 11.4885L8.26018 7.29854C8.46018 6.44854 8.70018 5.70854 9.00018 5.09854C10.1702 2.67854 12.1602 2.02854 15.5002 2.81854L17.1702 3.20854"
+                                                stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg><span>씨네톡</span></button>
+                                    </li>
+                                    <li class="mets01390_linkItem__RyBIj">
+                                        <button type="button">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path aria-hidden="true" d="M23 10V9C23 5 22 4 18 4H6C2 4 1 5 1 9V9.5C2.38 9.5 3.5 10.62 3.5 12C3.5 13.38 2.38 14.5 1 14.5V15C1 19 2 20 6 20H18C22 20 23 19 23 15C21.62 15 20.5 13.88 20.5 12.5" stroke="#121212"
+                                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                <path aria-hidden="true" d="M9 4L9 20" stroke="#121212" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5"></path>
+                                            </svg><span>예매·예약</span></button>
+                                    </li>
+                                    <li class="mets01390_linkItem__RyBIj">
+                                        <button type="button">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path aria-hidden="true" d="M4.14453 9.85938L5.35976 20.2628C5.50693 21.5227 6.57437 22.4728 7.84288 22.4728H16.2773C17.4959 22.4728 18.537 21.5942 18.7418 20.393L20.0024 12.9995" stroke="#242424" stroke-width="1.5"
+                                                stroke-linecap="round" stroke-linejoin="round"></path>
+                                                <path aria-hidden="true" d="M16.3125 10.0391L15.2767 22.0391" stroke="#242424" stroke-width="1.5" stroke-linecap="round"></path>
+                                                <path aria-hidden="true" d="M7.6947 10.0391L8.73047 22.0391" stroke="#242424" stroke-width="1.5" stroke-linecap="round"></path>
+                                                <path aria-hidden="true" d="M12 10.0391L12 21.9565" stroke="#242424" stroke-width="1.5" stroke-linecap="round"></path>
+                                                <path aria-hidden="true" d="M5.03305 6.31758C4.17396 6.35914 3.25199 6.92764 3.04816 7.75312C2.84355 8.58175 3.03633 9.50482 3.6035 9.79902H20.4634C20.8364 9.4522 21.1248 8.53583 20.8752 7.75312C20.6256 6.9704 19.8252 6.41165 19.008 6.32442C19.0123 6.25661 19.0146 6.18818 19.0146 6.11918C19.0146 4.49833 17.787 3.18437 16.2728 3.18437C15.8514 3.18437 15.4523 3.28608 15.0957 3.46781C14.6926 2.24848 13.6059 1.375 12.3286 1.375C11.0398 1.375 9.94501 2.26442 9.55079 3.50112C9.06829 3.06951 8.44699 2.80975 7.76901 2.80975C6.23353 2.80975 4.98877 4.14213 4.98877 5.78569C4.98877 5.96725 5.00396 6.145 5.03305 6.31758Z"
+                                                stroke="#242424" stroke-width="1.5" stroke-linejoin="round"></path>
+                                                <path aria-hidden="true" d="M15.8415 7.20639C15.6097 6.50562 14.9493 6 14.1708 6C13.3922 6 12.7318 6.50562 12.5 7.20639" stroke="#242424" stroke-width="1.5" stroke-linecap="round"></path>
+                                                <circle aria-hidden="true" cx="8.70156" cy="6.6" r="1.1" fill="#242424"></circle>
+                                            </svg><span>매점</span></button>
+                                    </li>
+                                    <li class="mets01390_linkItem__RyBIj">
+                                        <button type="button">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <g aria-hidden="true" clip-path="url(#clip0_2700_19922)">
+                                                    <path d="M1 20.9963C2.04954 18.1483 4.78758 16.1172 8 16.1172C11.2124 16.1172 13.9505 18.1483 15 20.9963" stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    <path d="M3.77202 3.41401C4.94802 2.51801 6.404 2 8 2C11.864 2 15 5.136 15 9C15 12.864 11.864 16 8 16C4.136 16 1 12.864 1 9" stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    <path d="M10.5394 11.8828C9.82707 12.4025 8.94943 12.7093 8.00016 12.7093C7.05088 12.7093 6.17324 12.4025 5.46094 11.8828" stroke="#242424" stroke-width="1.5" stroke-linecap="round"></path>
+                                                    <path d="M23 6H18" stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    <path d="M23 10H19" stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    <path d="M23 14H17" stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                </g>
+                                                <defs aria-hidden="true">
+                                                    <clipPath id="clip0_2700_19922">
+                                                        <rect width="24" height="24" fill="white"></rect>
+                                                    </clipPath>
+                                                </defs>
+                                            </svg><span>더보기</span></button>
+                                    </li>
+                                </ul>
+                                <ul class="mets01390_quickManuList__jWyYV">
+                                    <li class="mets01390_quickManuItem__WzpIR">
+                                        <button type="button">
+                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path aria-hidden="true" d="M12.2285 18.1381C14.4598 15.5862 18.1793 10.844 18.1793 7.58966C18.1793 6.03955 17.7801 4.70367 17.1157 3.60386C16.3246 2.29406 15.2809 1.4484 14.1657 0.873804C13.0506 0.299207 11.8098 0 10.5897 0C6.8897 0 3 2.75125 3 7.58966C3 10.844 6.71956 15.5862 8.95086 18.1381C9.82994 19.1435 11.3494 19.1435 12.2285 18.1381Z"
+                                                fill="url(#paint0_linear_5942_19576)"></path>
+                                                <path aria-hidden="true" d="M10.5844 10.0594C12.1563 10.0594 13.4305 8.78518 13.4305 7.21331C13.4305 5.64144 12.1563 4.36719 10.5844 4.36719C9.01253 4.36719 7.73828 5.64144 7.73828 7.21331C7.73828 8.78518 9.01253 10.0594 10.5844 10.0594Z"
+                                                fill="white"></path>
+                                                <defs aria-hidden="true">
+                                                    <linearGradient id="paint0_linear_5942_19576" x1="10.5897" y1="0" x2="10.5897" y2="19.9229" gradientUnits="userSpaceOnUse">
+                                                        <stop stop-color="#FF174F"></stop>
+                                                        <stop offset="1" stop-color="#FF6637"></stop>
+                                                    </linearGradient>
+                                                </defs>
+                                            </svg><span>상영관 찾기</span></button>
+                                    </li>
+                                    <li class="mets01390_quickManuItem__WzpIR">
+                                        <button type="button">
+                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path aria-hidden="true" fill-rule="evenodd" clip-rule="evenodd" d="M3.40371 10.0801L4.59227 1.90133C4.66747 1.38384 5.11113 1 5.63405 1H14.0341C14.557 1 15.0006 1.38384 15.0758 1.90133L16.2644 10.0801H17.5877C18.081 10.0801 18.5007 10.4399 18.576 10.9276L19.6562 17.9276C19.7497 18.5335 19.281 19.0801 18.6679 19.0801H1.00022C0.387144 19.0801 -0.0815884 18.5335 0.0119148 17.9276L1.09216 10.9276C1.16741 10.4399 1.58707 10.0801 2.08046 10.0801H3.40371Z"
+                                                fill="url(#paint0_linear_5942_19578)"></path>
+                                                <path aria-hidden="true" d="M6.83398 15V7H9.97211C11.7898 7 12.834 8.12155 12.834 9.69613C12.834 11.2928 11.7732 12.3923 9.92791 12.3923H8.49144V15H6.83398ZM8.49144 11.0552H9.66271C10.6461 11.0552 11.1268 10.5028 11.1213 9.69613C11.1268 8.90055 10.6461 8.36464 9.66271 8.35912H8.49144V11.0552Z"
+                                                fill="white"></path>
+                                                <defs aria-hidden="true">
+                                                    <linearGradient id="paint0_linear_5942_19578" x1="9.83647" y1="15.9395" x2="9.83647" y2="2.12799" gradientUnits="userSpaceOnUse">
+                                                        <stop stop-color="#FF6139"></stop>
+                                                        <stop offset="1" stop-color="#FF184F"></stop>
+                                                    </linearGradient>
+                                                </defs>
+                                            </svg><span>특별관</span></button>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mets01390_footerContent__0VV20">
+                                <footer class="cgv-footer pc-footer">
+                                    <div class="cgv-footer-top">
+                                        <h2><button type="button" class="cgv-footer-content-title active" aria-expanded="false">CJ CGV(주)<span class="icon"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path aria-hidden="true" d="M3 7.5L10 14.5L17 7.5" stroke="#161616" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="d-none"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path aria-hidden="true" d="M3 13.5L10 6.5L17 13.5" stroke="#161616" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button></h2>
+                                        <div class="cgv-footer-content  ">
+                                            <p class="cgv-footer-text"><span>대표이사 : 정종민</span></p>
+                                            <p class="cgv-footer-text"><span>(04377)서울특별시 용산구 한강대로 23길 55, 아이파크몰 6층(한강로동)</span></p>
+                                            <p class="cgv-footer-text"><span>통신판매업신고번호 : 2017-서울용산-0662</span>
+                                                <button type="button">사업자정보확인</button>
+                                            </p>
+                                            <p class="cgv-footer-text block"><span>사업자등록번호 : 104-81-45690</span><span>호스팅사업자 : CJ올리브네트웍스</span></p>
+                                            <p class="cgv-footer-text block"><span>대표이메일 : cjcgvmaster@cj.net</span><span>고객센터 : 1544-1122</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="cgv-footer-link-wrap">
+                                        <button type="button" class="cgv-footer-link">이용약관</button>
+                                        <button type="button" class="cgv-footer-link"><b>개인정보 처리방침</b></button>
+                                        <button type="button" class="cgv-footer-link">위치기반서비스 이용약관</button>
+                                        <button type="button" class="cgv-footer-link">법적고지</button>
+                                        <button type="button" class="cgv-footer-link">편성원칙</button>
+                                        <button type="button" class="cgv-footer-link">채용정보</button>
+                                    </div>
+                                </footer>
+                                <div class="singleSelect_container___5jMY">
+                                    <label for=":r0:" class="voice-only select_selcLabel___oURQ">셀렉트 라벨</label>
+                                    <div class="select_selectContainer__Kov5U ">
+                                        <select id=":r0:" class="select_commonSelect__LP_3T">
+                                            <option value="" style="display: none;">계열사 바로가기</option>
+                                            <optgroup label="CJ그룹">
+                                                <option value="https://www.cj.net/">CJ주식회사</option>
+                                            </optgroup>
+                                            <optgroup label="식품 &amp; 식품서비스">
+                                                <option value="https://www.cj.co.kr/kr/index">CJ제일제당</option>
+                                                <option value="https://www.cjfoodville.co.kr/main.asp">CJ푸드빌</option>
+                                                <option value="http://www.cjfreshway.com/index.jsp">CJ프레시웨이</option>
+                                            </optgroup>
+                                            <optgroup label="생명공학">
+                                                <option value="https://www.cj.co.kr/kr/aboutus/business/bio">CJ제일제당 BIO사업부문</option>
+                                                <option value="https://www.cj.co.kr/kr/aboutus/business/cjfeedncare">CJ Feed&amp;Care</option>
+                                            </optgroup>
+                                            <optgroup label="물류 &amp; 신유통">
+                                                <option value="https://www.cjlogistics.com/ko/main">CJ대한통운</option>
+                                                <option value="http://www.cjenc.co.kr/kr/Default.asp">CJ대한통운 건설부문</option>
+                                                <option value="https://www.oliveyoung.co.kr/store/company/brandStory.do">CJ올리브영</option>
+                                                <option value="https://www.cjolivenetworks.co.kr/">CJ올리브네트웍스</option>
+                                                <option value="http://company.cjonstyle.com/index.asp">CJ ENM 커머스부문</option>
+                                            </optgroup>
+                                            <optgroup label="엔터테인먼트 &amp; 미디어">
+                                                <option value="https://www.cjenm.com/ko/">CJ ENM 엔터테인먼트부문</option>
+                                                <option value="http://corp.cgv.co.kr">CJ CGV</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mets01390_rightContentArea__gfYhZ">
+                            <div class="mets01390_outsideAddArea__U2fQ7">
+                                <div class="mets01390_pcBannerWrap__Ln02j mets01390_video__8Qm6H">
+                                    <video id="mainAdVideo" class="mets01390_conts__ZJJ6w" src="https://adimg.cgv.co.kr/images/202511/Informant/251203_1080x608_PC.mp4" autoplay="" playsinline=""></video>
+                                    <div class="mets01390_textWrap__CbabT">
+                                        <p class="mets01390_title__0MeXL">정보원</p>
+                                        <p class="mets01390_txt__2eeBT">올겨울 빅웃음 범죄 액션
+                                            <br>극장 절찬 상영중</p>
+                                        <button type="button" class="mets01390_roundBtn__fG26H">자세히보기
+                                            <svg width="10" height="10" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path aria-hidden="true" d="M5 2L10 7L5 12" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="mets01390_controlBtnWrap__7_QvX">
+                                        <button type="button" class="mets01390_controlBtn__KWxKn"><img alt="일시정지" loading="lazy" width="24" height="24" decoding="async" data-nimg="1" class="" src="https://cdn.cgv.co.kr/cgvpomscontent/static/public/images/met/ico/icon_add_pause_white.svg" style="color: transparent;">
+                                            <img
+                                            alt="재생" loading="lazy" width="24" height="24" decoding="async" data-nimg="1" class="d-none" src="https://cdn.cgv.co.kr/cgvpomscontent/static/public/images/met/ico/icon_add_play_white.svg" style="color: transparent;"></button>
+                                        <button type="button" class="mets01390_controlBtn__KWxKn"><img alt="소리켜기" loading="lazy" width="24" height="24" decoding="async" data-nimg="1" class="" src="https://cdn.cgv.co.kr/cgvpomscontent/static/public/images/met/ico/icon_add_mute_white.svg" style="color: transparent;">
+                                            <img
+                                            alt="소리끄기" loading="lazy" width="24" height="24" decoding="async" data-nimg="1" class="d-none" src="https://cdn.cgv.co.kr/cgvpomscontent/static/public/images/met/ico/icon_add_sound_white.svg" style="color: transparent;"></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mets01390_qrcodeArea__9jn14">
+                                <div class="mets01390_textWrap__CbabT">
+                                    <h2 class="mets01390_qrTitle__YPwA6">QR코드 찍고<br>CGV 앱에서 자세히 보기</h2>
+                                    <p>QR코드를 스캔해보세요</p>
+                                </div>
+                                <div class="mets01390_imgWrap__FF2I7">
+                                    <div class="ant-qrcode css-ni1kz0 ant-qrcode-borderless" style="background-color: rgb(255, 255, 255); margin: 0px auto; padding: 4px; border-radius: 4px; width: 68px; height: 68px;">
+                                        <canvas height="68" width="68" role="img"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mets01390_mainContentArea__GkUrT">
+                            <div class="">
+                                <div class="cnms01510_container__tIPDh">
+                                    <div class="l-center">
+                                        <section class="cnms01510_visualContent__SYBRQ"><img alt="" aria-hidden="true" loading="lazy" width="390" height="231" decoding="async" data-nimg="1" class="cnms01510_bg__3Bg8K" srcset="/_next/image?url=https%3A%2F%2Fcdn.cgv.co.kr%2Fcgvpomscontent%2Fstatic%2Fpublic%2Fimages%2Fcnm%2Ftemp%2Ftemp_motion_seat.png&amp;w=640&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fcdn.cgv.co.kr%2Fcgvpomscontent%2Fstatic%2Fpublic%2Fimages%2Fcnm%2Ftemp%2Ftemp_motion_seat.png&amp;w=828&amp;q=75 2x"
+                                            src="/_next/image?url=https%3A%2F%2Fcdn.cgv.co.kr%2Fcgvpomscontent%2Fstatic%2Fpublic%2Fimages%2Fcnm%2Ftemp%2Ftemp_motion_seat.png&amp;w=828&amp;q=75" style="color: transparent;">
+                                            <div class="cnms01510_visual__4EjbE">
+                                                <div class="cnms01510_titleArea__s3ekW">
+                                                    <h2 class="cnms01510_pageTitle__6P1BC"><button type="button" class="cnms01510_titleLink__OKVb4">영화별예매</button>극장별 예매</h2>
+                                                    <button type="button" class="btn-icon"><span class="voice-only">닫기</span>
+                                                        <svg width="30" height="30" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M23 9L9 23M9 9L23 23" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="white" fill="white"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <div class="cnms01510_selectArea__Tu39g">
+                                                    <div class="dayScroll_container__e9cLv dayScroll_black__BULHC ">
+                                                        <h2 class="title1 voice-only">2024년 5월</h2>
+                                                        <div class="swiper swiper-initialized swiper-horizontal swiper-free-mode" tabindex="0">
+                                                            <div class="swiper-wrapper" style="transform: translate3d(0px, 0px, 0px); transition-duration: 0ms; transition-delay: 0ms;">
+                                                                <div class="swiper-slide swiper-slide-active dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T  dayScroll_itemActive__fZ5Sq" title="선택됨"><span class="dayScroll_txt__GEtA0  ">오늘</span><span class="dayScroll_number__o8i9s  ">03</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide swiper-slide-next dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T  " title=""><span class="dayScroll_txt__GEtA0  ">목</span><span class="dayScroll_number__o8i9s  ">04</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T  " title=""><span class="dayScroll_txt__GEtA0  ">금</span><span class="dayScroll_number__o8i9s  ">05</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T  " title=""><span class="dayScroll_txt__GEtA0 c-blue ">토</span><span class="dayScroll_number__o8i9s c-blue ">06</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T  " title=""><span class="dayScroll_txt__GEtA0  c-red">일</span><span class="dayScroll_number__o8i9s  c-red">07</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T dayScroll_disabled__t8HIQ " title="" disabled=""><span class="dayScroll_txt__GEtA0  ">월</span><span class="dayScroll_number__o8i9s  ">08</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T dayScroll_disabled__t8HIQ " title="" disabled=""><span class="dayScroll_txt__GEtA0  ">화</span><span class="dayScroll_number__o8i9s  ">09</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T dayScroll_disabled__t8HIQ " title="" disabled=""><span class="dayScroll_txt__GEtA0  ">수</span><span class="dayScroll_number__o8i9s  ">10</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T dayScroll_disabled__t8HIQ " title="" disabled=""><span class="dayScroll_txt__GEtA0  ">목</span><span class="dayScroll_number__o8i9s  ">11</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T dayScroll_disabled__t8HIQ " title="" disabled=""><span class="dayScroll_txt__GEtA0  ">금</span><span class="dayScroll_number__o8i9s  ">12</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T dayScroll_disabled__t8HIQ " title="" disabled=""><span class="dayScroll_txt__GEtA0 c-blue ">토</span><span class="dayScroll_number__o8i9s c-blue ">13</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T  " title=""><span class="dayScroll_txt__GEtA0  c-red">일</span><span class="dayScroll_number__o8i9s  c-red">14</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T dayScroll_disabled__t8HIQ " title="" disabled=""><span class="dayScroll_txt__GEtA0  ">월</span><span class="dayScroll_number__o8i9s  ">15</span></button>
+                                                                </div>
+                                                                <div class="swiper-slide dayScroll_scrollItem__IZ35T" style="margin-right: 6px;">
+                                                                    <button type="button" class="dayScroll_scrollItem__IZ35T  " title=""><span class="dayScroll_txt__GEtA0  ">화</span><span class="dayScroll_number__o8i9s  ">16</span></button>
+                                                                </div>
+                                                            </div>
+                                                            <div class="swiper-button-prev swiper-button-disabled"></div>
+                                                            <div class="swiper-button-next"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="cnms01510_timeBtnsWrap__2mjF_">
+                                                        <button type="button" class="cnms01510_timeBtn__Cw2I5 cnms01510_btnActive__z1FW4" title="선택됨">전체</button>
+                                                        <button type="button" class="cnms01510_timeBtn__Cw2I5 " title="">오전</button>
+                                                        <button type="button" class="cnms01510_timeBtn__Cw2I5 " title="">오후</button>
+                                                        <button type="button" class="cnms01510_timeBtn__Cw2I5 " title="">18시 이후</button>
+                                                        <button type="button" class="cnms01510_timeBtn__Cw2I5 " title="">심야</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+                                        <div class="cnms01510_tabFilterSection__fQEWr">
+                                            <div class="roundtab_container__MA2_a  ">
+                                                <div class="swiper swiper-initialized swiper-horizontal roundtab_tabSlideWrap__M9o5x">
+                                                    <div class="swiper-wrapper">
+                                                        <div class="swiper-slide swiper-slide-active roundtab_tabSlide__e9lHW" style="width: auto; margin-right: 4px;">
+                                                            <button type="button" class="roundtab_tabTitle__VWFIX roundtab_tabTitleActive__r46pt" title="선택됨"><span>영등포타임스퀘어</span></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="cnms01510_editBtnWrap__vwvRU">
+                                                <button type="button" class="btn btn-sm line-gray cnms01510_editBtn__FNDH8"><span class="voice-only">자주가는 CGV 목록 수정</span>
+                                                    <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <g aria-hidden="true" clip-path="url(#clip0_2466_25966)">
+                                                            <path d="M7.5 10H13.5" stroke="#242424" stroke-width="1.2" stroke-linecap="round"></path>
+                                                            <path d="M10.5 7L10.5 13" stroke="#242424" stroke-width="1.2" stroke-linecap="round"></path>
+                                                            <path d="M13.5615 2.60897C12.0997 2.00347 10.4911 1.84504 8.93928 2.15372C7.38743 2.4624 5.96197 3.22433 4.84315 4.34315C3.72433 5.46197 2.9624 6.88743 2.65372 8.43928C2.34504 9.99113 2.50347 11.5997 3.10897 13.0615C3.71447 14.5233 4.73985 15.7727 6.05544 16.6518C7.37103 17.5308 8.91775 18 10.5 18C12.6217 18 14.6566 17.1571 16.1569 15.6569C17.6571 14.1566 18.5 12.1217 18.5 10C18.5 8.41775 18.0308 6.87103 17.1518 5.55544"
+                                                            stroke="#242424" stroke-width="1.2" stroke-linecap="round"></path>
+                                                        </g>
+                                                        <defs aria-hidden="true">
+                                                            <clipPath id="clip0_2466_25966">
+                                                                <rect width="18" height="18" fill="white" transform="translate(1.5 1)"></rect>
+                                                            </clipPath>
+                                                        </defs>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div>
+                                                <div class="cnms01510_selectFilter__g778d">
+                                                    <div class="cnms01510_filterWrapper__sJ08E">
+                                                        <div class="linetabMini_container__VsBQ1" tabindex="0">
+                                                            <button type="button" class="linetabMini_tabTitle__lFlYm linetabMini_tabTitleActive__RIlS_" title="선택됨">영화순</button>
+                                                            <button type="button" class="linetabMini_tabTitle__lFlYm " title="">시간순</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="cnms01510_movieTitleWrap__69alk">
+                                                        <button type="button" class="btn-icon cnms01510_btn__dV0W6" aria-label="극장 속성"><span>아이맥스</span>
+                                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path aria-hidden="true" d="M2 6L8 6" stroke="#242424" stroke-width="1.2" stroke-linecap="round"></path>
+                                                                <path aria-hidden="true" d="M12 14L18 14" stroke="#242424" stroke-width="1.2" stroke-linecap="round"></path>
+                                                                <path aria-hidden="true" d="M15.5 6L18.0005 6" stroke="#242424" stroke-width="1.2" stroke-linecap="round"></path>
+                                                                <path aria-hidden="true" d="M2 14H4.5" stroke="#242424" stroke-width="1.2" stroke-linecap="round"></path>
+                                                                <rect aria-hidden="true" x="4.6" y="11.6" width="4.8" height="4.8" rx="2.4" stroke="#242424" stroke-width="1.2"></rect>
+                                                                <path aria-hidden="true" d="M13 8.4C11.6745 8.4 10.6 7.32548 10.6 6C10.6 4.67452 11.6745 3.6 13 3.6C14.3255 3.6 15.4 4.67452 15.4 6C15.4 7.32548 14.3255 8.4 13 8.4Z" stroke="#242424"
+                                                                stroke-width="1.2"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <section class="cnms01510_movieSection__N5I9s">
+                                                <div class="screenInfo_container__XpHXJ">
+                                                    <div class="accordion_container__W7nEs ">
+                                                        <h2 class="accordion_accordionTitleArea__AmnDj accordion_accordionTitleActive__ZeP6O"><button type="button" class="accordion_accordionTitle__r1B8g " aria-expanded="true"><span><span class="screenInfo_cinemaMovieWrap__isFER"><span class="screenInfo_posterWrap__v8HBK"><img alt="극장판 주술회전- 시부야사변 X 사멸회유(IMAX LASER 2D) 포스터" loading="lazy" width="84" height="120" decoding="async" data-nimg="1" class="screenInfo_poster__E_NVQ" src="https://cdn.cgv.co.kr/cgvpomsfilm/Movie/Thumbnail/Poster/030000/30000441/30000441_185.jpg" style="color: transparent;"></span><span class="screenInfo_textWrap__Tqn9M"><span class="screenInfo_title__Eso6_"><span class="title2">극장판 주술회전- 시부야사변 X 사멸회유</span><img alt="15세 관람가" loading="lazy" width="15" height="15" decoding="async" data-nimg="1" class="screenInfo_age__rKcFw" srcset="/_next/image?url=https%3A%2F%2Fcdn.cgv.co.kr%2Fcgvpomscontent%2Fstatic%2Fpublic%2Fimages%2Fmco%2Fico%2Fico_age_02.png&amp;w=16&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fcdn.cgv.co.kr%2Fcgvpomscontent%2Fstatic%2Fpublic%2Fimages%2Fmco%2Fico%2Fico_age_02.png&amp;w=32&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fcdn.cgv.co.kr%2Fcgvpomscontent%2Fstatic%2Fpublic%2Fimages%2Fmco%2Fico%2Fico_age_02.png&amp;w=32&amp;q=75" style="color: transparent;"></span></span></span></span><span class="d-none"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path aria-hidden="true" d="M3 7.5L10 14.5L17 7.5" stroke="#161616" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="accordion_icon__yQeLx"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path aria-hidden="true" d="M3 13.5L10 6.5L17 13.5" stroke="#161616" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button></h2>
+                                                        <div class="accordion_accordionContent__ptTkb  accordion_accordionActive__sK9dB">
+                                                            <div class="screenInfo_contentWrap__95SyT">
+                                                                <h3 class="screenInfo_title__Eso6_">IMAX관<span>IMAX LASER 2D / 자막</span></h3>
+                                                                <ul class="screenInfo_timeWrap__7GTHr">
+                                                                    <li class="screenInfo_timeItem__y8ZXg">
+                                                                        <button type="button" class="
+                                screenInfo_timeLink__45VfR 
+                                                              
+                              " aria-disabled="false"><span><span class="screenInfo_start__6BZbu">12:30</span><span class="screenInfo_end__qwvX0">- 14:07</span></span><span class="screenInfo_status__lT4zd"><span class="c-blue">91</span>
+                                                                            <span
+                                                                            class="screenInfo_seat__NLZUL"><span>/</span>387석</span>
+                                                                                </span><span class="screenInfo_sortWrap__HgvG1"></span><span class="screenInfo_sortWrap__HgvG1"></span></button>
+                                                                    </li>
+                                                                    <li class="screenInfo_timeItem__y8ZXg">
+                                                                        <button type="button" class="
+                                screenInfo_timeLink__45VfR 
+                                                              
+                              " aria-disabled="false"><span><span class="screenInfo_start__6BZbu">19:40</span><span class="screenInfo_end__qwvX0">- 21:17</span></span><span class="screenInfo_status__lT4zd"><span class="c-blue">242</span>
+                                                                            <span
+                                                                            class="screenInfo_seat__NLZUL"><span>/</span>387석</span>
+                                                                                </span><span class="screenInfo_sortWrap__HgvG1"></span><span class="screenInfo_sortWrap__HgvG1"></span></button>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="accordion_container__W7nEs ">
+                                                        <h2 class="accordion_accordionTitleArea__AmnDj accordion_accordionTitleActive__ZeP6O"><button type="button" class="accordion_accordionTitle__r1B8g " aria-expanded="true"><span><span class="screenInfo_cinemaMovieWrap__isFER"><span class="screenInfo_posterWrap__v8HBK"><img alt="주토피아 2(자막, IMAX LASER 2D) 포스터" loading="lazy" width="84" height="120" decoding="async" data-nimg="1" class="screenInfo_poster__E_NVQ" src="https://cdn.cgv.co.kr/cgvpomsfilm/Movie/Thumbnail/Poster/030000/30000286/30000286_185.jpg" style="color: transparent;"></span><span class="screenInfo_textWrap__Tqn9M"><span class="screenInfo_title__Eso6_"><span class="title2">주토피아 2</span><img alt="전체 관람가" loading="lazy" width="15" height="15" decoding="async" data-nimg="1" class="screenInfo_age__rKcFw" srcset="/_next/image?url=https%3A%2F%2Fcdn.cgv.co.kr%2Fcgvpomscontent%2Fstatic%2Fpublic%2Fimages%2Fmco%2Fico%2Fico_age_04.png&amp;w=16&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fcdn.cgv.co.kr%2Fcgvpomscontent%2Fstatic%2Fpublic%2Fimages%2Fmco%2Fico%2Fico_age_04.png&amp;w=32&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fcdn.cgv.co.kr%2Fcgvpomscontent%2Fstatic%2Fpublic%2Fimages%2Fmco%2Fico%2Fico_age_04.png&amp;w=32&amp;q=75" style="color: transparent;"></span></span></span></span><span class="d-none"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path aria-hidden="true" d="M3 7.5L10 14.5L17 7.5" stroke="#161616" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="accordion_icon__yQeLx"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path aria-hidden="true" d="M3 13.5L10 6.5L17 13.5" stroke="#161616" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button></h2>
+                                                        <div class="accordion_accordionContent__ptTkb  accordion_accordionActive__sK9dB">
+                                                            <div class="screenInfo_contentWrap__95SyT">
+                                                                <h3 class="screenInfo_title__Eso6_">IMAX관<span>IMAX LASER 2D / 자막</span></h3>
+                                                                <ul class="screenInfo_timeWrap__7GTHr">
+                                                                    <li class="screenInfo_timeItem__y8ZXg">
+                                                                        <button type="button" class="
+                                screenInfo_timeLink__45VfR 
+                                                              
+                              " aria-disabled="false"><span><span class="screenInfo_start__6BZbu">14:40</span><span class="screenInfo_end__qwvX0">- 16:38</span></span><span class="screenInfo_status__lT4zd"><span class="c-blue">349</span>
+                                                                            <span
+                                                                            class="screenInfo_seat__NLZUL"><span>/</span>387석</span>
+                                                                                </span><span class="screenInfo_sortWrap__HgvG1"></span><span class="screenInfo_sortWrap__HgvG1"></span></button>
+                                                                    </li>
+                                                                    <li class="screenInfo_timeItem__y8ZXg">
+                                                                        <button type="button" class="
+                                screenInfo_timeLink__45VfR 
+                                                              
+                              " aria-disabled="false"><span><span class="screenInfo_start__6BZbu">17:00</span><span class="screenInfo_end__qwvX0">- 18:58</span></span><span class="screenInfo_status__lT4zd"><span class="c-blue">349</span>
+                                                                            <span
+                                                                            class="screenInfo_seat__NLZUL"><span>/</span>387석</span>
+                                                                                </span><span class="screenInfo_sortWrap__HgvG1"></span><span class="screenInfo_sortWrap__HgvG1"></span></button>
+                                                                    </li>
+                                                                    <li class="screenInfo_timeItem__y8ZXg">
+                                                                        <button type="button" class="
+                                screenInfo_timeLink__45VfR 
+                                                              
+                              " aria-disabled="false"><span><span class="screenInfo_start__6BZbu">21:50</span><span class="screenInfo_end__qwvX0">- 23:48</span></span><span class="screenInfo_status__lT4zd"><span class="c-blue">374</span>
+                                                                            <span
+                                                                            class="screenInfo_seat__NLZUL"><span>/</span>387석</span>
+                                                                                </span><span class="screenInfo_sortWrap__HgvG1"></span><span class="screenInfo_sortWrap__HgvG1"></span></button>
+                                                                    </li>
+                                                                    <li class="screenInfo_timeItem__y8ZXg">
+                                                                        <button type="button" class="
+                                screenInfo_timeLink__45VfR 
+                                                              
+                              " aria-disabled="false"><span><span class="screenInfo_start__6BZbu">24:10</span><span class="screenInfo_end__qwvX0">- 26:08</span></span><span class="screenInfo_status__lT4zd"><span class="c-blue">386</span>
+                                                                            <span
+                                                                            class="screenInfo_seat__NLZUL"><span>/</span>387석</span>
+                                                                                </span><span class="screenInfo_sortWrap__HgvG1"></span><span class="screenInfo_sortWrap__HgvG1"></span></button>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </section>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="cgv-modal cgv-bot-modal " role="dialog" aria-modal="true">
+                                    <div class="modal-bg"></div>
+                                    <section class="bot-modal-container" style="pointer-events: none; touch-action: none; transform: translateX(-50%) translateY(0px); transition: transform 0.3s ease-in;">
+                                        <div class="center-btn-wrap">
+                                            <button type="button" class="btn-center-close" title="팝업 닫기" tabindex="-1" aria-hidden="true"><span class="voice-only">닫기</span></button>
+                                        </div>
+                                        <div class="modal-title">극장 속성</div>
+                                        <div class="modal-content ">
+                                            <div class="payment_filterOption__E5ZzZ">
+                                                <ul>
+                                                    <li class="">
+                                                        <button id="00-all" type="button" title="">전체</button>
+                                                    </li>
+                                                    <li class="">
+                                                        <button id="01-NOMAL" type="button" title="">일반</button>
+                                                    </li>
+                                                    <li class="">
+                                                        <button id="04-TCSCNS_GRAD_CD" type="button" title="">SCREENX</button>
+                                                    </li>
+                                                    <li class="">
+                                                        <button id="02-TCSCNS_GRAD_CD" type="button" title="">4DX</button>
+                                                    </li>
+                                                    <li class="payment_active__O1fCg">
+                                                        <button id="03-TCSCNS_GRAD_CD" type="button" title="선택됨">아이맥스</button>
+                                                    </li>
+                                                    <li class="">
+                                                        <button id="07-TCSCNS_GRAD_CD" type="button" title="">DOLBY ATMOS</button>
+                                                    </li>
+                                                    <li class="">
+                                                        <button id="03-SASCNS_GRAD_CD" type="button" title="">골드클래스</button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class=" bot-modal-footer">
+                                            <div class="btn-wrap">
+                                                <button type="button" class="btn btn-100 fill-main">확인</button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn-close">
+                                            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M23 9L9 23M9 9L23 23" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="white" fill="white"></path>
+                                            </svg><span class="voice-only">닫기</span></button>
+                                    </section>
+                                </div>
+                                <div class="cgv-modal cgv-bot-modal " role="dialog" aria-modal="true">
+                                    <div class="modal-bg"></div>
+                                    <section class="bot-modal-container" style="pointer-events: none; touch-action: none; transform: translateX(-50%) translateY(0px); transition: transform 0.3s ease-in;">
+                                        <div class="center-btn-wrap">
+                                            <button type="button" class="btn-center-close" title="팝업 닫기" tabindex="-1" aria-hidden="true"><span class="voice-only">닫기</span></button>
+                                        </div>
+                                        <div class="modal-title">
+                                            <div class="bottom_tabBtn__UqLwF">
+                                                <div class="doubletab_container__oFv1U">
+                                                    <div class="doubletab_tabLine__W2bky">
+                                                        <button type="button" class="doubletab_tabTitle__2Gr0c doubletab_tabTitleActive__ngL44" title="선택됨">지역별</button>
+                                                        <button type="button" class="doubletab_tabTitle__2Gr0c " title=" ">특별관</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-content btn-border ">
+                                            <div style="" class="bottom_theaterList__zuOJA bottom_region__2bZCS">
+                                                <ul>
+                                                    <li class=" bottom_active__vbz_f">
+                                                        <button type="button" title="선택됨">서울<span>(29)</span></button>
+                                                    </li>
+                                                    <li class=" ">
+                                                        <button type="button" title="">경기<span>(52)</span></button>
+                                                    </li>
+                                                    <li class=" ">
+                                                        <button type="button" title="">인천<span>(11)</span></button>
+                                                    </li>
+                                                    <li class=" ">
+                                                        <button type="button" title="">강원<span>(5)</span></button>
+                                                    </li>
+                                                    <li class=" ">
+                                                        <button type="button" title="">대전/충청<span>(20)</span></button>
+                                                    </li>
+                                                    <li class=" ">
+                                                        <button type="button" title="">대구<span>(9)</span></button>
+                                                    </li>
+                                                    <li class=" ">
+                                                        <button type="button" title="">부산/울산<span>(17)</span></button>
+                                                    </li>
+                                                    <li class=" ">
+                                                        <button type="button" title="">경상<span>(15)</span></button>
+                                                    </li>
+                                                    <li class=" ">
+                                                        <button type="button" title="">광주/전라/제주<span>(20)</span></button>
+                                                    </li>
+                                                </ul>
+                                                <div class="bottom_tabRight__xVGPl">
+                                                    <div class="bottom_listWrap__zYeR_">
+                                                        <div class="bottom_listTitle__52Z5R"><strong>전체 <span>(29)</span></strong></div>
+                                                        <div class="bottom_listCon__8g46z">
+                                                            <ul>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>강남</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>강변</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>건대입구</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>고덕강일</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>구로</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>대학로</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>동대문</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>등촌</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>명동</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>미아</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>방학</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>불광</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>상봉</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>성신여대입구</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>수유</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>신촌아트레온</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>씨네드쉐프 압구정</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>씨네드쉐프 용산</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>압구정</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>여의도</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>연남</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>영등포타임스퀘어</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>왕십리</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>용산아이파크몰</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>중계</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>천호</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>청담씨네시티</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>피카디리1958</p><span></span></button>
+                                                                </li>
+                                                                <li>
+                                                                    <button type="button">
+                                                                        <p>홍대</p><span></span></button>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="btn-wrap btn-wrap-col bot-modal-footer"></div>
+                                        <button type="button" class="btn-close">
+                                            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M23 9L9 23M9 9L23 23" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="white" fill="white"></path>
+                                            </svg><span class="voice-only">닫기</span></button>
+                                    </section>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div aria-live="polite" aria-atomic="true"></div>
+    <script src="https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/chunks/webpack-51bc1d526dfaf13d.js" async=""></script>
+    <script>
+        (self.__next_f=self.__next_f||[]).push([0]);self.__next_f.push([2,null])
+    </script>
+    <script>
+        self.__next_f.push([1,"1:HL[\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/73c00cd95dc66651.css\",\"style\"]\n2:HL[\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/346ce3ff3071b386.css\",\"style\"]\n3:HL[\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/27518a2b452f3dff.css\",\"style\"]\n0:\"$L4\"\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"5:HL[\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/ec53887ad1a0ccae.css\",\"style\"]\n6:HL[\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/0384a69b673f44ac.css\",\"style\"]\n7:HL[\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/f2a2bc8c6d97b4eb.css\",\"style\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"8:I[83973,[],\"\"]\ne:I[58498,[],\"\"]\nf:[]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"4:[[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/73c00cd95dc66651.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}],[\"$\",\"link\",\"1\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/346ce3ff3071b386.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}],[\"$\",\"link\",\"2\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/27518a2b452f3dff.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]],[\"$\",\"$L8\",null,{\"buildId\":\"GbOZ7ZvZPTM6d71-PkrMu\",\"assetPrefix\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc\",\"initialCanonicalUrl\":\"/\",\"initialTree\":[\"\",{\"children\":[\"(home)\",{\"children\":[\"__PAGE__?{\\\"device\\\":\\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36\\\"}\",{}]}]},\"$undefined\",\"$undefined\",true],\"initialSeedData\":[\"\",{\"children\":[\"(home)\",{\"children\":[\"__PAGE__\",{},[\"$L9\",\"$La\",null]]},[null,\"$Lb\",null]]},[null,\"$Lc\",null]],\"initialHead\":[false,\"$Ld\"],\"globalErrorComponent\":\"$e\",\"missingSlots\":\"$Wf\"}]]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"10:I[63595,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"11:I[26710,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"12:I[67077,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"13:I[68666,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"14:I[30440,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"15:I[65745,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"16:I[99036,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"17:I[9134,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"18:I[53874,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"19:I[20619,[],\"\"]\n1b:I[1294,[],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"1c:I[13349,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"7077\",\"static/chunks/7077-85608eebaf406da6.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"6387\",\"static/chunks/6387-98214fb1755574f1.js\",\"4396\",\"static/chunks/4396-2277bac3d03a255f.js\",\"3604\",\"static/chunks/3604-f2c487ca13f3b986.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"9057\",\"static/chunks/app/(home)/layout-f74bbeebbb856651.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"1d:I[22118,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"20:I[98677,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"21:I[84347,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"22:I[7477,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"ToastProvider\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"23:I[43016,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"24:I[58213,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"MainWrap\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"25:I[21066,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"26:I[37843,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"HidePGTitle\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"28:I[46010,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"6415\",\"static/chunks/6415-d6aea8ad25b5abb4.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"5422\",\"static/chunks/5422-817756a712bd3f9c.js\",\"5383\",\"static/chunks/5383-a9f20d6b0dc95795.js\",\"7601\",\"static/chunks/app/error-329a4bbd940228d3.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"29:I[19019,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"6415\",\"static/chunks/6415-d6aea8ad25b5abb4.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"5422\",\"static/chunks/5422-817756a712bd3f9c.js\",\"5383\",\"static/chunks/5383-a9f20d6b0dc95795.js\",\"9160\",\"static/chunks/app/not-found-5a0559cc42ce9b24.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"2a:I[4777,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"2b:I[40109,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"9247\",\"static/chunks/9247-2473c39166a1289d.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7915\",\"static/chunks/7915-ae158a5c80779e05.js\",\"3185\",\"static/chunks/app/layout-c9546648539e3250.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"2c:I[85150,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"7674\",\"static/chunks/ca377847-aa37866b5ba7e126.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"3544\",\"static/chunks/3544-40c25a25b432497d.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"5550\",\"static/chunks/5550-cd045f77bcb46f7a.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"701\",\"static/chunks/701-24953eea65d73ee6.js\",\"1120\",\"static/chunks/1120-3cd310f645e4fd35.js\",\"1029\",\"static/chunks/1029-2c1c4dd63b7f4132.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"3714\",\"static/chunks/3714-a617c2f7e4c391c1.js\",\"5608\",\"static/chunks/app/(home)/page-8f062bed499bcb0c.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"b:[\"$\",\"div\",null,{\"className\":\"mets01390_pcPage__Lpbde\",\"children\":[[\"$\",\"div\",null,{\"className\":\"mets01390_container__IcOpA\",\"children\":[[\"$\",\"$L10\",null,{}],[\"$\",\"$L11\",null,{}],[\"$\",\"div\",null,{\"className\":\"mets01390_leftContentArea__urjHN\",\"children\":[[\"$\",\"div\",null,{\"className\":\"mets01390_headerContent__08xyW\",\"children\":[[\"$\",\"h1\",null,{\"children\":[\"$\",\"$L12\",null,{\"href\":\"/\",\"children\":[\"$\",\"$L13\",null,{\"ombScrenId\":\"MMN-S00007\"}]}]}],[\"$\",\"$L14\",null,{\"active\":\"home\"}]]}],[\"$\",\"div\",null,{\"className\":\"mets01390_footerContent__0VV20\",\"children\":[[\"$\",\"$L15\",null,{}],[\"$\",\"$L16\",null,{\"optionsProp\":[{\"grpVal\":\"0\",\"label\":\"CJ주식회사\",\"value\":\"https://www.cj.net/\"},{\"grpVal\":\"1\",\"label\":\"CJ제일제당\",\"value\":\"https://www.cj.co.kr/kr/index\"},{\"grpVal\":\"1\",\"label\":\"CJ푸드빌\",\"value\":\"https://www.cjfoodville.co.kr/main.asp\"},{\"grpVal\":\"1\",\"label\":\"CJ프레시웨이\",\"value\":\"http://www.cjfreshway.com/index.jsp\"},{\"grpVal\":\"2\",\"label\":\"CJ제일제당 BIO사업부문\",\"value\":\"https://www.cj.co.kr/kr/aboutus/business/bio\"},{\"grpVal\":\"2\",\"label\":\"CJ Feed\u0026Care\",\"value\":\"https://www.cj.co.kr/kr/aboutus/business/cjfeedncare\"},{\"grpVal\":\"3\",\"label\":\"CJ대한통운\",\"value\":\"https://www.cjlogistics.com/ko/main\"},{\"grpVal\":\"3\",\"label\":\"CJ대한통운 건설부문\",\"value\":\"http://www.cjenc.co.kr/kr/Default.asp\"},{\"grpVal\":\"3\",\"label\":\"CJ올리브영\",\"value\":\"https://www.oliveyoung.co.kr/store/company/brandStory.do\"},{\"grpVal\":\"3\",\"label\":\"CJ올리브네트웍스\",\"value\":\"https://www.cjolivenetworks.co.kr/\"},{\"grpVal\":\"3\",\"label\":\"CJ ENM 커머스부문\",\"value\":\"http://company.cjonstyle.com/index.asp\"},{\"grpVal\":\"4\",\"label\":\"CJ ENM 엔터테인먼트부문\",\"value\":\"https://www.cjenm.com/ko/\"},{\"grpVal\":\"4\",\"label\":\"CJ CGV\",\"value\":\"http://corp.cgv.co.kr\"}],\"optGrp\":[{\"label\":\"CJ그룹\",\"value\":\"0\"},{\"label\":\"식품 \u0026 식품서비스\",\"value\":\"1\"},{\"label\":\"생명공학\",\"value\":\"2\"},{\"label\":\"물류 \u0026 신유통\",\"value\":\"3\"},{\"label\":\"엔터테인먼트 \u0026 미디어\",\"value\":\"4\"}]}]]}]]}],[\"$\",\"div\",null,{\"className\":\"mets01390_rightContentArea__gfYhZ\",\"children\":[[\"$\",\"$L17\",null,{}],[\"$\",\"div\",null,{\"className\":\"mets01390_qrcodeArea__9jn14\",\"children\":[[\"$\",\"div\",null,{\"className\":\"mets01390_textWrap__CbabT\",\"children\":[[\"$\",\"h2\",null,{\"className\":\"mets01390_qrTitle__YPwA6\",\"children\":[\"QR코드 찍고\",[\"$\",\"br\",null,{}],\"CGV 앱에서 자세히 보기\"]}],[\"$\",\"p\",null,{\"children\":\"QR코드를 스캔해보세요\"}]]}],[\"$\",\"div\",null,{\"className\":\"mets01390_imgWrap__FF2I7\",\"children\":[\"$\",\"$L18\",null,{\"value\":\"https://cgv.co.kr/met/webAppUsgGoid\",\"size\":68}]}]]}]]}],[\"$\",\"div\",null,{\"className\":\"mets01390_mainContentArea__GkUrT\",\"children\":[\"$\",\"$L19\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\",\"(home)\",\"children\"],\"loading\":\"$L1a\",\"loadingStyles\":[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/f5692389893e2d7f.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]],\"loadingScripts\":[],\"hasLoading\":true,\"error\":\"$undefined\",\"errorStyles\":\"$undefined\",\"errorScripts\":\"$undefined\",\"template\":[\"$\",\"$L1b\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":\"$undefined\",\"notFoundStyles\":\"$undefined\",\"styles\":[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/0384a69b673f44ac.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}],[\"$\",\"link\",\"1\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/f2a2bc8c6d97b4eb.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]]}]}]]}],[\"$\",\"$L1c\",null,{}]]}]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"1f:{\"name\":\"\",\"generalType\":\"\",\"zoneType\":\"\",\"cnt\":0}\n1e:{\"name\":\"\",\"seatLocNo\":\"\",\"status\":\"\",\"seatRowNm\":\"\",\"seatNo\":\"\",\"szoneKindCd\":\"\",\"szoneKindNm\":\"\",\"seatStusCd\":\"\",\"seatStusNm\":\"\",\"type\":\"$1f\",\"attachGroupNo\":\"\",\"statccClrval\":null,\"imageAtfileNo\":null,\"xcoordStartVal\":\"\",\"ycoordStartVal\":\"\",\"xcoordEndVal\":\"\",\"ycoordEndVal\":\"\",\"leftPwayYn\":\"\",\"rghtPwayYn\":\"\"}\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"c:[\"$\",\"html\",null,{\"lang\":\"ko\",\"children\":[[\"$\",\"head\",null,{\"children\":[\"$\",\"link\",null,{\"rel\":\"icon\",\"href\":\"/favicon.ico\"}]}],[\"$\",\"body\",null,{\"suppressHydrationWarning\":true,\"children\":[\"$\",\"$L1d\",null,{\"preloadedState\":{\"movieChartDetail\":{\"movDtlMain\":null,\"isMyReview\":false,\"chartData\":null,\"setReviewCount\":\"0\",\"blkYn\":null,\"myReview\":null,\"hdnAprvCnt\":0},\"chooseSeatMyself\":{\"seatArr\":[[{\"name\":\"\",\"seatLocNo\":\"\",\"status\":\"\",\"seatRowNm\":\"\",\"seatNo\":\"\",\"szoneKindCd\":\"\",\"szoneKindNm\":\"\",\"seatStusCd\":\"\",\"seatStusNm\":\"\",\"type\":{\"name\":\"\",\"generalType\":\"\",\"zoneType\":\"\",\"cnt\":0},\"attachGroupNo\":\"\",\"statccClrval\":null,\"imageAtfileNo\":null,\"xcoordStartVal\":\"\",\"ycoordStartVal\":\"\",\"xcoordEndVal\":\"\",\"ycoordEndVal\":\"\",\"leftPwayYn\":\"\",\"rghtPwayYn\":\"\"}]],\"initialSeatArr\":[[\"$1e\"]],\"chosenSeatArr\":[],\"chosenSeatIntoArr\":[],\"suggestSeat\":[],\"chosenSeatArrGroup\":[],\"seatColLength\":0,\"dblfrAdncSeatData\":null,\"seatInformationParams\":null,\"seatInfoParams\":{\"coCd\":\"\",\"siteNo\":\"\",\"scnYmd\":\"\",\"scnsNo\":\"\",\"scnSseq\":\"\",\"seatAreaNo\":\"\",\"cusgdCd\":\"\",\"custNo\":\"\"},\"screenSeatState\":null,\"isRcmSeat\":false,\"atktSuggestProdList\":null,\"selectedAtktSuggestProdList\":[],\"moviePay\":0,\"productPay\":0,\"totalPay\":0,\"seatTemp\":null},\"selectVisitorCnt\":{\"generalVisitorCnt\":0,\"youthVisitorCnt\":0,\"seniorVisitorCnt\":0,\"privilegeVisitorCnt\":0,\"allSeatCnt\":0,\"remainAllSeatCnt\":0,\"remainDisabledSeatCnt\":0,\"privateDisabledSeatCnt\":0,\"suiteboxDisabledSeatCnt\":0,\"lightDisabledSeatCnt\":0,\"isDisabledSameScreen\":false,\"seatTypeDisableSelection\":\"batch\"},\"cinemaSchedule\":{\"chosenSchedule\":\"\"},\"good\":{\"good\":{\"goodCategory\":\"\",\"goodNo\":0,\"goodMenu\":\"\",\"goodCate1\":\"\",\"goodImg\":\"\",\"goodNm\":\"\",\"goodDesc\":\"\",\"bestYn\":false,\"subYn\":false,\"recommend\":0,\"views\":0,\"regDate\":\"\"},\"carMmodalYn\":false,\"THTmodalYn\":false},\"giftShop\":{\"mainCategory\":\"\",\"dpctgGrpNo\":\"\",\"dpctgNo\":\"\",\"orderBy\":\"01\",\"cartProd\":null,\"custNo\":\"$undefined\",\"usingProdNo\":null},\"giftShopDetail\":{\"goodPrice\":0,\"goodVolume\":1,\"totalPrice\":0,\"chargePrice\":0,\"thtModalYn\":false,\"searchThtProdNo\":\"\",\"pchLmtQty\":10,\"salLmtQty\":10,\"maxAmt\":500000,\"maxQty\":10},\"givePresent\":{\"givePersons\":[],\"message\":\"\"},\"fastOrder\":{\"ltrPckupYn\":\"\",\"EssntOptn\":true,\"quantity\":1,\"currentLtrPckupYn\":\"\",\"price\":0,\"originPrc\":0,\"totalPrice\":0,\"hotdlPrice\":0,\"hotdlTotalPrice\":0,\"buketProd\":null,\"pchLmtQty\":20,\"salLmtQty\":20,\"fastordTop\":null,\"productOptnList\":{},\"selectOptn\":[],\"essntlNOptn\":{},\"essntlNOptnForPayment\":[],\"essntlNprice\":0,\"totalDcAmt\":0},\"comboResList\":{\"comboListParams\":{\"coCd\":\"A420\",\"siteNo\":\"\",\"siteNm\":\"\",\"lntd\":\"\",\"lttd\":\"\",\"custNo\":\"\",\"comboCategory\":\"01\"},\"comboMainCategory\":\"01\",\"comboCategory\":\"01\",\"comboResList\":[]},\"comboResDetail\":{\"comboDetailParams\":{\"coCd\":\"A420\",\"comboCategory\":\"\",\"custNo\":\"\",\"siteNo\":\"\",\"siteNm\":\"\",\"lntd\":\"\",\"lttd\":\"\",\"siteDt\":\"\"},\"comboDetail\":null,\"nutritionInfoModalActive\":false},\"cartFastOrder\":{\"cartFastOrderParams\":{},\"initCartFastOrderData\":null,\"cartFastOrderData\":null,\"cartFastOrderCount\":1,\"cartFastOrderSeletedData\":null,\"cartFastOrderIndex\":0,\"basicPayList\":[],\"cartFastOrderTotalPay\":0,\"productOptionModalActive\":false,\"productPhotoOptionModalActive\":false,\"initCartListFastOrderData\":null,\"cartListFastOrderData\":null,\"fastOrderBasicPayList\":[],\"fastOrderTotalDcprc\":0},\"cartGiftShop\":{\"cartGiftShopParams\":{},\"cartGiftShopData\":null,\"basicPayList\":[],\"cartGiftShopTotalPay\":0,\"nutritionInfoModalActive\":false,\"giftShopBasicPayList\":[],\"cartGiftShopSelectData\":null,\"giftShopTotalDcprc\":0},\"eventList\":{\"eventCategory\":\"\",\"eventCategoryIdx\":0,\"detailCategory\":\"\",\"scrollYn\":false,\"modalYn\":false,\"theaterType\":\"\",\"chooseCgv\":[]},\"mobileTicket\":{\"nowCategory\":\"전체\",\"nowTicket\":\"\",\"modalActive\":false,\"ticketNum\":0},\"commonAlert\":{\"modalAction\":{\"modalContents\":\"\",\"modalYn\":false}},\"commonGeoLocInfo\":{\"locInfo\":{\"lntd\":\"\",\"lttd\":\"\",\"isSucc\":false}},\"commonBodyScroll\":{\"stacks\":[]},\"movieChartSwrd\":{\"currentAtiveSwrd\":\"\"},\"movieChartTab\":{\"currentAtiveTab\":\"\"},\"specialCnm\":{\"specialCnmList\":[]},\"cnmModals\":{\"theaterGuideBottomModalParams\":{},\"theaterGuideBottomModal\":false,\"priceOfAdmissionModal\":false},\"theaterSelection\":{\"movieSiteInfo\":null,\"theaterSelectionBottomModalParams\":{\"coCd\":\"\",\"custNo\":\"\",\"lntd\":\"\",\"lttd\":\"\",\"srchKwrd\":\"\",\"defaultTabType\":\"region\",\"defaultRegionCode\":\"\",\"defaultSpecialComCode\":\"\",\"defaultSpecialComCodeVal\":\"\"},\"theaterSelectionBottomModal\":false,\"prferCgvLst\":null,\"headerSiteList\":null,\"selectedSiteList\":[],\"selectedSiteNo\":\"\"},\"seatMap\":{\"globalParams\":{\"coCd\":\"\",\"scnsNo\":\"\",\"scnSseq\":\"\",\"custNo\":\"\",\"isExternal\":false,\"salNo\":\"\",\"movNo\":\"\",\"siteNo\":\"\",\"movNm\":\"\",\"scnYmd\":\"\",\"scnsTm\":\"\",\"siteScnsNm\":\"\",\"atktRvseatBnduCount\":\"\",\"gnrlAtktQty\":\"\",\"teenAtktQty\":\"\",\"prodNo\":\"\",\"stoNo\":\"\",\"prodNm\":\"\"},\"MovPrcListParams\":{\"prodBnduCd\":null,\"bnduQty\":null,\"szoneKindCd\":null,\"stkndCd\":null},\"prodBnduList\":null,\"ticketMovieProducts\":{\"prodNo\":\"\",\"movNo\":\"\",\"movNm\":\"\",\"cpnTypCd\":\"\",\"nmbrCrtf\":null,\"bzplcNo\":\"\",\"cntCgvAempYn\":\"N\",\"cntCjAempYn\":\"N\",\"prdcmpTypCd\":\"\",\"prddtlTypCd\":\"\",\"movfNo\":\"\",\"rlsYmd\":null,\"scnNm\":\"\",\"scnYmd\":\"\",\"scnTm\":\"\",\"scnsNo\":\"\",\"scnSseq\":\"\",\"sachlTypCd\":\"\",\"prodBnduCd\":\"\",\"bnduQty\":\"\",\"szoneKindCd\":\"\",\"stkndCd\":\"\",\"amountTotal\":\"\",\"szoneExpDt\":\"\",\"szoneExpTm\":\"\",\"prcrulDivCd\":\"\",\"salsTznCd\":\"\",\"tcscnsGradCd\":\"\",\"sascnsGradCd\":\"\",\"movTirCd\":\"\",\"siteGradCd\":\"\",\"srvltKindCd\":\"\",\"rtctlScopCd\":\"\",\"movEtcAttrCd\":\"\",\"movkndCd\":\"\",\"videoAddexpCd\":\"\",\"hotdlYn\":\"\",\"hotdlDtlNo\":\"\",\"dblfrNo\":null,\"dblfrYn\":\"N\",\"cjAempYn\":\"N\",\"prdtypCd\":\"\",\"bzplcTypCd\":\"\",\"itgrScnsGradCd\":\"\",\"sellProductsList\":null,\"custNo\":null,\"sumSalAmt\":null,\"speclIndctTypCd\":null,\"vatincYn\":null},\"ticketProducts\":[],\"storeProducts\":null,\"ticketPrdList\":[],\"fstordOptnChoi\":null,\"seatInfoData\":null,\"atktScnSseqList\":[],\"atktRvseatBnduList\":[],\"beforeMoviegoers\":[],\"reservedSeatDataList\":[],\"visitors\":[],\"moviegoers\":[],\"seletedSeats\":[],\"totalVisitorCount\":0,\"sbord\":null,\"seatArea\":null,\"szone\":null,\"stknds\":null,\"salfrms\":null,\"seats\":null,\"sblcks\":null,\"szones\":null,\"chosenSeats\":[],\"chosenGroup\":[],\"movieSeatPayList\":[],\"prodList\":[],\"selectedProdList\":[],\"moviePay\":0,\"productPay\":0,\"seatPayList\":[],\"siteCautionMsg\":null,\"movAtktNo\":\"\",\"isSeatStanding\":false,\"isseatTempPrmp\":false,\"seatBucketProd\":null,\"movPrcInfo\":null,\"updateAddTotalPrice\":0,\"isInfoEmployees\":false,\"chosenPrivateSeats\":[],\"visitorCntChangeForbidden\":true},\"moviHotdldtl\":{\"selectArray\":0,\"movhdlDtlData\":null},\"imgVideoModal\":{\"imgVideoModalAction\":{\"modalYn\":false,\"startRow\":0,\"imgVideoLst\":[]}},\"proflBdclrModal\":{\"proflBdclrModalAction\":{\"modalYn\":false,\"proflBdclrInfo\":{\"fdUserNo\":\"\",\"dclrFdUserNo\":\"\",\"dclrFdUserNm\":\"\",\"proflUrl\":\"\"}}},\"fdBdclrModal\":{\"fdBdclrModalAction\":{\"modalYn\":false,\"fdBdclrInfo\":{\"fdNo\":\"\",\"fdCont\":\"\",\"dclrFdUserNm\":\"\",\"proflUrl\":\"\"}}},\"fdCtxtBdclrModal\":{\"fdCtxtBdclrModalAction\":{\"modalYn\":false,\"fdCtxtBdclrInfo\":{\"fdCtxtNo\":\"\",\"ctxtCont\":\"\",\"dclrFdUserNm\":\"\",\"proflUrl\":\"\"}}},\"fdUserProflInfo\":{\"proflInfo\":{\"custNo\":\"\",\"ncnm\":\"\",\"fdUserNo\":\"\",\"proflImgUrl\":\"\",\"iconImgUrl\":\"\",\"iconAlt\":\"\"}},\"actBanrTitle\":{\"banrTitle\":\"\"},\"ptplay\":{\"ptplayNoList\":[],\"ptplayPreviewImageList\":[]},\"nmbrCrtf\":{\"crtf\":null}},\"children\":[[\"$\",\"$L20\",null,{\"children\":[\" \",[\"$\",\"$L21\",null,{\"children\":[\"$\",\"$L22\",null,{\"children\":[\"$\",\"$L23\",null,{\"children\":[\"$\",\"$L24\",null,{\"children\":[\"$\",\"$L25\",null,{\"children\":[[\"$\",\"$L26\",null,{}],[\"$\",\"$L19\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\"],\"loading\":\"$L27\",\"loadingStyles\":[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/f5692389893e2d7f.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]],\"loadingScripts\":[],\"hasLoading\":true,\"error\":\"$28\",\"errorStyles\":[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/bdd6e373e09e91e8.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]],\"errorScripts\":[],\"template\":[\"$\",\"$L1b\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":[\"$\",\"$L29\",null,{}],\"notFoundStyles\":[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/bdd6e373e09e91e8.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]],\"styles\":[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"https://cdn.cgv.co.kr/cgvpomscontent/static/script/655e7acc/_next/static/css/ec53887ad1a0ccae.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]]}]]}]}]}]}]}]]}],[\"$\",\"$L2a\",null,{}],[\"$\",\"$L2b\",null,{}]]}]}]]}]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"a:[\"$\",\"$L2c\",null,{\"lang\":\"ko\",\"namespaces\":{\"common\":{\"name\":\"샘플 이름\"},\"mpy\":{\"hdCard\":\"현대카드\",\"hdCardMPoint\":\"현대카드 M포인트\",\"cardNumber\":\"카드번호\",\"expireDate\":\"유효기간\",\"cardNumberMsg\":\"카드번호를 입력해주세요\",\"password2\":\"비밀번호 앞 2자리\",\"MMYY\":\"MM/YY\",\"id\":\"아이디\",\"password\":\"비밀번호\",\"passwordMsg\":\"비밀번호를 입력해주세요\",\"6number\":\"6자리 입력\",\"birthday\":\"생년월일\",\"remainPoint\":\"보유 포인트\",\"hdCardMsg1\":\"2022년 3월 3일 06시부터 현대 M포인트 상시 6,000 포인트 사용 가능합니다.\",\"hdCardMsg2\":\"M포인트 사용 후 잔여금액은 해당 현대카드로 자동결제됩니다.(M포인트 사용과 관련한 안내사항은 ‘CGV할인정보 \u003e 신용카드 \u003e 현대카드M포인트’를 확인해주세요)\",\"discount\":\"할인\",\"product\":\"상품\",\"pay\":\"결제하기\",\"check\":\"조회하기\",\"confirm\":\"확인\",\"appliedPoint\":\"적용 포인트\",\"wooriCardWon\":\"우리WON 꿀머니\",\"pointToUse\":\"사용할 포인트 입력\",\"allUse\":\"모두 사용\",\"wooriCardMsg1\":\"우리WON꿀머니는 10포인트 단위로 사용 가능합니다.\",\"wooriCardMsg2\":\"매점 구매 상품에 대해서는 포인트 사용이 제한됩니다.\",\"wooriCardMsg3\":\"비밀번호는 우리WON꿀머니 APP 로그인 핀 번호 6자리 입력해주세요.\",\"wooriCardMsg4\":\"우리WON멤버스 점검시간동안 우리WON꿀머니 사용이 불가합니다. (매일 23:00 ~ 00:50)\",\"wooriCardMsg5\":\"우리WON멤버스 고객센터 (080-899-5000)\",\"totalAmount\":\"결제금액\",\"discountAmount\":\"할인금액\",\"gsPoint\":\"GS\u0026POINT\",\"gsPointMsg1\":\"입력하신 정보로 GS\u0026POINT의 인증절차가 진행됩니다.\",\"gsPointMsg2\":\"동의를 원하실 경우 조회/동의를 눌러주세요.\",\"gsPointMsg3\":\"3,000 포인트 이상 보유 시 사용 가능합니다.\",\"gsPointMsg4\":\"1매당 3,000 포인트 사용 가능합니다.\",\"gsPointMsg5\":\"현장에서 콤보 구매 시 1세트당 4,000 포인트 사용 가능합니다.\",\"sOilPoint\":\"S-OIL 포인트\",\"sOilPointMsg1\":\"보유포인트 한도 내 10포인트 단위로 전액 사용 가능합니다.\",\"sOilPointMsg2\":\"매점 구매 상품에 대해서는 포인트 사용이 제한됩니다.\",\"bookNLife\":\"도서상품권 북앤라이프 캐시\",\"bookNLifeID\":\"북앤라이프 아이디를 입력해주세요\",\"bookNLifeMsg1\":\"도서상품권 북앤라이프캐시는 10P 이상 사용 가능합니다.\",\"bookNLifeMsg2\":\"매점 구매 상품에 대해서는 포인트 사용이 제한됩니다.\",\"bookNLifeMsg3\":\"북앤라이프 탈퇴 후, 취소 환불 시 북앤라이프캐시 환급 불가합니다.\",\"bookNLifeMsg4\":\"북앤라이프캐시 계정 및 환불 관련 문의 안내\",\"bookNLifeMsg5\":\"1544-5111 (한국페이즈서비스)\",\"apply\":\"적용하기\",\"cultureCash\":\"문화상품권 컬쳐캐쉬\",\"cultureCashID\":\"컬쳐캐쉬 아이디를 입력해주세요\",\"cultureCashMsg1\":\"매점 구매 상품에 대해서는 포인트 사용이 제한됩니다.\"},\"home\":{}},\"config\":{\"locales\":[\"en\",\"ko\"],\"defaultLocale\":\"ko\",\"localeDetection\":false,\"pages\":{\"*\":[\"common\",\"mpy\"],\"/\":[\"home\"],\"/checkout\":[\"checkout\"]},\"locale\":\"ko\",\"loaderName\":\"server /page\",\"pathname\":\"/(home)/\"},\"children\":\"$L2d\"}]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"d:[[\"$\",\"meta\",\"0\",{\"name\":\"viewport\",\"content\":\"width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no\"}],[\"$\",\"meta\",\"1\",{\"charSet\":\"utf-8\"}],[\"$\",\"title\",\"2\",{\"children\":\"깊이 빠져 보다, CGV\"}],[\"$\",\"meta\",\"3\",{\"name\":\"description\",\"content\":\"Generated by create next app\"}],[\"$\",\"meta\",\"4\",{\"property\":\"og:title\",\"content\":\"깊이 빠져 보다, CGV\"}],[\"$\",\"meta\",\"5\",{\"property\":\"og:description\",\"content\":\"영화 그 이상의 다양한 몰입의 경험을 만듭니다. DEEP DIVE SPACE, CGV\"}],[\"$\",\"meta\",\"6\",{\"property\":\"og:url\",\"content\":\"https://www.cgv.co.kr/\"}],[\"$\",\"meta\",\"7\",{\"property\":\"og:locale\",\"content\":\"ko_KR\"}],[\"$\",\"meta\",\"8\",{\"property\":\"og:image\",\"content\":\"http://localhost:3000/opengraph.png\"}],[\"$\",\"meta\",\"9\",{\"property\":\"og:image:width\",\"content\":\"1600\"}],[\"$\",\"meta\",\"10\",{\"property\":\"og:image:height\",\"content\":\"1600\"}],[\"$\",\"meta\",\"11\",{\"property\":\"og:type\",\"content\":\"website\"}],[\"$\",\"meta\",\"12\",{\"name\":\"twitter:card\",\"content\":\"summary_large_image\"}],[\"$\",\"meta\",\"13\",{\"name\":\"twitter:title\",\"content\":\"깊이 빠져 보다, CGV\"}],[\"$\",\"meta\",\"14\",{\"name\":\"twitter:description\",\"content\":\"영화 그 이상의 다양한 몰입의 경험을 만듭니다. DEEP DIVE SPACE, CGV\"}],[\"$\",\"meta\",\"15\",{\"name\":\"twitter:image\",\"content\":\"http://localhost:3000/opengraph.png\"}],[\"$\",\"meta\",\"16\",{\"name\":\"twitter:image:width\",\"content\":\"1600\"}],[\"$\",\"meta\",\"17\",{\"name\":\"twitter:image:height\",\"content\":\"1600\"}],[\"$\",\"link\",\"18\",{\"rel\":\"icon\",\"href\":\"/favicon.ico\"}]]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"9:null\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"2e:I[58742,[\"2614\",\"static/chunks/app/(home)/loading-393532162cfb13de.js\"],\"\"]\n1a:[\"$\",\"$L2e\",null,{}]\n27:[\"$\",\"$L2e\",null,{}]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"2f:I[65058,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"7674\",\"static/chunks/ca377847-aa37866b5ba7e126.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"3544\",\"static/chunks/3544-40c25a25b432497d.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"5550\",\"static/chunks/5550-cd045f77bcb46f7a.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"701\",\"static/chunks/701-24953eea65d73ee6.js\",\"1120\",\"static/chunks/1120-3cd310f645e4fd35.js\",\"1029\",\"static/chunks/1029-2c1c4dd63b7f4132.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"3714\",\"static/chunks/3714-a617c2f7e4c391c1.js\",\"5608\",\"static/chunks/app/(home)/page-8f062bed499bcb0c.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"30:I[21597,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"7674\",\"static/chunks/ca377847-aa37866b5ba7e126.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"3544\",\"static/chunks/3544-40c25a25b432497d.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"5550\",\"static/chunks/5550-cd045f77bcb46f7a.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"701\",\"static/chunks/701-24953eea65d73ee6.js\",\"1120\",\"static/chunks/1120-3cd310f645e4fd35.js\",\"1029\",\"static/chunks/1029-2c1c4dd63b7f4132.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"3714\",\"static/chunks/3714-a617c2f7e4c391c1.js\",\"5608\",\"static/chunks/app/(home)/page-8f062bed499bcb0c.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"31:I[41698,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"7674\",\"static/chunks/ca377847-aa37866b5ba7e126.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"3544\",\"static/chunks/3544-40c25a25b432497d.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"5550\",\"static/chunks/5550-cd045f77bcb46f7a.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"701\",\"static/chunks/701-24953eea65d73ee6.js\",\"1120\",\"static/chunks/1120-3cd310f645e4fd35.js\",\"1029\",\"static/chunks/1029-2c1c4dd63b7f4132.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"3714\",\"static/chunks/3714-a617c2f7e4c391c1.js\",\"5608\",\"static/chunks/app/(home)/page-8f062bed499bcb0c.js\"],\"HydrationBoundary\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"32:I[87545,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"7674\",\"static/chunks/ca377847-aa37866b5ba7e126.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"3544\",\"static/chunks/3544-40c25a25b432497d.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"5550\",\"static/chunks/5550-cd045f77bcb46f7a.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"701\",\"static/chunks/701-24953eea65d73ee6.js\",\"1120\",\"static/chunks/1120-3cd310f645e4fd35.js\",\"1029\",\"static/chunks/1029-2c1c4dd63b7f4132.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"3714\",\"static/chunks/3714-a617c2f7e4c391c1.js\",\"5608\",\"static/chunks/app/(home)/page-8f062bed499bcb0c.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"33:I[14912,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"7674\",\"static/chunks/ca377847-aa37866b5ba7e126.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"3544\",\"static/chunks/3544-40c25a25b432497d.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"5550\",\"static/chunks/5550-cd045f77bcb46f7a.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"701\",\"static/chunks/701-24953eea65d73ee6.js\",\"1120\",\"static/chunks/1120-3cd310f645e4fd35.js\",\"1029\",\"static/chunks/1029-2c1c4dd63b7f4132.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"3714\",\"static/chunks/3714-a617c2f7e4c391c1.js\",\"5608\",\"static/chunks/app/(home)/page-8f062bed499bcb0c.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"34:I[59867,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"7674\",\"static/chunks/ca377847-aa37866b5ba7e126.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"3544\",\"static/chunks/3544-40c25a25b432497d.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"5550\",\"static/chunks/5550-cd045f77bcb46f7a.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"701\",\"static/chunks/701-24953eea65d73ee6.js\",\"1120\",\"static/chunks/1120-3cd310f645e4fd35.js\",\"1029\",\"static/chunks/1029-2c1c4dd63b7f4132.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"3714\",\"static/chunks/3714-a617c2f7e4c391c1.js\",\"5608\",\"static/chunks/app/(home)/page-8f062bed499bcb0c.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"35:I[65557,[\"1866\",\"static/chunks/e37a0b60-6433ce50218ced03.js\",\"8218\",\"static/chunks/aaea2bcf-a2546d1cebd288c0.js\",\"7674\",\"static/chunks/ca377847-aa37866b5ba7e126.js\",\"4271\",\"static/chunks/4271-fca72108a9374a27.js\",\"6656\",\"static/chunks/6656-ebf37beb3a720889.js\",\"1885\",\"static/chunks/1885-a7e5c19d033924f3.js\",\"8633\",\"static/chunks/8633-2f26ee5fab49c15d.js\",\"6962\",\"static/chunks/6962-114c2af815a312d3.js\",\"5564\",\"static/chunks/5564-6ba851e8fe1cc5f4.js\",\"6187\",\"static/chunks/6187-f0fcff49f4d7ac8a.js\",\"2488\",\"static/chunks/2488-025f8c48619dae23.js\",\"3544\",\"static/chunks/3544-40c25a25b432497d.js\",\"9058\",\"static/chunks/9058-e0f824aef3a21f5d.js\",\"8013\",\"static/chunks/8013-96b89f02823010f3.js\",\"3673\",\"static/chunks/3673-dfc01600016638a4.js\",\"8111\",\"static/chunks/8111-42d13e5458a1f856.js\",\"5550\",\"static/chunks/5550-cd045f77bcb46f7a.js\",\"3122\",\"static/chunks/3122-d4065905c60503c0.js\",\"1453\",\"static/chunks/1453-8feccb8ced971266.js\",\"6126\",\"static/chunks/6126-2bbbd224c947fbc6.js\",\"7816\",\"static/chunks/7816-ff45b22b3832019a.js\",\"4231\",\"static/chunks/4231-3991f43ba51dbcc1.js\",\"9033\",\"static/chunks/9033-e17f8b4133eea84f.js\",\"6318\",\"static/chunks/6318-3ee53d91d0c30711.js\",\"701\",\"static/chunks/701-24953eea65d73ee6.js\",\"1120\",\"static/chunks/1120-3cd310f645e4fd35.js\",\"1029\",\"static/chunks/1029-2c1c4dd63b7f4132.js\",\"2461\",\"static/chunks/2461-f153ae5667195a92.js\",\"5806\",\"static/chunks/5806-9d50fd4b5dcba113.js\",\"3714\",\"static/chunks/3714-a617c2f7e4c391c1.js\",\"5608\",\"static/chunks/app/(home)/page-8f062bed499bcb0c.js\"],\"\"]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,"2d:[\"$\",\"$L2f\",null,{\"children\":[[\"$\",\"div\",null,{\"className\":\"$undefined\",\"children\":[[\"$\",\"$L30\",null,{\"ticket\":true,\"alarm\":true,\"search\":true,\"mainPage\":true,\"custNo\":\"$undefined\"}],[\"$\",\"$L31\",null,{\"state\":{\"mutations\":[],\"queries\":[{\"state\":{\"data\":{\"statusCode\":0,\"statusMessage\":\"조회 되었습니다.\",\"data\":[{\"coCd\":\"A420\",\"screnDispNo\":\"167\",\"screnDispNm\":\"영화\",\"custNo\":null,\"dispSeq\":1,\"mediaFileNo\":\"202505036824000000\",\"cntsLodYn\":\"N\",\"lodPageUrl\":null,\"lodPageUrlInrYn\":\"N\",\"bkgrColorStartVal\":\"FFFFFF\",\"bkgrColorTendVal\":\"F4F4F4\",\"mediaDivCd\":\"01\",\"accbWordCont\":\"영화탭 아이콘\",\"physcFnm\":\"2f9227d098b04ca395c2fa2eea9839c7.png\",\"physcFilePathnm\":\"cgvpomscontent/ips/scren/2025/0503\"},{\"coCd\":\"A420\",\"screnDispNo\":\"169\",\"screnDispNm\":\"이벤트/혜택\",\"custNo\":null,\"dispSeq\":3,\"mediaFileNo\":\"202505038824000000\",\"cntsLodYn\":\"Y\",\"lodPageUrl\":null,\"lodPageUrlInrYn\":\"N\",\"bkgrColorStartVal\":\"FFFFFF\",\"bkgrColorTendVal\":\"F4F4F4\",\"mediaDivCd\":\"01\",\"accbWordCont\":\"이벤트/혜택 아이콘\",\"physcFnm\":\"7e58d7aa2661446f9eb9ad485e878d8b.png\",\"physcFilePathnm\":\"cgvpomscontent/ips/scren/2025/0503\"},{\"coCd\":\"A420\",\"screnDispNo\":\"170\",\"screnDispNm\":\"액티비티\",\"custNo\":null,\"dispSeq\":4,\"mediaFileNo\":\"202505039824000000\",\"cntsLodYn\":\"N\",\"lodPageUrl\":null,\"lodPageUrlInrYn\":\"N\",\"bkgrColorStartVal\":\"FFFFFF\",\"bkgrColorTendVal\":\"F4F4F4\",\"mediaDivCd\":\"01\",\"accbWordCont\":\"액티비티 아이콘\",\"physcFnm\":\"cae3c1c0cdb4449783b1fd1c311aece5.png\",\"physcFilePathnm\":\"cgvpomscontent/ips/scren/2025/0503\"}]},\"dataUpdateCount\":1,\"dataUpdatedAt\":1764727196607,\"error\":null,\"errorUpdateCount\":0,\"errorUpdatedAt\":0,\"fetchFailureCount\":0,\"fetchFailureReason\":null,\"fetchMeta\":null,\"isInvalidated\":false,\"status\":\"success\",\"fetchStatus\":\"idle\"},\"queryKey\":[\"mainScrDspMMN-S00009\"],\"queryHash\":\"[\\\"mainScrDspMMN-S00009\\\"]\"},{\"state\":{\"data\":{\"statusCode\":0,\"statusMessage\":\"조회 되었습니다.\",\"data\":{\"coCd\":\"A420\",\"screnDispUnitNo\":\"3\",\"screnDispUnitNm\":\"홈영화탭(기타)\",\"custNo\":null,\"bkgrClrval\":\"FFFFFF\",\"unitCpotRelNo\":6,\"screnDispCpotNo\":\"A0922\",\"titleUseYn\":\"N\",\"title\":null,\"mediaFileNo\":null,\"txtClrval\":null,\"lnkUseYn\":\"N\",\"cntsExpoQty\":5,\"expoFactrCont\":null,\"prty\":2,\"banrLnkTypCd\":null,\"evntNo\":null,\"movNo\":null,\"prodNo\":null,\"basLnkUrl\":null,\"basLnkInrMvYn\":\"N\",\"pcLnkIntlckYn\":\"N\",\"pcUrl\":null,\"pcInrMvYn\":\"N\",\"ntivAppIntlckYn\":\"N\",\"andrdUrl\":null,\"iphonUrl\":null,\"stuSstuDivCd\":\"A\",\"screnDispCpotTypCd\":\"09\",\"screnDispCpotCd\":\"22\",\"dspScrdispCpbanrList\":[{\"coCd\":\"A420\",\"unitCpotRelNo\":6,\"banrSeq\":\"8\",\"banrTitl\":\"[위키드:포굿] 마법같은 IMAX 이벤트\",\"imageHtmlDivCd\":\"1\",\"fixYn\":\"N\",\"wghtUseYn\":\"Y\",\"expoWghtVal\":100,\"flashMtnTypCd\":\"9\",\"lnkUseYn\":\"Y\",\"prty\":1,\"title\":null,\"subTitle\":null,\"butnNm\":null,\"cntsDtlCont\":null,\"bkgrColorStartVal\":\"FDF200\",\"bkgrColorTendVal\":\"BEF34C\",\"htmlTypCd\":\"1\",\"banrLnkTypCd\":\"01\",\"evntNo\":\"202511173911\",\"movNo\":null,\"prodNo\":null,\"basLnkUrl\":null,\"basLnkInrMvYn\":\"N\",\"pcLnkIntlckYn\":\"N\",\"pcUrl\":null,\"pcInrMvYn\":\"N\",\"ntivAppIntlckYn\":\"N\",\"andrdUrl\":null,\"iphonUrl\":null,\"mediaDivCd\":\"01\",\"accbWordCont\":\"위키드 이벤트\",\"physcFnm\":\"778de5d25d18446bac583f1e38a2e7fa.png\",\"physcFilePathnm\":\"cgvpomscontent/ips/unitCnts/2025/1117\"},{\"coCd\":\"A420\",\"unitCpotRelNo\":6,\"banrSeq\":\"6\",\"banrTitl\":\"컨세션사업팀_짱구는 못말려 26년 캘린더 MD\",\"imageHtmlDivCd\":\"1\",\"fixYn\":\"N\",\"wghtUseYn\":\"Y\",\"expoWghtVal\":1,\"flashMtnTypCd\":\"9\",\"lnkUseYn\":\"Y\",\"prty\":1,\"title\":null,\"subTitle\":null,\"butnNm\":null,\"cntsDtlCont\":null,\"bkgrColorStartVal\":\"FDF200\",\"bkgrColorTendVal\":\"BEF34C\",\"htmlTypCd\":\"1\",\"banrLnkTypCd\":\"01\",\"evntNo\":\"202511173812\",\"movNo\":null,\"prodNo\":null,\"basLnkUrl\":null,\"basLnkInrMvYn\":\"N\",\"pcLnkIntlckYn\":\"N\",\"pcUrl\":null,\"pcInrMvYn\":\"N\",\"ntivAppIntlckYn\":\"N\",\"andrdUrl\":null,\"iphonUrl\":null,\"mediaDivCd\":\"01\",\"accbWordCont\":\"짱구는 못말려 26년 캘린더 MD\",\"physcFnm\":\"98ab1d5a68ac456bb6c8983b3d5a9834.jpg\",\"physcFilePathnm\":\"cgvpomscontent/ips/unitCnts/2025/1124\"},{\"coCd\":\"A420\",\"unitCpotRelNo\":6,\"banrSeq\":\"4\",\"banrTitl\":\"운영팀_몬스타엑스 1주차 이벤트\",\"imageHtmlDivCd\":\"1\",\"fixYn\":\"N\",\"wghtUseYn\":\"Y\",\"expoWghtVal\":1,\"flashMtnTypCd\":\"9\",\"lnkUseYn\":\"Y\",\"prty\":1,\"title\":null,\"subTitle\":null,\"butnNm\":null,\"cntsDtlCont\":null,\"bkgrColorStartVal\":\"FDF200\",\"bkgrColorTendVal\":\"BEF34C\",\"htmlTypCd\":\"1\",\"banrLnkTypCd\":\"01\",\"evntNo\":\"202511184021\",\"movNo\":null,\"prodNo\":null,\"basLnkUrl\":null,\"basLnkInrMvYn\":\"N\",\"pcLnkIntlckYn\":\"N\",\"pcUrl\":null,\"pcInrMvYn\":\"N\",\"ntivAppIntlckYn\":\"N\",\"andrdUrl\":null,\"iphonUrl\":null,\"mediaDivCd\":\"01\",\"accbWordCont\":\"몬스타엑스 1주차 이벤트\",\"physcFnm\":\"373d0a8708804610835f7c84abd31f01.jpg\",\"physcFilePathnm\":\"cgvpomscontent/ips/unitCnts/2025/1201\"},{\"coCd\":\"A420\",\"unitCpotRelNo\":6,\"banrSeq\":\"5\",\"banrTitl\":\"컨세션사업팀_씨네드쉐프 센텀 재즈\u0026다이닝\",\"imageHtmlDivCd\":\"1\",\"fixYn\":\"N\",\"wghtUseYn\":\"Y\",\"expoWghtVal\":1,\"flashMtnTypCd\":\"9\",\"lnkUseYn\":\"Y\",\"prty\":1,\"title\":null,\"subTitle\":null,\"butnNm\":null,\"cntsDtlCont\":null,\"bkgrColorStartVal\":\"FDF200\",\"bkgrColorTendVal\":\"BEF34C\",\"htmlTypCd\":\"1\",\"banrLnkTypCd\":\"01\",\"evntNo\":\"202511283946\",\"movNo\":null,\"prodNo\":null,\"basLnkUrl\":null,\"basLnkInrMvYn\":\"N\",\"pcLnkIntlckYn\":\"N\",\"pcUrl\":null,\"pcInrMvYn\":\"N\",\"ntivAppIntlckYn\":\"N\",\"andrdUrl\":null,\"iphonUrl\":null,\"mediaDivCd\":\"01\",\"accbWordCont\":\"씨네드쉐프 센텀 재즈\u0026다이닝\",\"physcFnm\":\"4660b6700f1e4849afec392e22f63be5.jpg\",\"physcFilePathnm\":\"cgvpomscontent/ips/unitCnts/2025/1201\"}],\"dspScrdispBkgrTpcExtnlAd\":{\"unitCpotRelNo\":12,\"tabExpoNm\":\"메인팝업 외부광고\",\"mblAppAdUrl\":\"https://ad.cgv.co.kr/NetInsight/text/CGV/CGV_2025/Mobile@CGV_App_Popup\",\"mblWebAdUrl\":\"https://ad.cgv.co.kr/NetInsight/text/CGV/CGV_2025/Mobile@CGV_Web_Popup\",\"pcWebAdUrl\":\"https://ad.cgv.co.kr/NetInsight/text/CGV/CGV_2025/Mobile@CGV_Web_Popup\"}}},\"dataUpdateCount\":1,\"dataUpdatedAt\":1764727196621,\"error\":null,\"errorUpdateCount\":0,\"errorUpdatedAt\":0,\"fetchFailureCount\":0,\"fetchFailureReason\":null,\"fetchMeta\":null,\"isInvalidated\":false,\"status\":\"success\",\"fetchStatus\":\"idle\"},\"queryKey\":[\"mainPopupMMN-S00009\"],\"queryHash\":\"[\\\"mainPopupMMN-S00009\\\"]\"}]},\"children\":[\"$\",\"$L32\",null,{\"custNo\":\"$undefined\",\"scrDspLstParams\":{\"coCd\":\"A420\",\"ombScrenId\":\"MMN-S00009\",\"custNo\":\"\"}}]}]]}],[\"$\",\"$L33\",null,{}],[\"$\",\"$L34\",null,{}],[\"$\",\"$L35\",null,{}]]}]\n"])
+    </script>
+    <script>
+        self.__next_f.push([1,""])
+    </script>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" integrity="sha384-DKYJZ8NLiK8MN4/C5P2dtSmLQ4KwPaoqAfyA/DfmEc1VDxu4yyC7wy6K1Hs90nka" crossorigin="anonymous" async=""></script>
+    <next-route-announcer style="position: absolute;">
+        <template shadowrootmode="open">
+            <div aria-live="assertive" id="__next-route-announcer__" role="alert" style="position: absolute; border: 0px; height: 1px; margin: -1px; padding: 0px; width: 1px; clip: rect(0px, 0px, 0px, 0px); overflow: hidden; white-space: nowrap; overflow-wrap: normal;"></div>
+        </template>
+    </next-route-announcer>
+</body>
+
+</html>
