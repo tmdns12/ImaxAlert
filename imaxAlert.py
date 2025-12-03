@@ -318,6 +318,19 @@ def scrape_imax_shows(driver):
         return []
 
 
+def get_all_available_dates(driver):
+    """예매 가능한 모든 날짜 버튼 가져오기"""
+    try:
+        date_buttons = driver.find_elements(
+            By.CSS_SELECTOR,
+            ".dayScroll_scrollItem__IZ35T:not(.dayScroll_disabled__t8HIQ)"
+        )
+        return date_buttons
+    except Exception as e:
+        print(f"날짜 버튼 찾기 실패: {e}")
+        return []
+
+
 def main():
     driver = init_driver()
     driver.get("https://cgv.co.kr/cnm/movieBook/cinema")
@@ -332,7 +345,32 @@ def main():
     click_imax_filter(driver)
     time.sleep(2)
 
-    shows = scrape_imax_shows(driver)
+    # 모든 예매 가능한 날짜 가져오기
+    date_buttons = get_all_available_dates(driver)
+    print(f"예매 가능한 날짜 수: {len(date_buttons)}개")
+    
+    all_shows = []
+    
+    # 각 날짜를 순회하며 상영 정보 수집
+    for idx, date_btn in enumerate(date_buttons):
+        try:
+            # 날짜 버튼 클릭
+            driver.execute_script("arguments[0].scrollIntoView(true);", date_btn)
+            time.sleep(0.5)
+            date_btn.click()
+            time.sleep(2)
+            
+            # 해당 날짜의 상영 정보 수집
+            shows = scrape_imax_shows(driver)
+            all_shows.extend(shows)
+            
+            print(f"날짜 {idx+1}/{len(date_buttons)} 체크 완료")
+            
+        except Exception as e:
+            print(f"날짜 {idx+1} 처리 중 오류: {e}")
+            continue
+    
+    shows = all_shows
 
     # 이전 상태 로드
     previous_state = load_previous_state()
