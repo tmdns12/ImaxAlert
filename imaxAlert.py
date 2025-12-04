@@ -241,19 +241,20 @@ def get_all_date_info(driver):
     """모든 날짜의 활성화 상태 가져오기"""
     try:
         all_dates = []
-        date_items = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_scrollItem__IZ35T")
+        # button 요소를 직접 찾기
+        date_buttons = driver.find_elements(By.CSS_SELECTOR, "button.dayScroll_scrollItem__IZ35T")
         
-        for item in date_items:
+        for btn in date_buttons:
             try:
-                is_disabled = "dayScroll_disabled__t8HIQ" in item.get_attribute("class")
-                day_txt = item.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text
-                day_num = item.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text
+                is_disabled = "dayScroll_disabled__t8HIQ" in btn.get_attribute("class")
+                day_txt = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text
+                day_num = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text
                 date_key = f"{day_txt} {day_num}"
                 
                 all_dates.append({
                     'date': date_key,
                     'enabled': not is_disabled,
-                    'button': item if not is_disabled else None
+                    'button': btn if not is_disabled else None
                 })
             except Exception as e:
                 print(f"날짜 파싱 중 오류: {e}")
@@ -307,17 +308,38 @@ def main():
     enabled_dates = [d for d in all_date_info if d['enabled'] and d['button']]
     
     print(f"활성화된 날짜 {len(enabled_dates)}개 체크 중...")
-    for date_info in enabled_dates:
-        try:
-            driver.execute_script("arguments[0].scrollIntoView(true);", date_info['button'])
-            time.sleep(0.5)
-            date_info['button'].click()
-            time.sleep(2)
-            shows = scrape_imax_shows(driver)
-            all_movies_current.extend(shows)
-            print(f"날짜 '{date_info['date']}' 체크 완료: {len(shows)}개 영화")
-        except Exception as e:
-            print(f"날짜 '{date_info['date']}' 처리 중 오류: {e}")
+    for idx, date_info in enumerate(enabled_dates):
+        max_retries = 3
+        success = False
+        
+        for retry in range(max_retries):
+            try:
+                # 요소가 클릭 가능할 때까지 대기
+                WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable(date_info['button'])
+                )
+                
+                # JavaScript로 직접 클릭 (더 안정적)
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", date_info['button'])
+                time.sleep(1)
+                driver.execute_script("arguments[0].click();", date_info['button'])
+                time.sleep(2)
+                
+                shows = scrape_imax_shows(driver)
+                all_movies_current.extend(shows)
+                print(f"날짜 '{date_info['date']}' 체크 완료: {len(shows)}개 영화")
+                success = True
+                break
+                
+            except Exception as e:
+                if retry < max_retries - 1:
+                    print(f"날짜 '{date_info['date']}' 재시도 {retry+1}/{max_retries-1}")
+                    time.sleep(1)
+                else:
+                    print(f"날짜 '{date_info['date']}' 처리 실패 (최종): {e}")
+        
+        if not success:
+            print(f"⚠️ 날짜 '{date_info['date']}' 건너뜀")
             continue
     
     # 첫 실행인 경우 알림 없이 상태만 저장
