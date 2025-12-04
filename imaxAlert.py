@@ -184,12 +184,24 @@ def scrape_imax_shows(driver):
         movie_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
 
         movies_data = []
-        for container in movie_containers:
+        for idx, container in enumerate(movie_containers):
             try:
                 # h2 안에서 영화 제목 가져오기 (title2 클래스)
                 movie_title = container.find_element(
                     By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2"
                 ).text.strip()
+                
+                # 아코디언 버튼 찾기
+                accordion_btn = container.find_element(
+                    By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
+                )
+                
+                # 아코디언이 접혀있으면 펼치기
+                is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
+                if not is_expanded:
+                    driver.execute_script("arguments[0].click();", accordion_btn)
+                    time.sleep(1)
+                    print(f"  아코디언 펼침: {movie_title}")
                 
                 # h3에서 IMAX관 정보 가져오기
                 imax_theater_full = container.find_element(
@@ -199,10 +211,9 @@ def scrape_imax_shows(driver):
                 if "IMAX" not in imax_theater_full.upper():
                     continue
                 
-                # IMAX관 정보에서 괄호 안 내용 추출 (예: "IMAX관 IMAX LASER 2D / 자막" -> "IMAX LASER 2D, 자막")
+                # IMAX관 정보에서 괄호 안 내용 추출
                 imax_info_parts = imax_theater_full.replace("IMAX관", "").strip()
                 if imax_info_parts:
-                    # "IMAX LASER 2D / 자막" -> "IMAX LASER 2D, 자막"
                     imax_info_parts = imax_info_parts.replace(" / ", ", ")
                 
                 # 시간 리스트 가져오기
@@ -226,6 +237,7 @@ def scrape_imax_shows(driver):
                         'theater_info': imax_info_parts,
                         'times': show_times
                     })
+                    print(f"  수집: {movie_title} - {len(show_times)}개 상영")
             except Exception as e:
                 print(f"영화 정보 파싱 중 오류: {e}")
                 continue
