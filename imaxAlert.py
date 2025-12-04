@@ -114,38 +114,50 @@ def select_yeongdeungpo(driver):
 
 def click_imax_filter(driver):
     try:
-        # 1) “극장 속성” 버튼 열기 (라벨이 ‘전체’일 때)
+        # 1) "극장 속성" 버튼 찾기
         filter_btn = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((
+            EC.presence_of_element_located((
                 By.XPATH,
                 "//div[contains(@class,'cnms01510_movieTitleWrap__69alk')]"
-                "//button[contains(@class,'cnms01510_btn__dV0W6') and .//span[text()='전체']]"
+                "//button[contains(@class,'cnms01510_btn__dV0W6')]"
             ))
         )
-        driver.execute_script("arguments[0].scrollIntoView(true);", filter_btn)
-        filter_btn.click()
+        
+        # 이미 '아이맥스'가 선택되어 있는지 확인
+        current_label = filter_btn.find_element(By.TAG_NAME, "span").text
+        if current_label == "아이맥스":
+            print("IMAX 필터 이미 적용됨")
+            return
+        
+        # JavaScript로 버튼 클릭 (가림 문제 해결)
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", filter_btn)
+        time.sleep(1)
+        driver.execute_script("arguments[0].click();", filter_btn)
+        time.sleep(1)
 
-        # 2) 모달 내부 ‘아이맥스’ 버튼 클릭
+        # 2) 모달 내부 '아이맥스' 버튼 클릭
         imax_btn = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((
+            EC.presence_of_element_located((
                 By.XPATH,
                 "//section[contains(@class,'bot-modal-container')]"
                 "//button[normalize-space(text())='아이맥스']"
             ))
         )
-        imax_btn.click()
+        driver.execute_script("arguments[0].click();", imax_btn)
+        time.sleep(0.5)
 
-        # 3) 모달 하단 ‘확인’ 버튼 클릭
+        # 3) 모달 하단 '확인' 버튼 클릭
         confirm_btn = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((
+            EC.presence_of_element_located((
                 By.XPATH,
                 "//section[contains(@class,'bot-modal-container')]"
                 "//button[contains(@class,'btn') and contains(text(),'확인')]"
             ))
         )
-        confirm_btn.click()
+        driver.execute_script("arguments[0].click();", confirm_btn)
+        time.sleep(1)
 
-        # 4) 필터 버튼 라벨이 ‘아이맥스’로 바뀌었는지 확인
+        # 4) 필터 버튼 라벨이 '아이맥스'로 바뀌었는지 확인
         WebDriverWait(driver, 10).until(
             EC.text_to_be_present_in_element(
                 (
@@ -158,7 +170,7 @@ def click_imax_filter(driver):
         )
         print("IMAX 필터 적용 완료")
     except Exception as e:
-        print("IMAX 필터 적용 실패:", e)
+        print(f"IMAX 필터 적용 실패: {e}")
 
 
 def get_selected_date(driver):
