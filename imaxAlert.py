@@ -11,14 +11,9 @@ import json
 import os
 from datetime import datetime
 
-# ChromeDriver 경로 (로컬/서버 자동 감지)
-CHROMEDRIVER_PATH = os.getenv("CHROMEDRIVER_PATH", r"C:\Users\24011\Downloads\chromedriver-win64\chromedriver.exe")
-
-# 텔레그램 설정 (환경변수 우선, 없으면 기본값)
+CHROMEDRIVER_PATH = r"C:\Users\24011\Downloads\chromedriver-win64\chromedriver.exe"
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "8445210236:AAEmUtaJ4vGlbBlUKaS8wBVC0XCZyJMlUrs")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "7980674556")
-
-# 상태 저장 파일 경로
 STATE_FILE = "imax_state.json"
 
 
@@ -32,7 +27,6 @@ def send_telegram_message(text):
 
 
 def load_previous_state():
-    """이전 상태를 파일에서 로드"""
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, 'r', encoding='utf-8') as f:
@@ -44,7 +38,6 @@ def load_previous_state():
 
 
 def save_current_state(date_states, movie_states):
-    """현재 상태를 파일에 저장 (날짜 활성화 상태 + 영화 정보)"""
     try:
         state = {
             'dates': date_states,
@@ -57,30 +50,22 @@ def save_current_state(date_states, movie_states):
         print(f"상태 파일 저장 실패: {e}")
 
 
-
-
 def init_driver():
     chrome_options = Options()
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     
-    # 서버 환경 (GitHub Actions, Render 등)에서는 headless 모드 사용
-    if os.getenv("GITHUB_ACTIONS") or os.getenv("RENDER"):
+    if os.getenv("RENDER"):
         chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disable-software-rasterizer")
-        chrome_options.add_argument("--disable-extensions")
-        # Render 환경에서는 시스템 ChromeDriver 사용
         driver = webdriver.Chrome(options=chrome_options)
     else:
-        # 로컬 환경
         chrome_options.add_argument("--start-maximized")
         if os.path.exists(CHROMEDRIVER_PATH):
             service = Service(CHROMEDRIVER_PATH)
             driver = webdriver.Chrome(service=service, options=chrome_options)
         else:
-            # ChromeDriver 없으면 자동 설치
             service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
     
@@ -114,57 +99,44 @@ def select_yeongdeungpo(driver):
 
 def click_imax_filter(driver):
     try:
-        # 1) "극장 속성" 버튼 찾기
         filter_btn = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((
                 By.XPATH,
-                "//div[contains(@class,'cnms01510_movieTitleWrap__69alk')]"
-                "//button[contains(@class,'cnms01510_btn__dV0W6')]"
+                "//div[contains(@class,'cnms01510_movieTitleWrap__69alk')]//button"
             ))
         )
         
-        # 이미 '아이맥스'가 선택되어 있는지 확인
         current_label = filter_btn.find_element(By.TAG_NAME, "span").text
         if current_label == "아이맥스":
             print("IMAX 필터 이미 적용됨")
             return
         
-        # JavaScript로 버튼 클릭 (가림 문제 해결)
-        driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", filter_btn)
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", filter_btn)
         time.sleep(1)
         driver.execute_script("arguments[0].click();", filter_btn)
         time.sleep(1)
 
-        # 2) 모달 내부 '아이맥스' 버튼 클릭
         imax_btn = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((
                 By.XPATH,
-                "//section[contains(@class,'bot-modal-container')]"
-                "//button[normalize-space(text())='아이맥스']"
+                "//section[contains(@class,'bot-modal-container')]//button[text()='아이맥스']"
             ))
         )
         driver.execute_script("arguments[0].click();", imax_btn)
         time.sleep(0.5)
 
-        # 3) 모달 하단 '확인' 버튼 클릭
         confirm_btn = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((
                 By.XPATH,
-                "//section[contains(@class,'bot-modal-container')]"
-                "//button[contains(@class,'btn') and contains(text(),'확인')]"
+                "//section[contains(@class,'bot-modal-container')]//button[contains(text(),'확인')]"
             ))
         )
         driver.execute_script("arguments[0].click();", confirm_btn)
         time.sleep(1)
 
-        # 4) 필터 버튼 라벨이 '아이맥스'로 바뀌었는지 확인
         WebDriverWait(driver, 10).until(
             EC.text_to_be_present_in_element(
-                (
-                    By.XPATH,
-                    "//div[contains(@class,'cnms01510_movieTitleWrap__69alk')]"
-                    "//button[contains(@class,'cnms01510_btn__dV0W6')]//span"
-                ),
+                (By.XPATH, "//div[contains(@class,'cnms01510_movieTitleWrap__69alk')]//button//span"),
                 "아이맥스"
             )
         )
@@ -196,26 +168,21 @@ def scrape_imax_shows(driver):
         movie_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
 
         movies_data = []
-        for idx, container in enumerate(movie_containers):
+        for container in movie_containers:
             try:
-                # h2 안에서 영화 제목 가져오기 (title2 클래스)
                 movie_title = container.find_element(
                     By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2"
                 ).text.strip()
                 
-                # 아코디언 버튼 찾기
                 accordion_btn = container.find_element(
                     By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
                 )
                 
-                # 아코디언이 접혀있으면 펼치기
                 is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
                 if not is_expanded:
                     driver.execute_script("arguments[0].click();", accordion_btn)
                     time.sleep(1)
-                    print(f"  아코디언 펼침: {movie_title}")
                 
-                # h3에서 IMAX관 정보 가져오기
                 imax_theater_full = container.find_element(
                     By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT h3.screenInfo_title__Eso6_"
                 ).text.strip()
@@ -223,12 +190,8 @@ def scrape_imax_shows(driver):
                 if "IMAX" not in imax_theater_full.upper():
                     continue
                 
-                # IMAX관 정보에서 괄호 안 내용 추출
-                imax_info_parts = imax_theater_full.replace("IMAX관", "").strip()
-                if imax_info_parts:
-                    imax_info_parts = imax_info_parts.replace(" / ", ", ")
+                imax_info_parts = imax_theater_full.replace("IMAX관", "").strip().replace(" / ", ", ")
                 
-                # 시간 리스트 가져오기
                 time_items = container.find_elements(
                     By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
                 )
@@ -236,47 +199,18 @@ def scrape_imax_shows(driver):
                 show_times = []
                 for item in time_items:
                     try:
-                        # 버튼 요소 찾기
-                        btn = item.find_element(By.CSS_SELECTOR, "button.screenInfo_timeLink__45VfR")
-                        
                         start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
                         end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
                         
-                        # 버튼 비활성화 상태 확인
-                        is_disabled = btn.get_attribute("aria-disabled") == "true"
-                        has_disabled_class = "screenInfo_disabled__g9wii" in btn.get_attribute("class")
-                        
-                        # 좌석 정보 가져오기 시도
-                        seat_info = None
                         try:
                             status_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_status__lT4zd")
-                            # c-blue (잔여 좌석)가 있는지 확인
-                            try:
-                                seat = status_elem.find_element(By.CSS_SELECTOR, ".c-blue").text
-                                total = status_elem.find_element(By.CSS_SELECTOR, ".screenInfo_seat__NLZUL").text
-                                seat_info = f"{seat}{total}"
-                            except:
-                                # c-blue가 없으면 전체 텍스트 가져오기
-                                status_text = status_elem.text.strip()
-                                if status_text:
-                                    seat_info = status_text
+                            seat_info = status_elem.text.strip() or "-"
                         except:
-                            pass
-                        
-                        # 최종 좌석 정보 결정
-                        if is_disabled or has_disabled_class:
-                            # 비활성화 상태 (시간대만 오픈, 좌석 미오픈)
-                            if seat_info:
-                                seat_info = f"{seat_info} (비활성)"
-                            else:
-                                seat_info = "좌석미오픈"
-                        elif not seat_info:
-                            # 활성화 상태인데 좌석 정보 없음
-                            seat_info = "정보없음"
+                            seat_info = "-"
                         
                         show_times.append(f"{start} ~ {end} | {seat_info}")
                     except Exception as e:
-                        print(f"    상영시간 파싱 오류: {e}")
+                        print(f"상영시간 파싱 오류: {e}")
                         continue
                 
                 if show_times:
@@ -299,10 +233,8 @@ def scrape_imax_shows(driver):
 
 
 def get_all_date_info(driver):
-    """모든 날짜의 활성화 상태 가져오기"""
     try:
         all_dates = []
-        # button 요소를 직접 찾기
         date_buttons = driver.find_elements(By.CSS_SELECTOR, "button.dayScroll_scrollItem__IZ35T")
         
         for btn in date_buttons:
@@ -341,14 +273,11 @@ def main():
     click_imax_filter(driver)
     time.sleep(2)
 
-    # 모든 날짜 정보 가져오기 (활성화 여부 포함)
     all_date_info = get_all_date_info(driver)
     print(f"전체 날짜 수: {len(all_date_info)}개")
     
-    # 이전 상태 로드
     previous_state = load_previous_state()
     
-    # 이전에 비활성화였던 날짜 중 새로 활성화된 날짜 찾기
     newly_enabled_dates = []
     current_date_states = {}
     
@@ -357,91 +286,59 @@ def main():
         is_enabled = date_info['enabled']
         current_date_states[date_key] = is_enabled
         
-        # 이전 상태가 있고, 이전에는 비활성화였는데 지금 활성화된 경우
         if previous_state and 'dates' in previous_state:
             prev_enabled = previous_state['dates'].get(date_key, False)
             if not prev_enabled and is_enabled:
                 newly_enabled_dates.append(date_info)
-                print(f"🆕 새로 열린 날짜 발견: {date_key}")
+                print(f"새로 열린 날짜: {date_key}")
     
-    # 모든 활성화된 날짜의 상영 정보 수집
     all_movies_current = []
     enabled_dates = [d for d in all_date_info if d['enabled'] and d['button']]
     
     print(f"활성화된 날짜 {len(enabled_dates)}개 체크 중...")
-    for idx, date_info in enumerate(enabled_dates):
-        max_retries = 3
-        success = False
-        
-        for retry in range(max_retries):
-            try:
-                # 요소가 클릭 가능할 때까지 대기
-                WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable(date_info['button'])
-                )
-                
-                # JavaScript로 직접 클릭 (더 안정적)
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", date_info['button'])
-                time.sleep(1)
-                driver.execute_script("arguments[0].click();", date_info['button'])
-                time.sleep(2)
-                
-                shows = scrape_imax_shows(driver)
-                all_movies_current.extend(shows)
-                print(f"날짜 '{date_info['date']}' 체크 완료: {len(shows)}개 영화")
-                success = True
-                break
-                
-            except Exception as e:
-                if retry < max_retries - 1:
-                    print(f"날짜 '{date_info['date']}' 재시도 {retry+1}/{max_retries-1}")
-                    time.sleep(1)
-                else:
-                    print(f"날짜 '{date_info['date']}' 처리 실패 (최종): {e}")
-        
-        if not success:
-            print(f"⚠️ 날짜 '{date_info['date']}' 건너뜀")
+    for date_info in enabled_dates:
+        try:
+            WebDriverWait(driver, 10).until(EC.element_to_be_clickable(date_info['button']))
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", date_info['button'])
+            time.sleep(1)
+            driver.execute_script("arguments[0].click();", date_info['button'])
+            time.sleep(2)
+            
+            shows = scrape_imax_shows(driver)
+            all_movies_current.extend(shows)
+            print(f"날짜 '{date_info['date']}' 체크 완료: {len(shows)}개 영화")
+        except Exception as e:
+            print(f"날짜 '{date_info['date']}' 처리 실패: {e}")
             continue
     
-    # 첫 실행인 경우 알림 없이 상태만 저장
     if not previous_state:
-        print("첫 실행: 현재 상태를 저장합니다 (알림 없음)")
+        print("첫 실행: 상태 저장 (알림 없음)")
         save_current_state(current_date_states, all_movies_current)
-        print("초기 상태 저장 완료")
         driver.quit()
         return
     
-    # 변화 감지
-    new_date_movies = []  # 새로 열린 날짜의 영화들
-    new_showtimes = []    # 기존 날짜의 새 상영시간들
+    new_date_movies = []
+    new_showtimes = []
     
     if newly_enabled_dates:
-        # 새로 열린 날짜의 영화만 추출
         newly_enabled_date_keys = [d['date'] for d in newly_enabled_dates]
         for movie in all_movies_current:
             if movie['date'] in newly_enabled_date_keys:
                 new_date_movies.append(movie)
     
-    # 기존 날짜의 새 상영시간 체크
     if previous_state and 'movies' in previous_state:
-        prev_movies = previous_state['movies']
-        
-        # 이전 상영 정보를 딕셔너리로 변환 (날짜+영화 키)
         prev_movie_times = {}
-        for movie in prev_movies:
+        for movie in previous_state['movies']:
             key = f"{movie['date']}|{movie['title']}|{movie.get('theater_info', '')}"
             prev_movie_times[key] = set(movie.get('times', []))
         
-        # 현재 상영 정보와 비교
         for movie in all_movies_current:
             key = f"{movie['date']}|{movie['title']}|{movie.get('theater_info', '')}"
             current_times = set(movie.get('times', []))
             
             if key in prev_movie_times:
-                # 기존 영화의 새 상영시간 확인
                 new_times = current_times - prev_movie_times[key]
                 if new_times and movie['date'] not in [d['date'] for d in newly_enabled_dates]:
-                    # 새로 열린 날짜가 아닌 경우에만 (중복 방지)
                     new_showtimes.append({
                         'date': movie['date'],
                         'title': movie['title'],
@@ -449,11 +346,9 @@ def main():
                         'new_times': list(new_times)
                     })
     
-    # 알림 전송
     has_updates = False
     msg_parts = []
     
-    # 1. 새로 열린 날짜 알림
     if new_date_movies:
         has_updates = True
         msg_parts.append("🔔 새로운 예매 날짜가 열렸습니다!\n")
@@ -476,7 +371,6 @@ def main():
                     msg_parts.append(f"  {time_info}")
             msg_parts.append("")
     
-    # 2. 새로운 상영시간 알림 (예매대기 → 좌석 오픈 포함)
     if new_showtimes:
         has_updates = True
         if msg_parts:
@@ -490,11 +384,7 @@ def main():
             else:
                 msg_parts.append(item['title'])
             for time_info in item['new_times']:
-                # 예매대기에서 좌석 오픈으로 바뀐 경우 강조
-                if "예매대기" not in time_info and any("예매대기" in str(t) for t in item.get('old_times', [])):
-                    msg_parts.append(f"  🎫 {time_info}")
-                else:
-                    msg_parts.append(f"  {time_info}")
+                msg_parts.append(f"  {time_info}")
             msg_parts.append("")
     
     # 알림 전송
@@ -508,9 +398,8 @@ def main():
         if new_showtimes:
             print(f"  - 새로운 상영시간: {len(new_showtimes)}건")
     else:
-        print("변화 없음 - 알림 없음")
+        print("변화 없음")
     
-    # 현재 상태 저장 (날짜 활성화 상태 + 영화 정보)
     save_current_state(current_date_states, all_movies_current)
     print("상태 저장 완료")
 
