@@ -28,17 +28,7 @@ def send_telegram_message(text):
         "chat_id": TELEGRAM_CHAT_ID,
         "text": text
     }
-    try:
-        response = requests.post(url, data=payload, timeout=10)
-        if response.status_code == 200:
-            print("✅ 텔레그램 전송 성공")
-            return True
-        else:
-            print(f"❌ 텔레그램 전송 실패: {response.status_code} - {response.text}")
-            return False
-    except Exception as e:
-        print(f"❌ 텔레그램 전송 오류: {e}")
-        return False
+    requests.post(url, data=payload)
 
 
 def load_previous_state():
@@ -46,15 +36,11 @@ def load_previous_state():
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, 'r', encoding='utf-8') as f:
-                state = json.load(f)
-                print(f"✅ 상태 파일 로드 성공: {STATE_FILE}")
-                return state
+                return json.load(f)
         except Exception as e:
-            print(f"❌ 상태 파일 로드 실패: {e}")
+            print(f"상태 파일 로드 실패: {e}")
             return {}
-    else:
-        print(f"⚠️ 상태 파일 없음: {STATE_FILE} (첫 실행)")
-        return {}
+    return {}
 
 
 def save_current_state(date_states, movie_states):
@@ -67,9 +53,8 @@ def save_current_state(date_states, movie_states):
         }
         with open(STATE_FILE, 'w', encoding='utf-8') as f:
             json.dump(state, f, ensure_ascii=False, indent=2)
-        print(f"✅ 상태 저장 완료: 날짜 {len(date_states)}개, 영화 {len(movie_states)}개")
     except Exception as e:
-        print(f"❌ 상태 파일 저장 실패: {e}")
+        print(f"상태 파일 저장 실패: {e}")
 
 
 
@@ -250,12 +235,26 @@ def scrape_imax_shows(driver):
                 
                 show_times = []
                 for item in time_items:
-                    start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
-                    end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
-                    seat = item.find_element(By.CSS_SELECTOR, ".c-blue").text
-                    total = item.find_element(By.CSS_SELECTOR, ".screenInfo_seat__NLZUL").text
-                    
-                    show_times.append(f"{start} ~ {end} | {seat}{total}")
+                    try:
+                        start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
+                        end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
+                        
+                        # 잔여 좌석 (매진되면 없을 수 있음)
+                        try:
+                            seat = item.find_element(By.CSS_SELECTOR, ".c-blue").text
+                        except:
+                            seat = "0"
+                        
+                        # 전체 좌석
+                        try:
+                            total = item.find_element(By.CSS_SELECTOR, ".screenInfo_seat__NLZUL").text
+                        except:
+                            total = "석"
+                        
+                        show_times.append(f"{start} ~ {end} | {seat}{total}")
+                    except Exception as e:
+                        print(f"    상영시간 파싱 오류: {e}")
+                        continue
                 
                 if show_times:
                     movies_data.append({
@@ -325,12 +324,6 @@ def main():
     
     # 이전 상태 로드
     previous_state = load_previous_state()
-    print(f"\n=== 이전 상태 ===")
-    if previous_state:
-        print(f"이전 날짜 수: {len(previous_state.get('dates', {}))}개")
-        print(f"이전 영화 수: {len(previous_state.get('movies', []))}개")
-    else:
-        print("이전 상태 없음 (첫 실행)")
     
     # 이전에 비활성화였던 날짜 중 새로 활성화된 날짜 찾기
     newly_enabled_dates = []
@@ -389,12 +382,9 @@ def main():
     
     # 첫 실행인 경우 알림 없이 상태만 저장
     if not previous_state:
-        print("\n" + "="*50)
-        print("🔵 첫 실행: 현재 상태를 저장합니다 (알림 없음)")
-        print(f"  - 날짜 {len(current_date_states)}개")
-        print(f"  - 영화 {len(all_movies_current)}개")
-        print("="*50)
+        print("첫 실행: 현재 상태를 저장합니다 (알림 없음)")
         save_current_state(current_date_states, all_movies_current)
+        print("초기 상태 저장 완료")
         driver.quit()
         return
     
@@ -412,8 +402,6 @@ def main():
     # 기존 날짜의 새 상영시간 체크
     if previous_state and 'movies' in previous_state:
         prev_movies = previous_state['movies']
-        print(f"\n=== 상영시간 비교 ===")
-        print(f"이전 영화 수: {len(prev_movies)}개")
         
         # 이전 상영 정보를 딕셔너리로 변환 (날짜+영화 키)
         prev_movie_times = {}
@@ -429,24 +417,14 @@ def main():
             if key in prev_movie_times:
                 # 기존 영화의 새 상영시간 확인
                 new_times = current_times - prev_movie_times[key]
-                if new_times:
-                    print(f"  🆕 {movie['date']} | {movie['title']}: {len(new_times)}개 새 시간")
+                if new_times and movie['date'] not in [d['date'] for d in newly_enabled_dates]:
                     # 새로 열린 날짜가 아닌 경우에만 (중복 방지)
-                    if movie['date'] not in [d['date'] for d in newly_enabled_dates]:
-                        new_showtimes.append({
-                            'date': movie['date'],
-                            'title': movie['title'],
-                            'theater_info': movie.get('theater_info', ''),
-                            'new_times': list(new_times)
-                        })
-            else:
-                print(f"  ✨ 새 영화: {movie['date']} | {movie['title']}")
-    
-    # 디버깅 정보 출력
-    print(f"\n=== 변화 감지 결과 ===")
-    print(f"새로 열린 날짜: {len(newly_enabled_dates)}개")
-    print(f"새 날짜의 영화: {len(new_date_movies)}개")
-    print(f"새로운 상영시간: {len(new_showtimes)}건")
+                    new_showtimes.append({
+                        'date': movie['date'],
+                        'title': movie['title'],
+                        'theater_info': movie.get('theater_info', ''),
+                        'new_times': list(new_times)
+                    })
     
     # 알림 전송
     has_updates = False
@@ -495,21 +473,15 @@ def main():
     # 알림 전송
     if has_updates:
         msg = "\n".join(msg_parts).strip()
-        print(f"\n=== 알림 전송 ===")
-        print(f"메시지 길이: {len(msg)} 문자")
-        print(f"메시지 미리보기:\n{msg[:200]}...")
+        send_telegram_message(msg)
+        print("알림 전송 완료")
         
-        success = send_telegram_message(msg)
-        if success:
-            print("✅ 알림 전송 완료")
-            if new_date_movies:
-                print(f"  - 새로 열린 날짜: {len(newly_enabled_dates)}개")
-            if new_showtimes:
-                print(f"  - 새로운 상영시간: {len(new_showtimes)}건")
-        else:
-            print("❌ 알림 전송 실패")
+        if new_date_movies:
+            print(f"  - 새로 열린 날짜: {len(newly_enabled_dates)}개")
+        if new_showtimes:
+            print(f"  - 새로운 상영시간: {len(new_showtimes)}건")
     else:
-        print("\n=== 변화 없음 - 알림 없음 ===")
+        print("변화 없음 - 알림 없음")
     
     # 현재 상태 저장 (날짜 활성화 상태 + 영화 정보)
     save_current_state(current_date_states, all_movies_current)
