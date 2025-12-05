@@ -236,22 +236,30 @@ def scrape_imax_shows(driver):
                 show_times = []
                 for item in time_items:
                     try:
+                        # 버튼 요소 찾기
+                        btn = item.find_element(By.CSS_SELECTOR, "button.screenInfo_timeLink__45VfR")
+                        
                         start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
                         end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
                         
-                        # 잔여 좌석 (매진되면 없을 수 있음)
-                        try:
-                            seat = item.find_element(By.CSS_SELECTOR, ".c-blue").text
-                        except:
-                            seat = "0"
+                        # 예매 대기 상태 확인 (aria-disabled="true" 또는 disabled 클래스)
+                        is_disabled = btn.get_attribute("aria-disabled") == "true"
+                        has_disabled_class = "screenInfo_disabled__g9wii" in btn.get_attribute("class")
                         
-                        # 전체 좌석
-                        try:
-                            total = item.find_element(By.CSS_SELECTOR, ".screenInfo_seat__NLZUL").text
-                        except:
-                            total = "석"
+                        if is_disabled or has_disabled_class:
+                            # 예매 대기 상태
+                            seat_info = "예매대기"
+                        else:
+                            # 좌석 정보 가져오기
+                            try:
+                                seat = item.find_element(By.CSS_SELECTOR, ".c-blue").text
+                                total = item.find_element(By.CSS_SELECTOR, ".screenInfo_seat__NLZUL").text
+                                seat_info = f"{seat}{total}"
+                            except:
+                                # 좌석 정보 없음 (매진 등)
+                                seat_info = "매진"
                         
-                        show_times.append(f"{start} ~ {end} | {seat}{total}")
+                        show_times.append(f"{start} ~ {end} | {seat_info}")
                     except Exception as e:
                         print(f"    상영시간 파싱 오류: {e}")
                         continue
@@ -453,7 +461,7 @@ def main():
                     msg_parts.append(f"  {time_info}")
             msg_parts.append("")
     
-    # 2. 새로운 상영시간 알림
+    # 2. 새로운 상영시간 알림 (예매대기 → 좌석 오픈 포함)
     if new_showtimes:
         has_updates = True
         if msg_parts:
@@ -467,7 +475,11 @@ def main():
             else:
                 msg_parts.append(item['title'])
             for time_info in item['new_times']:
-                msg_parts.append(f"  {time_info}")
+                # 예매대기에서 좌석 오픈으로 바뀐 경우 강조
+                if "예매대기" not in time_info and any("예매대기" in str(t) for t in item.get('old_times', [])):
+                    msg_parts.append(f"  🎫 {time_info}")
+                else:
+                    msg_parts.append(f"  {time_info}")
             msg_parts.append("")
     
     # 알림 전송
