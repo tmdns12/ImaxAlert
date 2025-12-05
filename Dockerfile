@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     unzip \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Chrome 설치

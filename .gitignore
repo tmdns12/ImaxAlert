@@ -36,8 +36,7 @@ chromedriver*
 .DS_Store
 Thumbs.db
 
-# 상태 파일은 커밋해야 함 (주석 처리)
-# imax_state.json
+# 상태 파일은 Git에 커밋됨 (추적 필요)
 
 
 
