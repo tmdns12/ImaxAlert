@@ -4,12 +4,16 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     plan: free
+    disk:
+      name: imax-state-disk
+      mountPath: /app
+      sizeGB: 1
     envVars:
       - key: TELEGRAM_TOKEN
         sync: false
       - key: TELEGRAM_CHAT_ID
         sync: false
-      - key: GITHUB_ACTIONS
+      - key: RENDER
         value: "true"
 
 

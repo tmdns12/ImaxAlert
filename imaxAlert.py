@@ -240,8 +240,13 @@ def get_all_date_info(driver):
         for btn in date_buttons:
             try:
                 is_disabled = "dayScroll_disabled__t8HIQ" in btn.get_attribute("class")
-                day_txt = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text
-                day_num = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text
+                day_txt = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text.strip()
+                day_num = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text.strip()
+                
+                # 빈 날짜는 건너뛰기
+                if not day_txt or not day_num:
+                    continue
+                
                 date_key = f"{day_txt} {day_num}"
                 
                 all_dates.append({
@@ -250,7 +255,6 @@ def get_all_date_info(driver):
                     'button': btn if not is_disabled else None
                 })
             except Exception as e:
-                print(f"날짜 파싱 중 오류: {e}")
                 continue
         
         return all_dates
