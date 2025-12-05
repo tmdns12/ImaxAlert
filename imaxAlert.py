@@ -242,22 +242,37 @@ def scrape_imax_shows(driver):
                         start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
                         end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
                         
-                        # 예매 대기 상태 확인 (aria-disabled="true" 또는 disabled 클래스)
+                        # 버튼 비활성화 상태 확인
                         is_disabled = btn.get_attribute("aria-disabled") == "true"
                         has_disabled_class = "screenInfo_disabled__g9wii" in btn.get_attribute("class")
                         
-                        if is_disabled or has_disabled_class:
-                            # 예매 대기 상태
-                            seat_info = "예매대기"
-                        else:
-                            # 좌석 정보 가져오기
+                        # 좌석 정보 가져오기 시도
+                        seat_info = None
+                        try:
+                            status_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_status__lT4zd")
+                            # c-blue (잔여 좌석)가 있는지 확인
                             try:
-                                seat = item.find_element(By.CSS_SELECTOR, ".c-blue").text
-                                total = item.find_element(By.CSS_SELECTOR, ".screenInfo_seat__NLZUL").text
+                                seat = status_elem.find_element(By.CSS_SELECTOR, ".c-blue").text
+                                total = status_elem.find_element(By.CSS_SELECTOR, ".screenInfo_seat__NLZUL").text
                                 seat_info = f"{seat}{total}"
                             except:
-                                # 좌석 정보 없음 (매진 등)
-                                seat_info = "매진"
+                                # c-blue가 없으면 전체 텍스트 가져오기
+                                status_text = status_elem.text.strip()
+                                if status_text:
+                                    seat_info = status_text
+                        except:
+                            pass
+                        
+                        # 최종 좌석 정보 결정
+                        if is_disabled or has_disabled_class:
+                            # 비활성화 상태 (시간대만 오픈, 좌석 미오픈)
+                            if seat_info:
+                                seat_info = f"{seat_info} (비활성)"
+                            else:
+                                seat_info = "좌석미오픈"
+                        elif not seat_info:
+                            # 활성화 상태인데 좌석 정보 없음
+                            seat_info = "정보없음"
                         
                         show_times.append(f"{start} ~ {end} | {seat_info}")
                     except Exception as e:
