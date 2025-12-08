@@ -420,19 +420,9 @@ def main():
         driver.quit()
         return
     
-    newly_enabled_dates = []
     current_date_states = {}
-    
     for date_info in all_date_info:
-        date_key = date_info['date']
-        is_enabled = date_info['enabled']
-        current_date_states[date_key] = is_enabled
-        
-        if 'dates' in previous_state:
-            prev_enabled = previous_state['dates'].get(date_key, False)
-            if not prev_enabled and is_enabled:
-                newly_enabled_dates.append(date_info)
-                print(f"🆕 새로 열린 날짜 발견: {date_key}")
+        current_date_states[date_info['date']] = date_info['enabled']
     
     all_movies_current = []
     enabled_dates = [d for d in all_date_info if d['enabled'] and d['button']]
@@ -465,15 +455,12 @@ def main():
         if not success:
             print(f"⚠️ 날짜 '{date_info['date']}' 건너뜀")
     
-    newly_enabled_date_keys = set([d['date'] for d in newly_enabled_dates])
-    
     prev_movie_times = {}
     if 'movies' in previous_state:
         for movie in previous_state['movies']:
             key = f"{movie['date']}|{movie['title']}|{movie.get('theater_info', '')}"
             prev_movie_times[key] = set(movie.get('times', []))
     
-    new_date_movies = []
     new_showtimes = []
     
     for movie in all_movies_current:
@@ -481,9 +468,7 @@ def main():
         key = f"{movie_date}|{movie['title']}|{movie.get('theater_info', '')}"
         current_times = set(movie.get('times', []))
         
-        if movie_date in newly_enabled_date_keys:
-            new_date_movies.append(movie)
-        elif key in prev_movie_times:
+        if key in prev_movie_times:
             prev_times = prev_movie_times[key]
             new_times = current_times - prev_times
             if new_times:
@@ -493,32 +478,6 @@ def main():
                     'theater_info': movie.get('theater_info', ''),
                     'new_times': list(new_times)
                 })
-    
-    if new_date_movies:
-        by_date = {}
-        for movie in new_date_movies:
-            date = movie.get('date', '')
-            if date not in by_date:
-                by_date[date] = []
-            by_date[date].append(movie)
-        
-        for date, movies in sorted(by_date.items()):
-            msg_parts = []
-            msg_parts.append("🔔 새로운 예매 날짜가 열렸습니다!\n")
-            msg_parts.append(f"📅 {date}\n")
-            
-            for movie in movies:
-                if movie['theater_info']:
-                    msg_parts.append(f"{movie['title']} ({movie['theater_info']})")
-                else:
-                    msg_parts.append(movie['title'])
-                for time_info in movie['times']:
-                    msg_parts.append(f"  {time_info}")
-                msg_parts.append("")
-            
-            msg = "\n".join(msg_parts).strip()
-            send_telegram_message(msg)
-            print(f"알림 전송 완료: 새로 열린 날짜 '{date}'")
     
     if new_showtimes:
         by_date = {}
@@ -545,12 +504,8 @@ def main():
             msg = "\n".join(msg_parts).strip()
             send_telegram_message(msg)
             print(f"알림 전송 완료: 새로운 상영시간 '{date}'")
-    
-    if new_date_movies or new_showtimes:
-        if new_date_movies:
-            print(f"  - 새로 열린 날짜: {len(newly_enabled_dates)}개")
-        if new_showtimes:
-            print(f"  - 새로운 상영시간: {len(new_showtimes)}건")
+        
+        print(f"  - 새로운 상영시간: {len(new_showtimes)}건")
     else:
         print("변화 없음 - 알림 없음")
     
