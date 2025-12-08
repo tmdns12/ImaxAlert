@@ -105,8 +105,26 @@ def init_driver():
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
-        # webdriver-manager로 자동 버전 매칭
-        service = Service(ChromeDriverManager().install())
+        
+        # webdriver-manager가 반환하는 경로 처리
+        driver_path = ChromeDriverManager().install()
+        
+        # 경로가 디렉토리인 경우 chromedriver 실행 파일 찾기
+        if os.path.isdir(driver_path):
+            # chromedriver-linux64/chromedriver 경로 확인
+            chromedriver_exe = os.path.join(driver_path, "chromedriver-linux64", "chromedriver")
+            if not os.path.exists(chromedriver_exe):
+                chromedriver_exe = os.path.join(driver_path, "chromedriver")
+        else:
+            chromedriver_exe = driver_path
+        
+        if not os.path.exists(chromedriver_exe):
+            raise FileNotFoundError(f"ChromeDriver를 찾을 수 없습니다: {driver_path}")
+        
+        # 실행 권한 부여
+        os.chmod(chromedriver_exe, 0o755)
+        
+        service = Service(chromedriver_exe)
         driver = webdriver.Chrome(service=service, options=chrome_options)
     else:
         chrome_options.add_argument("--start-maximized")
