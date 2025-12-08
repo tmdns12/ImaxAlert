@@ -14,6 +14,8 @@ from datetime import datetime
 CHROMEDRIVER_PATH = r"C:\Users\24011\Downloads\chromedriver-win64\chromedriver.exe"
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "8445210236:AAEmUtaJ4vGlbBlUKaS8wBVC0XCZyJMlUrs")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "7980674556")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+GIST_ID = os.getenv("GIST_ID", "")
 STATE_FILE = "imax_state.json"
 
 
@@ -27,27 +29,71 @@ def send_telegram_message(text):
 
 
 def load_previous_state():
+    # 로컬 파일 우선 체크 (개발용)
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
-            print(f"상태 파일 로드 실패: {e}")
-            return {}
+            print(f"로컬 상태 파일 로드 실패: {e}")
+    
+    # Gist에서 로드 (프로덕션)
+    if GITHUB_TOKEN and GIST_ID:
+        try:
+            url = f"https://api.github.com/gists/{GIST_ID}"
+            headers = {
+                "Authorization": f"token {GITHUB_TOKEN}",
+                "Accept": "application/vnd.github.v3+json"
+            }
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                gist_data = response.json()
+                content = gist_data['files']['imax_state.json']['content']
+                return json.loads(content)
+            else:
+                print(f"Gist 로드 실패: {response.status_code}")
+        except Exception as e:
+            print(f"Gist 로드 오류: {e}")
+    
     return {}
 
 
 def save_current_state(date_states, movie_states):
+    state = {
+        'dates': date_states,
+        'movies': movie_states,
+        'last_updated': datetime.now().isoformat()
+    }
+    
+    # 로컬 파일 저장 (개발용)
     try:
-        state = {
-            'dates': date_states,
-            'movies': movie_states,
-            'last_updated': datetime.now().isoformat()
-        }
         with open(STATE_FILE, 'w', encoding='utf-8') as f:
             json.dump(state, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"상태 파일 저장 실패: {e}")
+        print(f"로컬 상태 파일 저장 실패: {e}")
+    
+    # Gist에 저장 (프로덕션)
+    if GITHUB_TOKEN and GIST_ID:
+        try:
+            url = f"https://api.github.com/gists/{GIST_ID}"
+            headers = {
+                "Authorization": f"token {GITHUB_TOKEN}",
+                "Accept": "application/vnd.github.v3+json"
+            }
+            data = {
+                "files": {
+                    "imax_state.json": {
+                        "content": json.dumps(state, ensure_ascii=False, indent=2)
+                    }
+                }
+            }
+            response = requests.patch(url, headers=headers, json=data, timeout=10)
+            if response.status_code == 200:
+                print("Gist 저장 완료")
+            else:
+                print(f"Gist 저장 실패: {response.status_code}")
+        except Exception as e:
+            print(f"Gist 저장 오류: {e}")
 
 
 def init_driver():
