@@ -106,49 +106,68 @@ def init_driver():
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
         
-        # webdriver-manager가 반환하는 경로 처리
-        driver_path = ChromeDriverManager().install()
-        print(f"webdriver-manager 반환 경로: {driver_path}")
-        
-        # 경로가 디렉토리인 경우 chromedriver 실행 파일 찾기
-        chromedriver_exe = None
-        if os.path.isdir(driver_path):
-            # 일반적인 구조: driver_path/chromedriver-linux64/chromedriver
-            chromedriver_exe = os.path.join(driver_path, "chromedriver-linux64", "chromedriver")
+        # webdriver-manager 사용 (자동으로 올바른 버전 다운로드)
+        try:
+            # webdriver-manager가 반환하는 경로
+            driver_path = ChromeDriverManager().install()
+            print(f"webdriver-manager 반환 경로: {driver_path}")
             
-            if not os.path.exists(chromedriver_exe):
-                # 다른 가능한 경로 확인
-                chromedriver_exe = os.path.join(driver_path, "chromedriver")
+            # 경로가 디렉토리인 경우 chromedriver 실행 파일 찾기
+            chromedriver_exe = None
             
-            # 여전히 없으면 디렉토리 내에서 찾기 (하지만 THIRD_PARTY_NOTICES 같은 파일 제외)
-            if not chromedriver_exe or not os.path.exists(chromedriver_exe):
-                for root, dirs, files in os.walk(driver_path):
-                    for file in files:
-                        if file == "chromedriver":
-                            candidate = os.path.join(root, file)
-                            # 실행 파일인지 확인 (바이너리 파일, 확장자 없음)
-                            if os.path.isfile(candidate):
-                                # THIRD_PARTY_NOTICES 같은 파일 제외
-                                if "THIRD_PARTY" not in candidate and "NOTICES" not in candidate:
-                                    chromedriver_exe = candidate
-                                    break
-                    if chromedriver_exe and os.path.exists(chromedriver_exe):
+            if os.path.isdir(driver_path):
+                # 일반적인 구조: driver_path/chromedriver-linux64/chromedriver
+                possible_paths = [
+                    os.path.join(driver_path, "chromedriver-linux64", "chromedriver"),
+                    os.path.join(driver_path, "chromedriver"),
+                ]
+                
+                for path in possible_paths:
+                    if os.path.exists(path) and os.path.isfile(path):
+                        chromedriver_exe = path
                         break
+                
+                # 여전히 없으면 디렉토리 내에서 찾기
+                if not chromedriver_exe:
+                    for root, dirs, files in os.walk(driver_path):
+                        for file in files:
+                            if file == "chromedriver" and not file.endswith(".txt") and not file.endswith(".md"):
+                                candidate = os.path.join(root, file)
+                                # THIRD_PARTY_NOTICES 같은 파일 제외
+                                if os.path.isfile(candidate) and "THIRD_PARTY" not in candidate and "NOTICES" not in candidate:
+                                    # ELF 바이너리 파일인지 확인 (Linux 실행 파일)
+                                    try:
+                                        with open(candidate, 'rb') as f:
+                                            header = f.read(4)
+                                            # ELF 파일 시그니처 확인 (0x7f 'ELF')
+                                            if header[0:4] == b'\x7fELF':
+                                                chromedriver_exe = candidate
+                                                break
+                                    except:
+                                        pass
+                        if chromedriver_exe:
+                            break
+                
+                if not chromedriver_exe or not os.path.exists(chromedriver_exe):
+                    raise FileNotFoundError(f"ChromeDriver 실행 파일을 찾을 수 없습니다: {driver_path}")
+            else:
+                chromedriver_exe = driver_path
+                if not os.path.exists(chromedriver_exe):
+                    raise FileNotFoundError(f"ChromeDriver를 찾을 수 없습니다: {driver_path}")
             
-            if not chromedriver_exe or not os.path.exists(chromedriver_exe):
-                raise FileNotFoundError(f"ChromeDriver 실행 파일을 찾을 수 없습니다: {driver_path}")
-        else:
-            chromedriver_exe = driver_path
-            if not os.path.exists(chromedriver_exe):
-                raise FileNotFoundError(f"ChromeDriver를 찾을 수 없습니다: {driver_path}")
-        
-        print(f"사용할 ChromeDriver 경로: {chromedriver_exe}")
-        
-        # 실행 권한 부여
-        os.chmod(chromedriver_exe, 0o755)
-        
-        service = Service(chromedriver_exe)
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+            print(f"사용할 ChromeDriver 경로: {chromedriver_exe}")
+            
+            # 실행 권한 부여
+            os.chmod(chromedriver_exe, 0o755)
+            
+            service = Service(chromedriver_exe)
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            
+        except Exception as e:
+            print(f"webdriver-manager 사용 실패: {e}")
+            print("Service 객체 없이 재시도...")
+            # Service 객체 없이 시도 (webdriver-manager가 자동으로 처리)
+            driver = webdriver.Chrome(options=chrome_options)
     else:
         chrome_options.add_argument("--start-maximized")
         if os.path.exists(CHROMEDRIVER_PATH):
