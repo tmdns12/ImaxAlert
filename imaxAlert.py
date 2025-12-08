@@ -111,15 +111,34 @@ def init_driver():
         
         # 경로가 디렉토리인 경우 chromedriver 실행 파일 찾기
         if os.path.isdir(driver_path):
-            # chromedriver-linux64/chromedriver 경로 확인
-            chromedriver_exe = os.path.join(driver_path, "chromedriver-linux64", "chromedriver")
-            if not os.path.exists(chromedriver_exe):
-                chromedriver_exe = os.path.join(driver_path, "chromedriver")
+            # 가능한 모든 경로 확인
+            possible_paths = [
+                os.path.join(driver_path, "chromedriver-linux64", "chromedriver"),
+                os.path.join(driver_path, "chromedriver"),
+            ]
+            # 디렉토리 내에서 chromedriver 파일 재귀적으로 찾기
+            chromedriver_exe = None
+            for root, dirs, files in os.walk(driver_path):
+                for file in files:
+                    if file == "chromedriver" and os.path.isfile(os.path.join(root, file)):
+                        chromedriver_exe = os.path.join(root, file)
+                        break
+                if chromedriver_exe:
+                    break
+            
+            # 가능한 경로도 확인
+            if not chromedriver_exe:
+                for path in possible_paths:
+                    if os.path.exists(path) and os.path.isfile(path):
+                        chromedriver_exe = path
+                        break
+            
+            if not chromedriver_exe:
+                raise FileNotFoundError(f"ChromeDriver 실행 파일을 찾을 수 없습니다: {driver_path}")
         else:
             chromedriver_exe = driver_path
-        
-        if not os.path.exists(chromedriver_exe):
-            raise FileNotFoundError(f"ChromeDriver를 찾을 수 없습니다: {driver_path}")
+            if not os.path.exists(chromedriver_exe):
+                raise FileNotFoundError(f"ChromeDriver를 찾을 수 없습니다: {driver_path}")
         
         # 실행 권한 부여
         os.chmod(chromedriver_exe, 0o755)
