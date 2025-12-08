@@ -17,7 +17,8 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --d
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# ChromeDriver는 webdriver-manager가 자동으로 설치하므로 여기서는 설치하지 않음
+# 기존 ChromeDriver 제거 (webdriver-manager가 자동으로 설치)
+RUN rm -f /usr/local/bin/chromedriver /usr/bin/chromedriver 2>/dev/null || true
 
 WORKDIR /app
 
