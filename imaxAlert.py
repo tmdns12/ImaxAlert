@@ -494,13 +494,7 @@ def main():
                     'new_times': list(new_times)
                 })
     
-    has_updates = False
-    msg_parts = []
-    
     if new_date_movies:
-        has_updates = True
-        msg_parts.append("🔔 새로운 예매 날짜가 열렸습니다!\n")
-        
         by_date = {}
         for movie in new_date_movies:
             date = movie.get('date', '')
@@ -509,36 +503,50 @@ def main():
             by_date[date].append(movie)
         
         for date, movies in sorted(by_date.items()):
-            msg_parts.append(f"📅 {date}")
+            msg_parts = []
+            msg_parts.append("🔔 새로운 예매 날짜가 열렸습니다!\n")
+            msg_parts.append(f"📅 {date}\n")
+            
             for movie in movies:
                 if movie['theater_info']:
-                    msg_parts.append(f"\n{movie['title']} ({movie['theater_info']})")
+                    msg_parts.append(f"{movie['title']} ({movie['theater_info']})")
                 else:
-                    msg_parts.append(f"\n{movie['title']}")
+                    msg_parts.append(movie['title'])
                 for time_info in movie['times']:
                     msg_parts.append(f"  {time_info}")
-            msg_parts.append("")
+                msg_parts.append("")
+            
+            msg = "\n".join(msg_parts).strip()
+            send_telegram_message(msg)
+            print(f"알림 전송 완료: 새로 열린 날짜 '{date}'")
     
     if new_showtimes:
-        has_updates = True
-        if msg_parts:
-            msg_parts.append("\n" + "="*30 + "\n")
-        msg_parts.append("⏰ 새로운 상영시간이 추가되었습니다!\n")
-        
+        by_date = {}
         for item in new_showtimes:
-            msg_parts.append(f"📅 {item['date']}")
-            if item['theater_info']:
-                msg_parts.append(f"{item['title']} ({item['theater_info']})")
-            else:
-                msg_parts.append(item['title'])
-            for time_info in item['new_times']:
-                msg_parts.append(f"  {time_info}")
-            msg_parts.append("")
+            date = item['date']
+            if date not in by_date:
+                by_date[date] = []
+            by_date[date].append(item)
+        
+        for date, items in sorted(by_date.items()):
+            msg_parts = []
+            msg_parts.append("⏰ 새로운 상영시간이 추가되었습니다!\n")
+            msg_parts.append(f"📅 {date}\n")
+            
+            for item in items:
+                if item['theater_info']:
+                    msg_parts.append(f"{item['title']} ({item['theater_info']})")
+                else:
+                    msg_parts.append(item['title'])
+                for time_info in item['new_times']:
+                    msg_parts.append(f"  {time_info}")
+                msg_parts.append("")
+            
+            msg = "\n".join(msg_parts).strip()
+            send_telegram_message(msg)
+            print(f"알림 전송 완료: 새로운 상영시간 '{date}'")
     
-    if has_updates:
-        msg = "\n".join(msg_parts).strip()
-        send_telegram_message(msg)
-        print("알림 전송 완료")
+    if new_date_movies or new_showtimes:
         if new_date_movies:
             print(f"  - 새로 열린 날짜: {len(newly_enabled_dates)}개")
         if new_showtimes:
