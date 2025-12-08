@@ -455,28 +455,44 @@ def main():
         if not success:
             print(f"⚠️ 날짜 '{date_info['date']}' 건너뜀")
     
+    def extract_time_only(time_str):
+        """시간대 문자열에서 시간 부분만 추출 (좌석수 제외)"""
+        if " | " in time_str:
+            return time_str.split(" | ")[0]
+        return time_str
+    
     prev_movie_times = {}
     if 'movies' in previous_state:
         for movie in previous_state['movies']:
             key = f"{movie['date']}|{movie['title']}|{movie.get('theater_info', '')}"
-            prev_movie_times[key] = set(movie.get('times', []))
+            prev_times_set = set()
+            for time_str in movie.get('times', []):
+                prev_times_set.add(extract_time_only(time_str))
+            prev_movie_times[key] = prev_times_set
     
     new_showtimes = []
     
     for movie in all_movies_current:
         movie_date = movie['date']
         key = f"{movie_date}|{movie['title']}|{movie.get('theater_info', '')}"
-        current_times = set(movie.get('times', []))
+        
+        current_times_set = set()
+        current_times_full = {}
+        for time_str in movie.get('times', []):
+            time_only = extract_time_only(time_str)
+            current_times_set.add(time_only)
+            current_times_full[time_only] = time_str
         
         if key in prev_movie_times:
             prev_times = prev_movie_times[key]
-            new_times = current_times - prev_times
-            if new_times:
+            new_times_only = current_times_set - prev_times
+            if new_times_only:
+                new_times_full = [current_times_full[t] for t in new_times_only]
                 new_showtimes.append({
                     'date': movie_date,
                     'title': movie['title'],
                     'theater_info': movie.get('theater_info', ''),
-                    'new_times': list(new_times)
+                    'new_times': new_times_full
                 })
     
     if new_showtimes:
