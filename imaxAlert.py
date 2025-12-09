@@ -397,79 +397,77 @@ def scrape_all_dates_from_html(driver, enabled_dates):
                 date_key = date_info['date']
                 print(f"[{idx+1}/{len(enabled_dates)}] 날짜 '{date_key}' 처리 중...")
                 
-                # 날짜 버튼 찾기 (매번 다시 찾기 - stale element 방지)
-                date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
+                # 저장된 버튼 객체를 우선 사용 (이미 get_all_date_info에서 찾았음)
                 target_button = None
-                found_dates = []  # 디버깅용
-                
-                for btn in date_buttons:
+                if date_info.get('button'):
                     try:
-                        day_txt = ""
-                        day_num = ""
+                        btn = date_info['button']
+                        btn.is_displayed()  # stale element 체크
+                        target_button = btn
+                    except:
+                        pass
+                
+                # 저장된 버튼이 유효하지 않으면 다시 찾기 (fallback)
+                if not target_button:
+                    date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
+                    found_dates = []  # 디버깅용
+                    
+                    for btn in date_buttons:
                         try:
-                            day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
-                            day_txt = day_txt_elem.text.strip()
-                        except:
-                            pass
-                        
-                        try:
-                            day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
-                            day_num = day_num_elem.text.strip()
-                        except:
-                            pass
-                        
-                        if not day_txt or not day_num:
+                            day_txt = ""
+                            day_num = ""
                             try:
-                                btn_text = btn.text.strip()
-                                lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
-                                if len(lines) >= 2:
-                                    day_txt = lines[0]
-                                    day_num = lines[1]
-                                elif len(lines) == 1:
-                                    parts = lines[0].split()
-                                    if len(parts) >= 2:
-                                        day_txt = parts[0]
-                                        day_num = parts[1]
+                                day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
+                                day_txt = day_txt_elem.text.strip()
                             except:
                                 pass
-                        
-                        if day_txt and day_num:
-                            btn_date_key = f"{day_txt} {day_num}"
-                            found_dates.append(btn_date_key)  # 디버깅용
                             
-                            if btn_date_key == date_key:
-                                class_attr = btn.get_attribute("class") or ""
-                                is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
-                                is_disabled_attr = btn.get_attribute("disabled") is not None
-                                if not (is_disabled_class or is_disabled_attr):
-                                    target_button = btn
-                                    break
-                    except:
-                        continue
-                
-                if not target_button:
-                    print(f"  ⚠️ 날짜 '{date_key}' 버튼을 찾을 수 없음")
-                    if found_dates:
-                        print(f"     발견된 날짜 목록: {', '.join(found_dates[:10])}")  # 처음 10개만 출력
-                    # 저장된 버튼 객체를 직접 사용해보기 (fallback)
-                    if date_info.get('button'):
-                        try:
-                            # 버튼이 여전히 유효한지 확인
-                            btn = date_info['button']
-                            btn.is_displayed()  # stale element 체크
-                            target_button = btn
-                            print(f"     저장된 버튼 객체 사용")
+                            try:
+                                day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
+                                day_num = day_num_elem.text.strip()
+                            except:
+                                pass
+                            
+                            if not day_txt or not day_num:
+                                try:
+                                    btn_text = btn.text.strip()
+                                    lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
+                                    if len(lines) >= 2:
+                                        day_txt = lines[0]
+                                        day_num = lines[1]
+                                    elif len(lines) == 1:
+                                        parts = lines[0].split()
+                                        if len(parts) >= 2:
+                                            day_txt = parts[0]
+                                            day_num = parts[1]
+                                except:
+                                    pass
+                            
+                            if day_txt and day_num:
+                                btn_date_key = f"{day_txt} {day_num}"
+                                found_dates.append(btn_date_key)  # 디버깅용
+                                
+                                if btn_date_key == date_key:
+                                    class_attr = btn.get_attribute("class") or ""
+                                    is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
+                                    is_disabled_attr = btn.get_attribute("disabled") is not None
+                                    if not (is_disabled_class or is_disabled_attr):
+                                        target_button = btn
+                                        break
                         except:
-                            pass
+                            continue
                     
                     if not target_button:
+                        print(f"  ⚠️ 날짜 '{date_key}' 버튼을 찾을 수 없음")
+                        if found_dates:
+                            print(f"     발견된 날짜 목록: {', '.join(found_dates[:10])}")  # 처음 10개만 출력
                         continue
                 
                 # 날짜 버튼 클릭
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
-                time.sleep(0.2)
+                time.sleep(0.1)  # 스크롤 대기 시간 단축
                 driver.execute_script("arguments[0].click();", target_button)
-                time.sleep(1)  # 페이지 업데이트 대기 (최소화했지만 필요함)
+                time.sleep(0.8)  # 페이지 업데이트 대기 시간 약간 단축
                 
                 # 데이터 수집
                 shows = scrape_imax_shows(driver, date_key)
@@ -550,10 +548,10 @@ def get_all_date_info(driver):
                                 }
                             }
                             if (swiper && swiper.slideTo) {
-                                swiper.slideTo(arguments[1], 300);
+                                swiper.slideTo(arguments[1], 0);  # 애니메이션 없이 즉시 이동
                             }
                         """, swiper_container, slide_idx)
-                        time.sleep(0.2)  # 슬라이드 이동 대기
+                        time.sleep(0.05)  # 슬라이드 이동 대기 시간 단축
                     except:
                         pass
                 
@@ -572,10 +570,10 @@ def get_all_date_info(driver):
                             }
                         }
                         if (swiper && swiper.slideTo) {
-                            swiper.slideTo(0, 300);
+                            swiper.slideTo(0, 0);  # 애니메이션 없이 즉시 이동
                         }
                     """, swiper_container)
-                    time.sleep(0.3)  # 첫 번째 슬라이드로 돌아가는 대기
+                    time.sleep(0.1)  # 첫 번째 슬라이드로 돌아가는 대기 시간 단축
                     print("첫 번째 슬라이드로 복귀 완료")
                 except Exception as e:
                     print(f"첫 번째 슬라이드로 복귀 실패: {e}")
@@ -593,10 +591,6 @@ def get_all_date_info(driver):
         
         for idx, btn in enumerate(date_buttons):
             try:
-                # 버튼이 보이도록 스크롤
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", btn)
-                time.sleep(0.1)
-                
                 # disabled 클래스와 disabled 속성 모두 확인 (더 안전)
                 class_attr = btn.get_attribute("class") or ""
                 is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
