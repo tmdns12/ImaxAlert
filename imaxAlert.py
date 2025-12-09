@@ -598,15 +598,70 @@ def main():
         print(f"활성화된 날짜 {len(enabled_dates)}개 체크 중...")
         for date_info in enabled_dates:
             try:
-                WebDriverWait(driver, 10).until(EC.element_to_be_clickable(date_info['button']))
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", date_info['button'])
+                date_key = date_info['date']
+                
+                # 날짜 버튼을 매번 다시 찾기 (stale element 방지)
+                date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
+                target_button = None
+                
+                for btn in date_buttons:
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
+                        time.sleep(0.1)
+                        
+                        day_txt = ""
+                        day_num = ""
+                        try:
+                            day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
+                            day_txt = day_txt_elem.text.strip()
+                        except:
+                            pass
+                        
+                        try:
+                            day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
+                            day_num = day_num_elem.text.strip()
+                        except:
+                            pass
+                        
+                        if not day_txt or not day_num:
+                            try:
+                                btn_text = btn.text.strip()
+                                lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
+                                if len(lines) >= 2:
+                                    day_txt = lines[0]
+                                    day_num = lines[1]
+                                elif len(lines) == 1:
+                                    parts = lines[0].split()
+                                    if len(parts) >= 2:
+                                        day_txt = parts[0]
+                                        day_num = parts[1]
+                            except:
+                                pass
+                        
+                        if day_txt and day_num:
+                            btn_date_key = f"{day_txt} {day_num}"
+                            if btn_date_key == date_key:
+                                class_attr = btn.get_attribute("class") or ""
+                                is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
+                                is_disabled_attr = btn.get_attribute("disabled") is not None
+                                if not (is_disabled_class or is_disabled_attr):
+                                    target_button = btn
+                                    break
+                    except:
+                        continue
+                
+                if not target_button:
+                    raise Exception(f"날짜 버튼 '{date_key}'을 찾을 수 없음")
+                
+                WebDriverWait(driver, 10).until(EC.element_to_be_clickable(target_button))
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
                 time.sleep(1)
-                driver.execute_script("arguments[0].click();", date_info['button'])
+                driver.execute_script("arguments[0].click();", target_button)
                 time.sleep(2)
                 
                 shows = scrape_imax_shows(driver)
                 all_movies_current.extend(shows)
-                print(f"날짜 '{date_info['date']}' 체크 완료: {len(shows)}개 영화")
+                print(f"날짜 '{date_key}' 체크 완료: {len(shows)}개 영화")
             except Exception as e:
                 print(f"날짜 '{date_info['date']}' 처리 실패: {e}")
                 continue
@@ -627,29 +682,88 @@ def main():
     for date_info in enabled_dates:
         max_retries = 3
         success = False
+        date_key = date_info['date']
         
         for retry in range(max_retries):
             try:
-                WebDriverWait(driver, 10).until(EC.element_to_be_clickable(date_info['button']))
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", date_info['button'])
+                # 날짜 버튼을 매번 다시 찾기 (stale element 방지)
+                date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
+                target_button = None
+                
+                for btn in date_buttons:
+                    try:
+                        # 버튼이 보이도록 스크롤
+                        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
+                        time.sleep(0.1)
+                        
+                        # 날짜 텍스트 확인
+                        day_txt = ""
+                        day_num = ""
+                        try:
+                            day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
+                            day_txt = day_txt_elem.text.strip()
+                        except:
+                            pass
+                        
+                        try:
+                            day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
+                            day_num = day_num_elem.text.strip()
+                        except:
+                            pass
+                        
+                        # 대체 방법: 버튼 텍스트에서 추출
+                        if not day_txt or not day_num:
+                            try:
+                                btn_text = btn.text.strip()
+                                lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
+                                if len(lines) >= 2:
+                                    day_txt = lines[0]
+                                    day_num = lines[1]
+                                elif len(lines) == 1:
+                                    parts = lines[0].split()
+                                    if len(parts) >= 2:
+                                        day_txt = parts[0]
+                                        day_num = parts[1]
+                            except:
+                                pass
+                        
+                        if day_txt and day_num:
+                            btn_date_key = f"{day_txt} {day_num}"
+                            if btn_date_key == date_key:
+                                # disabled 확인
+                                class_attr = btn.get_attribute("class") or ""
+                                is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
+                                is_disabled_attr = btn.get_attribute("disabled") is not None
+                                if not (is_disabled_class or is_disabled_attr):
+                                    target_button = btn
+                                    break
+                    except:
+                        continue
+                
+                if not target_button:
+                    raise Exception(f"날짜 버튼 '{date_key}'을 찾을 수 없음")
+                
+                WebDriverWait(driver, 10).until(EC.element_to_be_clickable(target_button))
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
                 time.sleep(1)
-                driver.execute_script("arguments[0].click();", date_info['button'])
+                driver.execute_script("arguments[0].click();", target_button)
                 time.sleep(2)
                 
                 shows = scrape_imax_shows(driver)
                 all_movies_current.extend(shows)
-                print(f"날짜 '{date_info['date']}' 체크 완료: {len(shows)}개 영화")
+                print(f"날짜 '{date_key}' 체크 완료: {len(shows)}개 영화")
                 success = True
                 break
             except Exception as e:
+                error_msg = str(e)
                 if retry < max_retries - 1:
-                    print(f"날짜 '{date_info['date']}' 재시도 {retry+1}/{max_retries-1}")
+                    print(f"날짜 '{date_key}' 재시도 {retry+1}/{max_retries-1}: {error_msg}")
                     time.sleep(1)
                 else:
-                    print(f"날짜 '{date_info['date']}' 처리 실패 (최종): {e}")
+                    print(f"날짜 '{date_key}' 처리 실패 (최종): {error_msg}")
         
         if not success:
-            print(f"⚠️ 날짜 '{date_info['date']}' 건너뜀")
+            print(f"⚠️ 날짜 '{date_key}' 건너뜀")
     
     def extract_time_only(time_str):
         """시간대 문자열에서 시간 부분만 추출 (좌석수 제외)"""
