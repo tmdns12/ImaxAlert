@@ -397,9 +397,10 @@ def scrape_all_dates_from_html(driver, enabled_dates):
                 date_key = date_info['date']
                 print(f"[{idx+1}/{len(enabled_dates)}] 날짜 '{date_key}' 처리 중...")
                 
-                # 날짜 버튼 찾기
+                # 날짜 버튼 찾기 (매번 다시 찾기 - stale element 방지)
                 date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
                 target_button = None
+                found_dates = []  # 디버깅용
                 
                 for btn in date_buttons:
                     try:
@@ -434,6 +435,8 @@ def scrape_all_dates_from_html(driver, enabled_dates):
                         
                         if day_txt and day_num:
                             btn_date_key = f"{day_txt} {day_num}"
+                            found_dates.append(btn_date_key)  # 디버깅용
+                            
                             if btn_date_key == date_key:
                                 class_attr = btn.get_attribute("class") or ""
                                 is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
@@ -446,7 +449,21 @@ def scrape_all_dates_from_html(driver, enabled_dates):
                 
                 if not target_button:
                     print(f"  ⚠️ 날짜 '{date_key}' 버튼을 찾을 수 없음")
-                    continue
+                    if found_dates:
+                        print(f"     발견된 날짜 목록: {', '.join(found_dates[:10])}")  # 처음 10개만 출력
+                    # 저장된 버튼 객체를 직접 사용해보기 (fallback)
+                    if date_info.get('button'):
+                        try:
+                            # 버튼이 여전히 유효한지 확인
+                            btn = date_info['button']
+                            btn.is_displayed()  # stale element 체크
+                            target_button = btn
+                            print(f"     저장된 버튼 객체 사용")
+                        except:
+                            pass
+                    
+                    if not target_button:
+                        continue
                 
                 # 날짜 버튼 클릭
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
