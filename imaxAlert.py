@@ -548,7 +548,7 @@ def get_all_date_info(driver):
                                 }
                             }
                             if (swiper && swiper.slideTo) {
-                                swiper.slideTo(arguments[1], 0);  # 애니메이션 없이 즉시 이동
+                                swiper.slideTo(arguments[1], 0);  // 애니메이션 없이 즉시 이동
                             }
                         """, swiper_container, slide_idx)
                         time.sleep(0.05)  # 슬라이드 이동 대기 시간 단축
@@ -570,7 +570,7 @@ def get_all_date_info(driver):
                             }
                         }
                         if (swiper && swiper.slideTo) {
-                            swiper.slideTo(0, 0);  # 애니메이션 없이 즉시 이동
+                            swiper.slideTo(0, 0);  // 애니메이션 없이 즉시 이동
                         }
                     """, swiper_container)
                     time.sleep(0.1)  # 첫 번째 슬라이드로 돌아가는 대기 시간 단축
