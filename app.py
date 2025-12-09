@@ -32,6 +32,10 @@ def run_bot_loop():
     
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}] 봇 루프 시작 - {check_interval}초 간격으로 체크", flush=True)
     
+    # 첫 실행 전 대기 (헬스체크가 먼저 응답할 수 있도록)
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}] 첫 체크 전 5초 대기 (헬스체크 준비 시간)", flush=True)
+    time.sleep(5)
+    
     while True:
         try:
             current_time = time.time()
@@ -64,12 +68,17 @@ def run_bot_loop():
 
 @app.route("/")
 def health_check():
-    """Render health check 엔드포인트"""
-    return jsonify({
-        "status": "ok",
-        "service": "CGV IMAX Alert Bot",
-        "bot_status": bot_status
-    }), 200
+    """Render health check 엔드포인트 - 빠른 응답을 위해 간단한 응답"""
+    # 헬스체크는 빠르게 응답 (상태 정보는 선택적)
+    try:
+        return jsonify({
+            "status": "ok",
+            "service": "CGV IMAX Alert Bot",
+            "bot_status": bot_status
+        }), 200
+    except Exception:
+        # 오류 발생 시에도 빠르게 응답
+        return jsonify({"status": "ok"}), 200
 
 @app.route("/health")
 def health():
@@ -77,12 +86,21 @@ def health():
     return jsonify({"status": "healthy"}), 200
 
 if __name__ == "__main__":
-    # 백그라운드 스레드에서 봇 실행
-    bot_thread = threading.Thread(target=run_bot_loop, daemon=True)
-    bot_thread.start()
-    print("봇 백그라운드 스레드 시작됨")
+    # Flask 서버가 먼저 시작되도록 설정
+    port = int(os.getenv("PORT", 10000))
+    
+    # 백그라운드 스레드에서 봇 실행 (Flask 시작 후)
+    def start_bot_after_delay():
+        time.sleep(5)  # Flask가 완전히 시작될 시간 확보
+        bot_thread = threading.Thread(target=run_bot_loop, daemon=True)
+        bot_thread.start()
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}] 봇 백그라운드 스레드 시작됨", flush=True)
+    
+    # 별도 스레드에서 봇 시작 스케줄링
+    threading.Thread(target=start_bot_after_delay, daemon=True).start()
+    
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}] Flask 서버 시작 중... (포트: {port})", flush=True)
     
     # Flask 서버 실행
-    port = int(os.getenv("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
 
