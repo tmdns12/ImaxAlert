@@ -24,7 +24,7 @@ def run_bot_loop():
     """백그라운드에서 봇을 주기적으로 실행"""
     global bot_status
     
-    check_interval = 60  # 60초마다 체크
+    check_interval = 30  # 30초마다 체크
     last_check_time = None
     
     # 출력 버퍼링 비활성화
