@@ -114,22 +114,44 @@ def init_driver():
             
             # 경로가 디렉토리인 경우 chromedriver 실행 파일 찾기
             chromedriver_exe = None
+            search_dir = driver_path
             
-            if os.path.isdir(driver_path):
-                # 일반적인 구조: driver_path/chromedriver-linux64/chromedriver
+            # 반환된 경로가 파일이면 부모 디렉토리로 이동
+            if os.path.isfile(driver_path):
+                search_dir = os.path.dirname(driver_path)
+                print(f"반환된 경로가 파일이므로 부모 디렉토리로 이동: {search_dir}")
+            elif not os.path.isdir(driver_path):
+                # 경로가 존재하지 않으면 부모 디렉토리 확인
+                search_dir = os.path.dirname(driver_path)
+                print(f"경로가 존재하지 않으므로 부모 디렉토리 확인: {search_dir}")
+            
+            if os.path.isdir(search_dir):
+                # 일반적인 구조: search_dir/chromedriver-linux64/chromedriver
                 possible_paths = [
-                    os.path.join(driver_path, "chromedriver-linux64", "chromedriver"),
-                    os.path.join(driver_path, "chromedriver"),
+                    os.path.join(search_dir, "chromedriver-linux64", "chromedriver"),
+                    os.path.join(search_dir, "chromedriver"),
+                    os.path.join(os.path.dirname(search_dir), "chromedriver-linux64", "chromedriver"),
+                    os.path.join(os.path.dirname(search_dir), "chromedriver"),
                 ]
                 
+                print(f"가능한 경로 확인 중: {possible_paths[:2]}")
                 for path in possible_paths:
                     if os.path.exists(path) and os.path.isfile(path):
-                        chromedriver_exe = path
-                        break
+                        # ELF 바이너리 파일인지 확인
+                        try:
+                            with open(path, 'rb') as f:
+                                header = f.read(4)
+                                if header[0:4] == b'\x7fELF':
+                                    chromedriver_exe = path
+                                    print(f"ELF 실행 파일 발견: {chromedriver_exe}")
+                                    break
+                        except:
+                            pass
                 
                 # 여전히 없으면 디렉토리 내에서 찾기
                 if not chromedriver_exe:
-                    for root, dirs, files in os.walk(driver_path):
+                    print(f"디렉토리 내에서 검색 중: {search_dir}")
+                    for root, dirs, files in os.walk(search_dir):
                         for file in files:
                             # 파일명이 정확히 "chromedriver"이고, 확장자가 없어야 함
                             if file == "chromedriver":
@@ -140,6 +162,7 @@ def init_driver():
                                     candidate.endswith(".txt") or 
                                     candidate.endswith(".md") or
                                     candidate.endswith(".chromedriver")):
+                                    print(f"제외된 파일: {candidate}")
                                     continue
                                 
                                 # ELF 바이너리 파일인지 먼저 확인 (Linux 실행 파일)
@@ -149,17 +172,29 @@ def init_driver():
                                         # ELF 파일 시그니처 확인 (0x7f 'ELF')
                                         if header[0:4] == b'\x7fELF':
                                             chromedriver_exe = candidate
+                                            print(f"ELF 실행 파일 발견: {chromedriver_exe}")
                                             break
-                                except:
-                                    pass
+                                except Exception as e:
+                                    print(f"파일 확인 실패 {candidate}: {e}")
                         if chromedriver_exe:
                             break
                 
                 if not chromedriver_exe or not os.path.exists(chromedriver_exe):
-                    raise FileNotFoundError(f"ChromeDriver 실행 파일을 찾을 수 없습니다: {driver_path}")
+                    raise FileNotFoundError(f"ChromeDriver 실행 파일을 찾을 수 없습니다: {search_dir}")
             else:
-                chromedriver_exe = driver_path
-                if not os.path.exists(chromedriver_exe):
+                # 파일 경로로 직접 사용 시도
+                if os.path.isfile(driver_path):
+                    # ELF 바이너리인지 확인
+                    try:
+                        with open(driver_path, 'rb') as f:
+                            header = f.read(4)
+                            if header[0:4] == b'\x7fELF':
+                                chromedriver_exe = driver_path
+                            else:
+                                raise FileNotFoundError(f"ChromeDriver가 ELF 바이너리가 아닙니다: {driver_path}")
+                    except:
+                        raise FileNotFoundError(f"ChromeDriver를 읽을 수 없습니다: {driver_path}")
+                else:
                     raise FileNotFoundError(f"ChromeDriver를 찾을 수 없습니다: {driver_path}")
             
             print(f"사용할 ChromeDriver 경로: {chromedriver_exe}")
