@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Python 출력 버퍼링 비활성화 (로그 즉시 출력)
+ENV PYTHONUNBUFFERED=1
+
 # 필요한 패키지 설치
 RUN apt-get update && apt-get install -y \
     wget \
