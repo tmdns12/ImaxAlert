@@ -457,8 +457,9 @@ def get_all_date_info(driver):
         # 각 버튼을 찾을 때마다 해당 버튼이 보이도록 스크롤
         found_dates = []
         unique_dates = set()  # 중복 제거를 위한 set
+        skipped_count = 0
         
-        for btn in date_buttons:
+        for idx, btn in enumerate(date_buttons):
             try:
                 # 버튼이 보이도록 스크롤
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", btn)
@@ -470,17 +471,53 @@ def get_all_date_info(driver):
                 is_disabled_attr = btn.get_attribute("disabled") is not None
                 is_disabled = is_disabled_class or is_disabled_attr
                 
-                day_txt = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text.strip()
-                day_num = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text.strip()
+                # 날짜 텍스트 가져오기 (여러 방법 시도)
+                day_txt = ""
+                day_num = ""
+                
+                # 방법 1: CSS 선택자로 각 요소 찾기
+                try:
+                    day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
+                    day_txt = day_txt_elem.text.strip()
+                except:
+                    day_txt = ""
+                
+                try:
+                    day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
+                    day_num = day_num_elem.text.strip()
+                except:
+                    day_num = ""
+                
+                # 방법 2: 요소를 찾지 못했으면 버튼의 전체 텍스트에서 추출
+                if not day_txt or not day_num:
+                    try:
+                        btn_text = btn.text.strip()
+                        # 버튼 텍스트 예: "오늘\n08" 또는 "화 09"
+                        lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
+                        if len(lines) >= 2:
+                            day_txt = lines[0]
+                            day_num = lines[1]
+                        elif len(lines) == 1:
+                            # 공백으로 구분된 경우: "화 09"
+                            parts = lines[0].split()
+                            if len(parts) >= 2:
+                                day_txt = parts[0]
+                                day_num = parts[1]
+                    except Exception as parse_error:
+                        pass
                 
                 # 빈 날짜는 건너뛰기
                 if not day_txt or not day_num:
+                    skipped_count += 1
+                    print(f"  날짜 버튼 {idx+1} 건너뛰기: day_txt='{day_txt}', day_num='{day_num}'")
                     continue
                 
                 date_key = f"{day_txt} {day_num}"
                 
                 # 중복 제거
                 if date_key in unique_dates:
+                    skipped_count += 1
+                    print(f"  날짜 버튼 {idx+1} 중복 건너뛰기: {date_key}")
                     continue
                 unique_dates.add(date_key)
                 found_dates.append(date_key)
@@ -491,7 +528,12 @@ def get_all_date_info(driver):
                     'button': btn if not is_disabled else None
                 })
             except Exception as e:
+                skipped_count += 1
+                print(f"  날짜 버튼 {idx+1} 처리 실패: {e}")
                 continue
+        
+        if skipped_count > 0:
+            print(f"건너뛴 날짜 버튼 수: {skipped_count}개")
         
         if found_dates:
             print(f"발견된 날짜 목록: {', '.join(found_dates)}")
