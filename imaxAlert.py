@@ -447,6 +447,29 @@ def get_all_date_info(driver):
                         time.sleep(0.2)  # 슬라이드 이동 대기
                     except:
                         pass
+                
+                # 모든 슬라이드를 순회한 후 첫 번째 슬라이드로 돌아가기
+                try:
+                    driver.execute_script("""
+                        var container = arguments[0];
+                        var swiper = container.swiper;
+                        if (!swiper) {
+                            var swipers = document.querySelectorAll('.dayScroll_container__e9cLv .swiper');
+                            for (var i = 0; i < swipers.length; i++) {
+                                if (swipers[i].swiper) {
+                                    swiper = swipers[i].swiper;
+                                    break;
+                                }
+                            }
+                        }
+                        if (swiper && swiper.slideTo) {
+                            swiper.slideTo(0, 300);
+                        }
+                    """, swiper_container)
+                    time.sleep(0.3)  # 첫 번째 슬라이드로 돌아가는 대기
+                    print("첫 번째 슬라이드로 복귀 완료")
+                except Exception as e:
+                    print(f"첫 번째 슬라이드로 복귀 실패: {e}")
         except Exception as e:
             print(f"Swiper 슬라이드 순회 중 오류 (무시하고 계속): {e}")
         
