@@ -386,48 +386,84 @@ def get_all_date_info(driver):
     try:
         all_dates = []
         
-        # 날짜 스크롤 영역 찾기 및 모든 날짜가 보이도록 스크롤
+        # 날짜 스크롤 영역 찾기
         try:
             date_container = driver.find_element(By.CSS_SELECTOR, ".dayScroll_container__e9cLv")
             # 날짜 스크롤 영역을 화면에 보이도록 스크롤
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", date_container)
             time.sleep(0.5)
-            
-            # Swiper 슬라이더의 next 버튼을 여러 번 클릭하여 모든 날짜가 보이도록
-            max_clicks = 20  # 최대 클릭 횟수 (충분히 많은 날짜를 보기 위해)
-            for i in range(max_clicks):
-                try:
-                    next_btn = driver.find_element(By.CSS_SELECTOR, ".dayScroll_container__e9cLv .swiper-button-next")
-                    # 버튼이 비활성화되어 있으면 더 이상 스크롤할 수 없음
-                    if "swiper-button-disabled" in next_btn.get_attribute("class"):
-                        break
-                    driver.execute_script("arguments[0].click();", next_btn)
-                    time.sleep(0.3)  # 각 클릭 후 약간 대기
-                except:
-                    # next 버튼을 찾을 수 없거나 클릭할 수 없으면 중단
-                    break
-            
-            # 다시 처음으로 스크롤 (모든 날짜를 확인한 후)
-            try:
-                prev_btn = driver.find_element(By.CSS_SELECTOR, ".dayScroll_container__e9cLv .swiper-button-prev")
-                for i in range(max_clicks):
-                    if "swiper-button-disabled" in prev_btn.get_attribute("class"):
-                        break
-                    driver.execute_script("arguments[0].click();", prev_btn)
-                    time.sleep(0.2)
-            except:
-                pass
-            
-            time.sleep(0.5)  # 스크롤 완료 후 요소 로드 대기
         except Exception as e:
-            print(f"날짜 스크롤 영역 처리 중 오류 (무시하고 계속): {e}")
+            print(f"날짜 스크롤 영역 찾기 실패 (무시하고 계속): {e}")
         
-        date_buttons = driver.find_elements(By.CSS_SELECTOR, "button.dayScroll_scrollItem__IZ35T")
+        # Swiper 인스턴스를 찾아서 모든 슬라이드를 순회
+        try:
+            swiper_container = driver.find_element(By.CSS_SELECTOR, ".dayScroll_container__e9cLv .swiper")
+            
+            # Swiper 인스턴스의 슬라이드 개수 가져오기
+            total_slides = driver.execute_script("""
+                var container = arguments[0];
+                // Swiper 인스턴스 찾기
+                var swiper = container.swiper;
+                if (!swiper && window.Swiper) {
+                    // 직접 찾기
+                    var swipers = document.querySelectorAll('.dayScroll_container__e9cLv .swiper');
+                    for (var i = 0; i < swipers.length; i++) {
+                        if (swipers[i].swiper) {
+                            swiper = swipers[i].swiper;
+                            break;
+                        }
+                    }
+                }
+                if (swiper && swiper.slides) {
+                    return swiper.slides.length;
+                }
+                // DOM에서 직접 찾기
+                var slides = container.querySelectorAll('.swiper-slide');
+                return slides ? slides.length : 0;
+            """, swiper_container)
+            
+            if total_slides > 0:
+                print(f"Swiper 슬라이드 총 개수: {total_slides}개")
+                # 각 슬라이드로 이동하여 모든 날짜 버튼이 로드되도록
+                for slide_idx in range(total_slides):
+                    try:
+                        # 해당 슬라이드로 이동
+                        driver.execute_script("""
+                            var container = arguments[0];
+                            var swiper = container.swiper;
+                            if (!swiper) {
+                                var swipers = document.querySelectorAll('.dayScroll_container__e9cLv .swiper');
+                                for (var i = 0; i < swipers.length; i++) {
+                                    if (swipers[i].swiper) {
+                                        swiper = swipers[i].swiper;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (swiper && swiper.slideTo) {
+                                swiper.slideTo(arguments[1], 300);
+                            }
+                        """, swiper_container, slide_idx)
+                        time.sleep(0.2)  # 슬라이드 이동 대기
+                    except:
+                        pass
+        except Exception as e:
+            print(f"Swiper 슬라이드 순회 중 오류 (무시하고 계속): {e}")
+        
+        # 모든 날짜 버튼 찾기 (DOM에 있는 모든 버튼)
+        date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
         print(f"발견된 날짜 버튼 수: {len(date_buttons)}개")
         
+        # 각 버튼을 찾을 때마다 해당 버튼이 보이도록 스크롤
         found_dates = []
+        unique_dates = set()  # 중복 제거를 위한 set
+        
         for btn in date_buttons:
             try:
+                # 버튼이 보이도록 스크롤
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", btn)
+                time.sleep(0.1)
+                
                 # disabled 클래스와 disabled 속성 모두 확인 (더 안전)
                 class_attr = btn.get_attribute("class") or ""
                 is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
@@ -442,6 +478,11 @@ def get_all_date_info(driver):
                     continue
                 
                 date_key = f"{day_txt} {day_num}"
+                
+                # 중복 제거
+                if date_key in unique_dates:
+                    continue
+                unique_dates.add(date_key)
                 found_dates.append(date_key)
                 
                 all_dates.append({
