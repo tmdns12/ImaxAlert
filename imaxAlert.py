@@ -389,7 +389,12 @@ def get_all_date_info(driver):
         
         for btn in date_buttons:
             try:
-                is_disabled = "dayScroll_disabled__t8HIQ" in btn.get_attribute("class")
+                # disabled 클래스와 disabled 속성 모두 확인 (더 안전)
+                class_attr = btn.get_attribute("class") or ""
+                is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
+                is_disabled_attr = btn.get_attribute("disabled") is not None
+                is_disabled = is_disabled_class or is_disabled_attr
+                
                 day_txt = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text.strip()
                 day_num = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text.strip()
                 
