@@ -131,20 +131,27 @@ def init_driver():
                 if not chromedriver_exe:
                     for root, dirs, files in os.walk(driver_path):
                         for file in files:
-                            if file == "chromedriver" and not file.endswith(".txt") and not file.endswith(".md"):
+                            # 파일명이 정확히 "chromedriver"이고, 확장자가 없어야 함
+                            if file == "chromedriver":
                                 candidate = os.path.join(root, file)
-                                # THIRD_PARTY_NOTICES 같은 파일 제외
-                                if os.path.isfile(candidate) and "THIRD_PARTY" not in candidate and "NOTICES" not in candidate:
-                                    # ELF 바이너리 파일인지 확인 (Linux 실행 파일)
-                                    try:
-                                        with open(candidate, 'rb') as f:
-                                            header = f.read(4)
-                                            # ELF 파일 시그니처 확인 (0x7f 'ELF')
-                                            if header[0:4] == b'\x7fELF':
-                                                chromedriver_exe = candidate
-                                                break
-                                    except:
-                                        pass
+                                # 경로에 THIRD_PARTY, NOTICES, .txt, .md 등이 포함된 경우 제외
+                                if ("THIRD_PARTY" in candidate.upper() or 
+                                    "NOTICES" in candidate.upper() or
+                                    candidate.endswith(".txt") or 
+                                    candidate.endswith(".md") or
+                                    candidate.endswith(".chromedriver")):
+                                    continue
+                                
+                                # ELF 바이너리 파일인지 먼저 확인 (Linux 실행 파일)
+                                try:
+                                    with open(candidate, 'rb') as f:
+                                        header = f.read(4)
+                                        # ELF 파일 시그니처 확인 (0x7f 'ELF')
+                                        if header[0:4] == b'\x7fELF':
+                                            chromedriver_exe = candidate
+                                            break
+                                except:
+                                    pass
                         if chromedriver_exe:
                             break
                 
