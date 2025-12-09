@@ -229,16 +229,28 @@ def get_selected_date(driver):
 def scrape_imax_shows(driver, date_key=None):
     """현재 선택된 날짜의 IMAX 상영 정보 수집"""
     try:
-        current_date = date_key or get_selected_date(driver)
+        time.sleep(1)  # 페이지 로딩 대기
+        if date_key is None:
+            current_date = get_selected_date(driver)
+        else:
+            current_date = date_key
+        
         movie_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
         movies_data = []
         
         for container in movie_containers:
             try:
-                accordion_btn = container.find_element(By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button")
-                if accordion_btn.get_attribute("aria-expanded") != "true":
-                    driver.execute_script("arguments[0].click();", accordion_btn)
+                # 영화 제목 먼저 찾기
+                movie_title = container.find_element(By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2").text.strip()
                 
+                # 아코디언 펼치기
+                accordion_btn = container.find_element(By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button")
+                is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
+                if not is_expanded:
+                    driver.execute_script("arguments[0].click();", accordion_btn)
+                    time.sleep(0.5)  # 아코디언 펼친 후 DOM 업데이트 대기
+                
+                # IMAX 정보 확인
                 try:
                     imax_theater_full = container.find_element(By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT h3.screenInfo_title__Eso6_").text.strip()
                     if "IMAX" not in imax_theater_full.upper():
@@ -247,8 +259,7 @@ def scrape_imax_shows(driver, date_key=None):
                 except:
                     continue
                 
-                movie_title = container.find_element(By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2").text.strip()
-                
+                # 상영시간 수집
                 time_items = container.find_elements(By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg")
                 show_times = []
                 for item in time_items:
@@ -324,7 +335,7 @@ def scrape_all_dates_from_html(driver, enabled_dates):
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
                 time.sleep(0.2)
                 driver.execute_script("arguments[0].click();", target_button)
-                time.sleep(1)
+                time.sleep(1.5)  # 날짜 변경 후 페이지 업데이트 대기 시간 증가
                 
                 shows = scrape_imax_shows(driver, date_key)
                 if shows:
