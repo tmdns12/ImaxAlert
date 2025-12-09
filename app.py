@@ -6,6 +6,7 @@ import os
 import sys
 import threading
 import time
+import logging
 from flask import Flask, jsonify
 
 # imaxAlert 모듈에서 main 함수 import
@@ -70,12 +71,16 @@ def run_bot_loop():
 def health_check():
     """Render health check 엔드포인트 - 빠른 응답을 위해 간단한 응답"""
     # 헬스체크는 빠르게 응답 (상태 정보는 선택적)
+    # 봇이 데이터 수집 중이어도 헬스체크는 즉시 응답해야 함
+    # Flask는 threaded=True로 실행되므로 백그라운드 작업과 독립적으로 응답 가능
     try:
-        return jsonify({
+        response_data = {
             "status": "ok",
             "service": "CGV IMAX Alert Bot",
             "bot_status": bot_status
-        }), 200
+        }
+        # 데이터 수집 중이어도 헬스체크는 즉시 응답
+        return jsonify(response_data), 200
     except Exception:
         # 오류 발생 시에도 빠르게 응답
         return jsonify({"status": "ok"}), 200
@@ -100,6 +105,33 @@ if __name__ == "__main__":
     threading.Thread(target=start_bot_after_delay, daemon=True).start()
     
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}] Flask 서버 시작 중... (포트: {port})", flush=True)
+    
+    # Werkzeug 로거 설정: 봇 실행 중에는 헬스체크 로그 출력 안 함
+    log = logging.getLogger('werkzeug')
+    original_log = log.log
+    
+    def quiet_log(level, msg, *args, **kwargs):
+        # 봇이 실행 중이고 헬스체크 요청이면 로그 출력 안 함
+        if bot_status.get("running", False):
+            # 로그 메시지 형식: "IP - - [날짜] \"GET / HTTP/1.1\" 200 -"
+            try:
+                if args:
+                    # args가 있으면 msg % args 형식으로 포맷팅
+                    msg_str = str(msg) % args if args else str(msg)
+                else:
+                    msg_str = str(msg)
+                
+                # 헬스체크 요청 로그 필터링
+                if 'GET / HTTP/1.1' in msg_str or 'GET /health HTTP/1.1' in msg_str:
+                    return
+            except:
+                # 포맷팅 실패 시 원본 메시지 확인
+                msg_str = str(msg)
+                if 'GET / HTTP/1.1' in msg_str or 'GET /health HTTP/1.1' in msg_str:
+                    return
+        original_log(level, msg, *args, **kwargs)
+    
+    log.log = quiet_log
     
     # Flask 서버 실행
     app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
