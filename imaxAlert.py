@@ -385,8 +385,47 @@ def scrape_imax_shows(driver):
 def get_all_date_info(driver):
     try:
         all_dates = []
-        date_buttons = driver.find_elements(By.CSS_SELECTOR, "button.dayScroll_scrollItem__IZ35T")
         
+        # 날짜 스크롤 영역 찾기 및 모든 날짜가 보이도록 스크롤
+        try:
+            date_container = driver.find_element(By.CSS_SELECTOR, ".dayScroll_container__e9cLv")
+            # 날짜 스크롤 영역을 화면에 보이도록 스크롤
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", date_container)
+            time.sleep(0.5)
+            
+            # Swiper 슬라이더의 next 버튼을 여러 번 클릭하여 모든 날짜가 보이도록
+            max_clicks = 20  # 최대 클릭 횟수 (충분히 많은 날짜를 보기 위해)
+            for i in range(max_clicks):
+                try:
+                    next_btn = driver.find_element(By.CSS_SELECTOR, ".dayScroll_container__e9cLv .swiper-button-next")
+                    # 버튼이 비활성화되어 있으면 더 이상 스크롤할 수 없음
+                    if "swiper-button-disabled" in next_btn.get_attribute("class"):
+                        break
+                    driver.execute_script("arguments[0].click();", next_btn)
+                    time.sleep(0.3)  # 각 클릭 후 약간 대기
+                except:
+                    # next 버튼을 찾을 수 없거나 클릭할 수 없으면 중단
+                    break
+            
+            # 다시 처음으로 스크롤 (모든 날짜를 확인한 후)
+            try:
+                prev_btn = driver.find_element(By.CSS_SELECTOR, ".dayScroll_container__e9cLv .swiper-button-prev")
+                for i in range(max_clicks):
+                    if "swiper-button-disabled" in prev_btn.get_attribute("class"):
+                        break
+                    driver.execute_script("arguments[0].click();", prev_btn)
+                    time.sleep(0.2)
+            except:
+                pass
+            
+            time.sleep(0.5)  # 스크롤 완료 후 요소 로드 대기
+        except Exception as e:
+            print(f"날짜 스크롤 영역 처리 중 오류 (무시하고 계속): {e}")
+        
+        date_buttons = driver.find_elements(By.CSS_SELECTOR, "button.dayScroll_scrollItem__IZ35T")
+        print(f"발견된 날짜 버튼 수: {len(date_buttons)}개")
+        
+        found_dates = []
         for btn in date_buttons:
             try:
                 # disabled 클래스와 disabled 속성 모두 확인 (더 안전)
@@ -403,6 +442,7 @@ def get_all_date_info(driver):
                     continue
                 
                 date_key = f"{day_txt} {day_num}"
+                found_dates.append(date_key)
                 
                 all_dates.append({
                     'date': date_key,
@@ -411,6 +451,9 @@ def get_all_date_info(driver):
                 })
             except Exception as e:
                 continue
+        
+        if found_dates:
+            print(f"발견된 날짜 목록: {', '.join(found_dates)}")
         
         return all_dates
     except Exception as e:
