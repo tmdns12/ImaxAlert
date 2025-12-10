@@ -492,23 +492,23 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
     prev_movie_times = {}
     normalized_target_date = normalize_string(target_date_key)
     
-        # 이전 상태에서 해당 날짜의 영화 정보만 가져오기 (날짜 재확인)
-        for movie in previous_movies:
-            movie_date = normalize_string(movie.get('date', ''))
-            # 날짜가 일치하는지 확인 (안전 장치)
-            if movie_date != normalized_target_date:
-                continue
-            
-            key = create_movie_key(movie)
-            prev_times_set = set()
-            for time_str in movie.get('times', []):
-                time_only = extract_time_only(time_str)
-                if time_only:  # 빈 문자열 제외
-                    prev_times_set.add(time_only)
-            if prev_times_set:  # 빈 set은 저장하지 않음
-                prev_movie_times[key] = prev_times_set
-                # 디버깅: 이전 시간 로그
-                print(f"  📌 이전 상태 로드: {movie.get('title')} - 시간 {len(prev_times_set)}개")
+    # 이전 상태에서 해당 날짜의 영화 정보만 가져오기 (날짜 재확인)
+    for movie in previous_movies:
+        movie_date = normalize_string(movie.get('date', ''))
+        # 날짜가 일치하는지 확인 (안전 장치)
+        if movie_date != normalized_target_date:
+            continue
+        
+        key = create_movie_key(movie)
+        prev_times_set = set()
+        for time_str in movie.get('times', []):
+            time_only = extract_time_only(time_str)
+            if time_only:  # 빈 문자열 제외
+                prev_times_set.add(time_only)
+        if prev_times_set:  # 빈 set은 저장하지 않음
+            prev_movie_times[key] = prev_times_set
+            # 디버깅: 이전 시간 로그
+            print(f"  📌 이전 상태 로드: {movie.get('title')} - 시간 {len(prev_times_set)}개")
     
     # 현재 상태와 비교 (날짜 일치 확인)
     for movie in current_shows:
