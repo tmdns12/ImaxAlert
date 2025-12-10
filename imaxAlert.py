@@ -312,7 +312,14 @@ def get_selected_date(driver):
 def scrape_imax_shows(driver, date_key=None):
     """현재 선택된 날짜의 IMAX 상영 정보 수집"""
     try:
-        time.sleep(1)
+        # 스마트 대기: 페이지 로딩 완료까지 대기
+        try:
+            WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
+            )
+        except:
+            time.sleep(0.5)  # fallback
+        
         if date_key is None:
             current_date = get_selected_date(driver)
         else:
@@ -335,7 +342,13 @@ def scrape_imax_shows(driver, date_key=None):
                 is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
                 if not is_expanded:
                     driver.execute_script("arguments[0].click();", accordion_btn)
-                    time.sleep(0.5)
+                    # 스마트 대기: 아코디언 펼쳐질 때까지 대기
+                    try:
+                        WebDriverWait(driver, 2).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT"))
+                        )
+                    except:
+                        time.sleep(0.3)  # fallback
                 
                 imax_theater_full = container.find_element(
                     By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT h3.screenInfo_title__Eso6_"
@@ -386,11 +399,84 @@ def scrape_imax_shows(driver, date_key=None):
         return []
 
 
-def scrape_all_dates_from_html(driver, enabled_dates):
-    """각 날짜를 빠르게 클릭하면서 모든 날짜의 데이터 수집 (대기 시간 최소화)"""
+def extract_time_only(time_str):
+    """시간대 문자열에서 시간 부분만 추출 (좌석수 제외)"""
+    if " | " in time_str:
+        return time_str.split(" | ")[0]
+    return time_str
+
+def find_new_showtimes_for_date(current_shows, previous_movies):
+    """특정 날짜의 새로운 상영시간 찾기"""
+    new_showtimes = []
+    prev_movie_times = {}
+    
+    # 이전 상태에서 해당 날짜의 영화 정보 가져오기
+    for movie in previous_movies:
+        key = f"{movie['date']}|{movie['title']}|{movie.get('theater_info', '')}"
+        prev_times_set = set()
+        for time_str in movie.get('times', []):
+            prev_times_set.add(extract_time_only(time_str))
+        prev_movie_times[key] = prev_times_set
+    
+    # 현재 상태와 비교
+    for movie in current_shows:
+        movie_date = movie['date']
+        key = f"{movie_date}|{movie['title']}|{movie.get('theater_info', '')}"
+        
+        current_times_set = set()
+        current_times_full = {}
+        for time_str in movie.get('times', []):
+            time_only = extract_time_only(time_str)
+            current_times_set.add(time_only)
+            current_times_full[time_only] = time_str
+        
+        if key in prev_movie_times:
+            prev_times = prev_movie_times[key]
+            new_times_only = current_times_set - prev_times
+            if new_times_only:
+                new_times_full = [current_times_full[t] for t in new_times_only]
+                new_showtimes.append({
+                    'date': movie_date,
+                    'title': movie['title'],
+                    'theater_info': movie.get('theater_info', ''),
+                    'new_times': new_times_full
+                })
+    
+    return new_showtimes
+
+def send_notification_for_date(date_key, new_showtimes):
+    """특정 날짜의 새로운 상영시간 알림 전송"""
+    msg_parts = []
+    msg_parts.append("⏰ 새로운 상영시간이 추가되었습니다!\n")
+    msg_parts.append(f"📅 {date_key}\n")
+    
+    for item in new_showtimes:
+        if item['theater_info']:
+            msg_parts.append(f"{item['title']} ({item['theater_info']})")
+        else:
+            msg_parts.append(item['title'])
+        for time_info in item['new_times']:
+            msg_parts.append(f"  {time_info}")
+        msg_parts.append("")
+    
+    msg = "\n".join(msg_parts).strip()
+    send_telegram_message(msg)
+    print(f"⚡ 즉시 알림 전송: {date_key}")
+
+def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
+    """각 날짜를 빠르게 클릭하면서 모든 날짜의 데이터 수집 및 즉시 알림 (스마트 대기 적용)"""
     try:
         print(f"활성화된 날짜 {len(enabled_dates)}개를 빠르게 클릭하며 수집 중...")
         all_movies_data = []
+        
+        # 이전 상태에서 날짜별로 영화 정보 분리
+        prev_movies_by_date = {}
+        if previous_state and 'movies' in previous_state:
+            for movie in previous_state['movies']:
+                date = movie['date']
+                if date not in prev_movies_by_date:
+                    prev_movies_by_date[date] = []
+                prev_movies_by_date[date].append(movie)
         
         for idx, date_info in enumerate(enabled_dates):
             try:
@@ -465,15 +551,30 @@ def scrape_all_dates_from_html(driver, enabled_dates):
                 
                 # 날짜 버튼 클릭
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
-                time.sleep(0.1)  # 스크롤 대기 시간 단축
+                time.sleep(0.05)  # 스크롤 대기 시간 최소화
                 driver.execute_script("arguments[0].click();", target_button)
-                time.sleep(0.8)  # 페이지 업데이트 대기 시간 약간 단축
+                
+                # 스마트 대기: 날짜 변경 후 영화 목록이 로드될 때까지 대기
+                try:
+                    WebDriverWait(driver, 5).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
+                    )
+                except:
+                    time.sleep(0.5)  # fallback
                 
                 # 데이터 수집
                 shows = scrape_imax_shows(driver, date_key)
                 if shows:
                     all_movies_data.extend(shows)
                     print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간")
+                    
+                    # 즉시 변화 감지 및 알림 (첫 실행이 아닌 경우만)
+                    if previous_state:
+                        prev_movies = prev_movies_by_date.get(date_key, [])
+                        new_showtimes = find_new_showtimes_for_date(shows, prev_movies)
+                        
+                        if new_showtimes:
+                            send_notification_for_date(date_key, new_showtimes)
                 else:
                     print(f"  ⚠️ 날짜 '{date_key}' 데이터 없음")
                     
@@ -680,16 +781,41 @@ def get_all_date_info(driver):
 def main():
     driver = init_driver()
     driver.get("https://cgv.co.kr/cnm/movieBook/cinema")
-    time.sleep(2)
+    
+    # 스마트 대기: 페이지 로딩 완료
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//li/button[contains(., '서울')]"))
+        )
+    except:
+        time.sleep(1)  # fallback
 
     select_region_seoul(driver)
-    time.sleep(1)
+    # 스마트 대기: 지역 선택 후 로딩
+    try:
+        WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH, "//button[p[text()='영등포타임스퀘어']]"))
+        )
+    except:
+        time.sleep(0.5)  # fallback
 
     select_yeongdeungpo(driver)
-    time.sleep(3)
+    # 스마트 대기: 극장 선택 후 로딩
+    try:
+        WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH, "//div[contains(@class,'cnms01510_movieTitleWrap__69alk')]//button"))
+        )
+    except:
+        time.sleep(1)  # fallback
 
     click_imax_filter(driver)
-    time.sleep(2)
+    # 스마트 대기: 필터 적용 후 로딩
+    try:
+        WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".dayScroll_container__e9cLv"))
+        )
+    except:
+        time.sleep(0.5)  # fallback
 
     all_date_info = get_all_date_info(driver)
     print(f"전체 날짜 수: {len(all_date_info)}개")
@@ -706,86 +832,18 @@ def main():
     if not previous_state:
         print("첫 실행: 모든 데이터 수집 후 상태 저장 (알림 없음)")
         # HTML에서 모든 날짜 데이터를 한 번에 수집
-        all_movies_current = scrape_all_dates_from_html(driver, enabled_dates)
+        all_movies_current = scrape_all_dates_from_html(driver, enabled_dates, None)
         
         save_current_state(current_date_states, all_movies_current)
         print("초기 상태 저장 완료")
         driver.quit()
         return
     
-    # 기존 상태가 있는 경우: HTML에서 모든 데이터 수집
+    # 기존 상태가 있는 경우: HTML에서 모든 데이터 수집 및 즉시 알림
     print(f"활성화된 날짜 {len(enabled_dates)}개 체크 중...")
-    all_movies_current = scrape_all_dates_from_html(driver, enabled_dates)
+    all_movies_current = scrape_all_dates_from_html(driver, enabled_dates, previous_state)
     
-    def extract_time_only(time_str):
-        """시간대 문자열에서 시간 부분만 추출 (좌석수 제외)"""
-        if " | " in time_str:
-            return time_str.split(" | ")[0]
-        return time_str
-    
-    prev_movie_times = {}
-    if 'movies' in previous_state:
-        for movie in previous_state['movies']:
-            key = f"{movie['date']}|{movie['title']}|{movie.get('theater_info', '')}"
-            prev_times_set = set()
-            for time_str in movie.get('times', []):
-                prev_times_set.add(extract_time_only(time_str))
-            prev_movie_times[key] = prev_times_set
-    
-    new_showtimes = []
-    
-    for movie in all_movies_current:
-        movie_date = movie['date']
-        key = f"{movie_date}|{movie['title']}|{movie.get('theater_info', '')}"
-        
-        current_times_set = set()
-        current_times_full = {}
-        for time_str in movie.get('times', []):
-            time_only = extract_time_only(time_str)
-            current_times_set.add(time_only)
-            current_times_full[time_only] = time_str
-        
-        if key in prev_movie_times:
-            prev_times = prev_movie_times[key]
-            new_times_only = current_times_set - prev_times
-            if new_times_only:
-                new_times_full = [current_times_full[t] for t in new_times_only]
-                new_showtimes.append({
-                    'date': movie_date,
-                    'title': movie['title'],
-                    'theater_info': movie.get('theater_info', ''),
-                    'new_times': new_times_full
-                })
-    
-    if new_showtimes:
-        by_date = {}
-        for item in new_showtimes:
-            date = item['date']
-            if date not in by_date:
-                by_date[date] = []
-            by_date[date].append(item)
-        
-        for date, items in sorted(by_date.items()):
-            msg_parts = []
-            msg_parts.append("⏰ 새로운 상영시간이 추가되었습니다!\n")
-            msg_parts.append(f"📅 {date}\n")
-            
-            for item in items:
-                if item['theater_info']:
-                    msg_parts.append(f"{item['title']} ({item['theater_info']})")
-                else:
-                    msg_parts.append(item['title'])
-                for time_info in item['new_times']:
-                    msg_parts.append(f"  {time_info}")
-                msg_parts.append("")
-            
-            msg = "\n".join(msg_parts).strip()
-            send_telegram_message(msg)
-            print(f"알림 전송 완료: 새로운 상영시간 '{date}'")
-        
-        print(f"  - 새로운 상영시간: {len(new_showtimes)}건")
-    else:
-        print("변화 없음 - 알림 없음")
+    print("변화 감지 완료 (즉시 알림은 이미 전송됨)")
     
     save_current_state(current_date_states, all_movies_current)
     print("상태 저장 완료")
