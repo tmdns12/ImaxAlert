@@ -556,14 +556,15 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
         print(f"활성화된 날짜 {len(enabled_dates)}개를 빠르게 클릭하며 수집 중...")
         all_movies_data = []
         
-        # 이전 상태에서 날짜별로 영화 정보 분리
+        # 이전 상태에서 날짜별로 영화 정보 분리 (정규화된 날짜 사용)
         prev_movies_by_date = {}
         if previous_state and 'movies' in previous_state:
             for movie in previous_state['movies']:
-                date = movie['date']
-                if date not in prev_movies_by_date:
+                date = normalize_string(movie.get('date', ''))
+                if date and date not in prev_movies_by_date:
                     prev_movies_by_date[date] = []
-                prev_movies_by_date[date].append(movie)
+                if date:
+                    prev_movies_by_date[date].append(movie)
         
         for idx, date_info in enumerate(enabled_dates):
             try:
@@ -657,11 +658,16 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     
                     # 즉시 변화 감지 및 알림 (첫 실행이 아닌 경우만)
                     if previous_state:
-                        prev_movies = prev_movies_by_date.get(date_key, [])
+                        # 날짜 키도 정규화하여 비교
+                        normalized_date_key = normalize_string(date_key)
+                        prev_movies = prev_movies_by_date.get(normalized_date_key, [])
                         new_showtimes = find_new_showtimes_for_date(shows, prev_movies)
                         
                         if new_showtimes:
+                            print(f"  🔔 알림 대상 발견: {len(new_showtimes)}개 영화에 새로운 상영시간")
                             send_notification_for_date(date_key, new_showtimes)
+                        else:
+                            print(f"  ✓ 변화 없음")
                 else:
                     print(f"  ⚠️ 날짜 '{date_key}' 데이터 없음")
                     
