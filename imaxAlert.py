@@ -540,21 +540,28 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
         if key in prev_movie_times:
             prev_times = prev_movie_times[key]
             
+            # 새로운 시간과 사라진 시간 계산
+            new_times_only = current_times_set - prev_times
+            removed_times_only = prev_times - current_times_set
+            
             # 디버깅: 상세 비교 로그
-            if len(prev_times) == len(current_times_set):
-                # 개수가 같은데도 새로운 시간이 감지되는 경우 - 상세 로그 출력
+            if len(prev_times) == len(current_times_set) or (new_times_only and removed_times_only):
+                # 개수가 같거나 시간대가 교체된 경우 - 상세 로그 출력
                 print(f"  🔍 상세 비교 ({movie.get('title')}):")
                 print(f"     이전 시간: {sorted(prev_times)}")
                 print(f"     현재 시간: {sorted(current_times_set)}")
-                print(f"     차이: {sorted(current_times_set - prev_times)}")
+                print(f"     추가된 시간: {sorted(new_times_only)}")
+                print(f"     사라진 시간: {sorted(removed_times_only)}")
             
-            new_times_only = current_times_set - prev_times
-            
-            if new_times_only:
+            # 실제로 시간대가 추가된 경우만 알림 (시간대가 교체된 경우는 제외)
+            # 조건: 새로운 시간이 있고, 이전 시간의 일부라도 남아있어야 함
+            if new_times_only and (not removed_times_only or len(removed_times_only) < len(new_times_only)):
                 # 디버깅: 상세 로그
                 print(f"  🔍 변화 감지: {movie.get('title')} - 새로운 시간 {len(new_times_only)}개")
                 print(f"     이전 시간 수: {len(prev_times)}, 현재 시간 수: {len(current_times_set)}")
                 print(f"     새로운 시간: {sorted(new_times_only)}")
+                if removed_times_only:
+                    print(f"     사라진 시간: {sorted(removed_times_only)} (시간대 교체로 인한 알림)")
                 new_times_full = [current_times_full[t] for t in new_times_only]
                 new_showtimes.append({
                     'date': movie_date,
@@ -562,6 +569,12 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
                     'theater_info': normalize_string(movie.get('theater_info', '')),
                     'new_times': new_times_full
                 })
+            elif new_times_only and removed_times_only and len(removed_times_only) >= len(new_times_only):
+                # 시간대가 교체된 경우 (사라진 시간이 추가된 시간보다 많거나 같음) - 알림 없음
+                print(f"  ⚠️ 시간대 교체 감지 ({movie.get('title')}): 알림 없음")
+                print(f"     이전 시간: {sorted(prev_times)}")
+                print(f"     현재 시간: {sorted(current_times_set)}")
+                print(f"     (시간대가 교체되었지만 추가되지 않았으므로 알림하지 않음)")
         else:
             # 새로운 영화 (이전에 없던 영화) - 알림 없음 (첫 실행이 아닌 경우)
             pass
