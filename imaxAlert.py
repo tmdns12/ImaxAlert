@@ -591,6 +591,13 @@ def get_all_date_info(driver):
         
         for idx, btn in enumerate(date_buttons):
             try:
+                # 버튼이 보이도록 스크롤 (텍스트 로드를 위해 필요)
+                try:
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'auto'});", btn)
+                    time.sleep(0.05)  # 최소 대기 시간
+                except:
+                    pass
+                
                 # disabled 클래스와 disabled 속성 모두 확인 (더 안전)
                 class_attr = btn.get_attribute("class") or ""
                 is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
