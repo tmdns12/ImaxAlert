@@ -645,49 +645,49 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     found_dates = []  # 디버깅용
                     
                     for btn in date_buttons:
-                    try:
-                        day_txt = ""
-                        day_num = ""
                         try:
-                            day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
-                            day_txt = day_txt_elem.text.strip()
-                        except:
-                            pass
-                        
-                        try:
-                            day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
-                            day_num = day_num_elem.text.strip()
-                        except:
-                            pass
-                        
-                        if not day_txt or not day_num:
+                            day_txt = ""
+                            day_num = ""
                             try:
-                                btn_text = btn.text.strip()
-                                lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
-                                if len(lines) >= 2:
-                                    day_txt = lines[0]
-                                    day_num = lines[1]
-                                elif len(lines) == 1:
-                                    parts = lines[0].split()
-                                    if len(parts) >= 2:
-                                        day_txt = parts[0]
-                                        day_num = parts[1]
+                                day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
+                                day_txt = day_txt_elem.text.strip()
                             except:
                                 pass
-                        
-                        if day_txt and day_num:
-                            btn_date_key = f"{day_txt} {day_num}"
-                            found_dates.append(btn_date_key)  # 디버깅용
                             
-                            if btn_date_key == date_key:
-                                class_attr = btn.get_attribute("class") or ""
-                                is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
-                                is_disabled_attr = btn.get_attribute("disabled") is not None
-                                if not (is_disabled_class or is_disabled_attr):
-                                    target_button = btn
-                                    break
-                    except:
-                        continue
+                            try:
+                                day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
+                                day_num = day_num_elem.text.strip()
+                            except:
+                                pass
+                            
+                            if not day_txt or not day_num:
+                                try:
+                                    btn_text = btn.text.strip()
+                                    lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
+                                    if len(lines) >= 2:
+                                        day_txt = lines[0]
+                                        day_num = lines[1]
+                                    elif len(lines) == 1:
+                                        parts = lines[0].split()
+                                        if len(parts) >= 2:
+                                            day_txt = parts[0]
+                                            day_num = parts[1]
+                                except:
+                                    pass
+                            
+                            if day_txt and day_num:
+                                btn_date_key = f"{day_txt} {day_num}"
+                                found_dates.append(btn_date_key)  # 디버깅용
+                                
+                                if btn_date_key == date_key:
+                                    class_attr = btn.get_attribute("class") or ""
+                                    is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
+                                    is_disabled_attr = btn.get_attribute("disabled") is not None
+                                    if not (is_disabled_class or is_disabled_attr):
+                                        target_button = btn
+                                        break
+                        except:
+                            continue
                 
                 if not target_button:
                     print(f"  ⚠️ 날짜 '{date_key}' 버튼을 찾을 수 없음")
