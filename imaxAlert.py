@@ -329,43 +329,69 @@ def scrape_imax_shows(driver, date_key=None):
         movie_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
 
         movies_data = []
-        for container in movie_containers:
+        for idx, container in enumerate(movie_containers):
             try:
-                movie_title = container.find_element(
-                    By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2"
-                ).text.strip()
-                
-                accordion_btn = container.find_element(
-                    By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
-                )
-                
-                is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
-                if not is_expanded:
-                    driver.execute_script("arguments[0].click();", accordion_btn)
-                    # 스마트 대기: 아코디언 펼쳐질 때까지 대기
-                    try:
-                        WebDriverWait(driver, 2).until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT"))
-                        )
-                    except:
-                        time.sleep(0.3)  # fallback
-                
-                imax_theater_full = container.find_element(
-                    By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT h3.screenInfo_title__Eso6_"
-                ).text.strip()
-                
-                if "IMAX" not in imax_theater_full.upper():
+                # 영화 제목 먼저 저장 (아코디언 펼치기 전)
+                try:
+                    movie_title = container.find_element(
+                        By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2"
+                    ).text.strip()
+                except:
                     continue
                 
-                imax_info_parts = imax_theater_full.replace("IMAX관", "").strip().replace(" / ", ", ")
+                # 아코디언 버튼 찾기 및 클릭
+                try:
+                    accordion_btn = container.find_element(
+                        By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
+                    )
+                    is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
+                    if not is_expanded:
+                        driver.execute_script("arguments[0].click();", accordion_btn)
+                        # 스마트 대기: 아코디언 펼쳐질 때까지 대기
+                        try:
+                            WebDriverWait(driver, 2).until(
+                                EC.presence_of_element_located((By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT"))
+                            )
+                        except:
+                            time.sleep(0.3)  # fallback
+                except:
+                    pass
                 
-                time_items = container.find_elements(
-                    By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
-                )
+                # 아코디언을 펼친 후 컨테이너를 다시 찾기 (stale element 방지)
+                try:
+                    containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+                    if idx < len(containers):
+                        container = containers[idx]  # 인덱스로 재참조
+                    else:
+                        continue
+                except:
+                    continue
+                
+                # IMAX 정보 확인 (재찾은 컨테이너 사용)
+                try:
+                    imax_theater_full = container.find_element(
+                        By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT h3.screenInfo_title__Eso6_"
+                    ).text.strip()
+                    
+                    if "IMAX" not in imax_theater_full.upper():
+                        continue
+                    
+                    imax_info_parts = imax_theater_full.replace("IMAX관", "").strip().replace(" / ", ", ")
+                except:
+                    continue
+                
+                # 상영시간 수집 (재찾은 컨테이너 사용)
+                try:
+                    time_items = container.find_elements(
+                        By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
+                    )
+                except:
+                    continue
                 
                 show_times = []
                 for item in time_items:
                     try:
+                        # 각 아이템도 stale 방지를 위해 텍스트만 빠르게 추출
                         start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
                         end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
                         
@@ -377,7 +403,7 @@ def scrape_imax_shows(driver, date_key=None):
                         
                         show_times.append(f"{start} {end} | {seat_info}")
                     except Exception as e:
-                        print(f"상영시간 파싱 오류: {e}")
+                        # stale element 발생 시 해당 아이템만 건너뛰기
                         continue
                 
                 if show_times:
