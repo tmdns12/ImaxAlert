@@ -418,6 +418,10 @@ def scrape_imax_shows(driver, date_key=None):
                         # 시간 문자열 정규화
                         start = normalize_string(start)
                         end = normalize_string(end)
+                        # 종료 시간에서 앞의 "-" 제거 ("- 16:38" -> "16:38")
+                        if end.startswith("-"):
+                            end = end[1:].strip()
+                        end = normalize_string(end)
                         seat_info = normalize_string(seat_info) if seat_info != "-" else "-"
                         show_times.append(f"{start} ~ {end} | {seat_info}")
                     except Exception as e:
@@ -475,6 +479,10 @@ def extract_time_only(time_str):
         if len(parts) == 2:
             start_time = normalize_string(parts[0])
             end_time = normalize_string(parts[1])
+            # 종료 시간에서 앞의 "-" 제거 ("- 16:38" -> "16:38")
+            if end_time.startswith("-"):
+                end_time = end_time[1:].strip()
+            end_time = normalize_string(end_time)
             return f"{start_time} ~ {end_time}"
     
     return time_part
