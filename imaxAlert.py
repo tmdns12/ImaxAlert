@@ -401,16 +401,20 @@ def scrape_imax_shows(driver, date_key=None):
                         except:
                             seat_info = "-"
                         
-                        show_times.append(f"{start} {end} | {seat_info}")
+                        # 시간 문자열 정규화
+                        start = normalize_string(start)
+                        end = normalize_string(end)
+                        seat_info = normalize_string(seat_info) if seat_info != "-" else "-"
+                        show_times.append(f"{start} ~ {end} | {seat_info}")
                     except Exception as e:
                         # stale element 발생 시 해당 아이템만 건너뛰기
                         continue
                 
                 if show_times:
                     movies_data.append({
-                        'date': current_date,
-                        'title': movie_title,
-                        'theater_info': imax_info_parts,
+                        'date': normalize_string(current_date),
+                        'title': normalize_string(movie_title),
+                        'theater_info': normalize_string(imax_info_parts),
                         'times': show_times
                     })
                     print(f"  수집: {movie_title} - {len(show_times)}개 상영")
@@ -425,48 +429,84 @@ def scrape_imax_shows(driver, date_key=None):
         return []
 
 
+def normalize_string(s):
+    """문자열 정규화 (공백, 특수문자 통일)"""
+    if not s:
+        return ""
+    # 앞뒤 공백 제거 및 여러 공백을 하나로
+    return " ".join(str(s).strip().split())
+
 def extract_time_only(time_str):
-    """시간대 문자열에서 시간 부분만 추출 (좌석수 제외)"""
-    if " | " in time_str:
-        return time_str.split(" | ")[0]
-    return time_str
+    """시간대 문자열에서 시간 부분만 추출 (좌석수 제외, 정규화)"""
+    if not time_str:
+        return ""
+    
+    # 정규화 후 추출
+    normalized = normalize_string(time_str)
+    
+    if " | " in normalized:
+        time_part = normalized.split(" | ")[0]
+    elif "|" in normalized:
+        time_part = normalized.split("|")[0]
+    else:
+        time_part = normalized
+    
+    # 추가 정규화: "14:40 ~ 16:38" -> "14:40 ~ 16:38" (공백 통일)
+    return normalize_string(time_part)
+
+def create_movie_key(movie):
+    """영화 키 생성 (정규화 적용)"""
+    date = normalize_string(movie.get('date', ''))
+    title = normalize_string(movie.get('title', ''))
+    theater_info = normalize_string(movie.get('theater_info', ''))
+    return f"{date}|{title}|{theater_info}"
 
 def find_new_showtimes_for_date(current_shows, previous_movies):
-    """특정 날짜의 새로운 상영시간 찾기"""
+    """특정 날짜의 새로운 상영시간 찾기 (정규화된 비교)"""
     new_showtimes = []
     prev_movie_times = {}
     
     # 이전 상태에서 해당 날짜의 영화 정보 가져오기
     for movie in previous_movies:
-        key = f"{movie['date']}|{movie['title']}|{movie.get('theater_info', '')}"
+        key = create_movie_key(movie)
         prev_times_set = set()
         for time_str in movie.get('times', []):
-            prev_times_set.add(extract_time_only(time_str))
-        prev_movie_times[key] = prev_times_set
+            time_only = extract_time_only(time_str)
+            if time_only:  # 빈 문자열 제외
+                prev_times_set.add(time_only)
+        if prev_times_set:  # 빈 set은 저장하지 않음
+            prev_movie_times[key] = prev_times_set
     
     # 현재 상태와 비교
     for movie in current_shows:
-        movie_date = movie['date']
-        key = f"{movie_date}|{movie['title']}|{movie.get('theater_info', '')}"
+        movie_date = normalize_string(movie.get('date', ''))
+        key = create_movie_key(movie)
         
         current_times_set = set()
         current_times_full = {}
         for time_str in movie.get('times', []):
             time_only = extract_time_only(time_str)
-            current_times_set.add(time_only)
-            current_times_full[time_only] = time_str
+            if time_only:  # 빈 문자열 제외
+                current_times_set.add(time_only)
+                current_times_full[time_only] = time_str
         
         if key in prev_movie_times:
             prev_times = prev_movie_times[key]
             new_times_only = current_times_set - prev_times
+            
             if new_times_only:
+                # 디버깅: 실제로 새로운 시간인지 확인
+                print(f"  🔍 변화 감지: {movie.get('title')} - 새로운 시간 {len(new_times_only)}개")
                 new_times_full = [current_times_full[t] for t in new_times_only]
                 new_showtimes.append({
                     'date': movie_date,
-                    'title': movie['title'],
-                    'theater_info': movie.get('theater_info', ''),
+                    'title': normalize_string(movie.get('title', '')),
+                    'theater_info': normalize_string(movie.get('theater_info', '')),
                     'new_times': new_times_full
                 })
+        else:
+            # 새로운 영화 (이전에 없던 영화) - 알림 없음 (첫 실행이 아닌 경우)
+            pass
     
     return new_showtimes
 
