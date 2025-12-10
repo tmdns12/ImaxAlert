@@ -360,7 +360,7 @@ def scrape_imax_shows(driver, date_key=None):
                     )
                     is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
                     if not is_expanded:
-                        driver.execute_script("arguments[0].click();", accordion_btn)
+                    driver.execute_script("arguments[0].click();", accordion_btn)
                         # 스마트 대기: 아코디언 펼쳐질 때까지 대기
                         try:
                             WebDriverWait(driver, 2).until(
@@ -641,63 +641,63 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 
                 # 저장된 버튼이 유효하지 않으면 다시 찾기 (fallback)
                 if not target_button:
-                    date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
-                    found_dates = []  # 디버깅용
-                    
-                    for btn in date_buttons:
+                date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
+                found_dates = []  # 디버깅용
+                
+                for btn in date_buttons:
+                    try:
+                        day_txt = ""
+                        day_num = ""
                         try:
-                            day_txt = ""
-                            day_num = ""
-                            try:
-                                day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
-                                day_txt = day_txt_elem.text.strip()
-                            except:
-                                pass
-                            
-                            try:
-                                day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
-                                day_num = day_num_elem.text.strip()
-                            except:
-                                pass
-                            
-                            if not day_txt or not day_num:
-                                try:
-                                    btn_text = btn.text.strip()
-                                    lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
-                                    if len(lines) >= 2:
-                                        day_txt = lines[0]
-                                        day_num = lines[1]
-                                    elif len(lines) == 1:
-                                        parts = lines[0].split()
-                                        if len(parts) >= 2:
-                                            day_txt = parts[0]
-                                            day_num = parts[1]
-                                except:
-                                    pass
-                            
-                            if day_txt and day_num:
-                                btn_date_key = f"{day_txt} {day_num}"
-                                found_dates.append(btn_date_key)  # 디버깅용
-                                
-                                if btn_date_key == date_key:
-                                    class_attr = btn.get_attribute("class") or ""
-                                    is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
-                                    is_disabled_attr = btn.get_attribute("disabled") is not None
-                                    if not (is_disabled_class or is_disabled_attr):
-                                        target_button = btn
-                                        break
+                            day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
+                            day_txt = day_txt_elem.text.strip()
                         except:
-                            continue
-                    
-                    if not target_button:
-                        print(f"  ⚠️ 날짜 '{date_key}' 버튼을 찾을 수 없음")
-                        if found_dates:
-                            print(f"     발견된 날짜 목록: {', '.join(found_dates[:10])}")  # 처음 10개만 출력
+                            pass
+                        
+                        try:
+                            day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
+                            day_num = day_num_elem.text.strip()
+                        except:
+                            pass
+                        
+                        if not day_txt or not day_num:
+                            try:
+                                btn_text = btn.text.strip()
+                                lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
+                                if len(lines) >= 2:
+                                    day_txt = lines[0]
+                                    day_num = lines[1]
+                                elif len(lines) == 1:
+                                    parts = lines[0].split()
+                                    if len(parts) >= 2:
+                                        day_txt = parts[0]
+                                        day_num = parts[1]
+                            except:
+                                pass
+                        
+                        if day_txt and day_num:
+                            btn_date_key = f"{day_txt} {day_num}"
+                            found_dates.append(btn_date_key)  # 디버깅용
+                            
+                            if btn_date_key == date_key:
+                                class_attr = btn.get_attribute("class") or ""
+                                is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
+                                is_disabled_attr = btn.get_attribute("disabled") is not None
+                                if not (is_disabled_class or is_disabled_attr):
+                                    target_button = btn
+                                    break
+                    except:
+                        continue
+                
+                if not target_button:
+                    print(f"  ⚠️ 날짜 '{date_key}' 버튼을 찾을 수 없음")
+                    if found_dates:
+                        print(f"     발견된 날짜 목록: {', '.join(found_dates[:10])}")  # 처음 10개만 출력
                         continue
                 
                 # 날짜 버튼 클릭
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
-                time.sleep(0.05)  # 스크롤 대기 시간 최소화
+                time.sleep(0.1)  # 스크롤 대기
                 driver.execute_script("arguments[0].click();", target_button)
                 
                 # 스마트 대기: 날짜 변경 후 영화 목록이 로드될 때까지 대기
@@ -705,27 +705,27 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     WebDriverWait(driver, 5).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
                     )
+                    # 추가 대기: 날짜 변경이 완전히 반영될 때까지
+                    time.sleep(0.3)
                 except:
-                    time.sleep(0.5)  # fallback
+                    time.sleep(0.8)  # fallback 대기 시간 증가
                 
                 # 데이터 수집
                 shows = scrape_imax_shows(driver, date_key)
                 if shows:
+                    # 날짜 키 정규화
+                    normalized_date_key = normalize_string(date_key)
+                    
+                    # 수집한 모든 데이터의 날짜를 강제로 현재 날짜로 설정 (중요!)
+                    for show in shows:
+                        show['date'] = normalized_date_key
+                    
                     all_movies_data.extend(shows)
                     print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간")
                     
                     # 즉시 변화 감지 및 알림 (첫 실행이 아닌 경우만)
                     if previous_state:
-                        # 날짜 키도 정규화하여 비교
-                        normalized_date_key = normalize_string(date_key)
                         prev_movies = prev_movies_by_date.get(normalized_date_key, [])
-                        
-                        # 수집한 데이터의 날짜가 정확한지 확인
-                        for show in shows:
-                            show_date = normalize_string(show.get('date', ''))
-                            if show_date != normalized_date_key:
-                                print(f"  ⚠️ 날짜 불일치: 예상 '{normalized_date_key}', 수집된 '{show_date}' - 수정")
-                                show['date'] = normalized_date_key  # 날짜 강제 수정
                         
                         new_showtimes = find_new_showtimes_for_date(shows, prev_movies, date_key)
                         
@@ -855,9 +855,9 @@ def get_all_date_info(driver):
                 try:
                     driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'auto'});", btn)
                     time.sleep(0.05)  # 최소 대기 시간
-                except:
-                    pass
-                
+        except:
+            pass
+        
                 # disabled 클래스와 disabled 속성 모두 확인 (더 안전)
                 class_attr = btn.get_attribute("class") or ""
                 is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
@@ -884,7 +884,7 @@ def get_all_date_info(driver):
                 # 방법 2: 요소를 찾지 못했으면 버튼의 전체 텍스트에서 추출
                 if not day_txt or not day_num:
                     try:
-                        btn_text = btn.text.strip()
+                    btn_text = btn.text.strip()
                         # 버튼 텍스트 예: "오늘\n08" 또는 "화 09"
                         lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
                         if len(lines) >= 2:
@@ -893,7 +893,7 @@ def get_all_date_info(driver):
                         elif len(lines) == 1:
                             # 공백으로 구분된 경우: "화 09"
                             parts = lines[0].split()
-                            if len(parts) >= 2:
+                    if len(parts) >= 2:
                                 day_txt = parts[0]
                                 day_num = parts[1]
                     except Exception as parse_error:
