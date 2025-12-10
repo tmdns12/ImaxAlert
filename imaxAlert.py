@@ -360,7 +360,7 @@ def scrape_imax_shows(driver, date_key=None):
                     )
                     is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
                     if not is_expanded:
-                    driver.execute_script("arguments[0].click();", accordion_btn)
+                        driver.execute_script("arguments[0].click();", accordion_btn)
                         # 스마트 대기: 아코디언 펼쳐질 때까지 대기
                         try:
                             WebDriverWait(driver, 2).until(
@@ -641,10 +641,10 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 
                 # 저장된 버튼이 유효하지 않으면 다시 찾기 (fallback)
                 if not target_button:
-                date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
-                found_dates = []  # 디버깅용
-                
-                for btn in date_buttons:
+                    date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
+                    found_dates = []  # 디버깅용
+                    
+                    for btn in date_buttons:
                     try:
                         day_txt = ""
                         day_num = ""
@@ -855,9 +855,9 @@ def get_all_date_info(driver):
                 try:
                     driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'auto'});", btn)
                     time.sleep(0.05)  # 최소 대기 시간
-        except:
-            pass
-        
+                except:
+                    pass
+                
                 # disabled 클래스와 disabled 속성 모두 확인 (더 안전)
                 class_attr = btn.get_attribute("class") or ""
                 is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
@@ -884,7 +884,7 @@ def get_all_date_info(driver):
                 # 방법 2: 요소를 찾지 못했으면 버튼의 전체 텍스트에서 추출
                 if not day_txt or not day_num:
                     try:
-                    btn_text = btn.text.strip()
+                        btn_text = btn.text.strip()
                         # 버튼 텍스트 예: "오늘\n08" 또는 "화 09"
                         lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
                         if len(lines) >= 2:
@@ -893,7 +893,7 @@ def get_all_date_info(driver):
                         elif len(lines) == 1:
                             # 공백으로 구분된 경우: "화 09"
                             parts = lines[0].split()
-                    if len(parts) >= 2:
+                            if len(parts) >= 2:
                                 day_txt = parts[0]
                                 day_num = parts[1]
                     except Exception as parse_error:
