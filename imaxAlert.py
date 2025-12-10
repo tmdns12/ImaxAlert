@@ -59,9 +59,23 @@ def load_previous_state():
 
 
 def save_current_state(date_states, movie_states):
+    # 저장 전 데이터 정규화 및 검증
+    normalized_movies = []
+    for movie in movie_states:
+        # 모든 필드 정규화
+        normalized_movie = {
+            'date': normalize_string(movie.get('date', '')),
+            'title': normalize_string(movie.get('title', '')),
+            'theater_info': normalize_string(movie.get('theater_info', '')),
+            'times': [normalize_string(t) if isinstance(t, str) else t for t in movie.get('times', [])]
+        }
+        # 유효한 데이터만 저장
+        if normalized_movie['date'] and normalized_movie['title'] and normalized_movie['times']:
+            normalized_movies.append(normalized_movie)
+    
     state = {
         'dates': date_states,
-        'movies': movie_states,
+        'movies': normalized_movies,
         'last_updated': datetime.now().isoformat()
     }
     
@@ -461,13 +475,19 @@ def create_movie_key(movie):
     theater_info = normalize_string(movie.get('theater_info', ''))
     return f"{date}|{title}|{theater_info}"
 
-def find_new_showtimes_for_date(current_shows, previous_movies):
-    """특정 날짜의 새로운 상영시간 찾기 (정규화된 비교)"""
+def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key):
+    """특정 날짜의 새로운 상영시간 찾기 (정규화된 비교, 날짜 검증 강화)"""
     new_showtimes = []
     prev_movie_times = {}
+    normalized_target_date = normalize_string(target_date_key)
     
-    # 이전 상태에서 해당 날짜의 영화 정보 가져오기
+    # 이전 상태에서 해당 날짜의 영화 정보만 가져오기 (날짜 재확인)
     for movie in previous_movies:
+        movie_date = normalize_string(movie.get('date', ''))
+        # 날짜가 일치하는지 확인 (안전 장치)
+        if movie_date != normalized_target_date:
+            continue
+        
         key = create_movie_key(movie)
         prev_times_set = set()
         for time_str in movie.get('times', []):
@@ -477,9 +497,15 @@ def find_new_showtimes_for_date(current_shows, previous_movies):
         if prev_times_set:  # 빈 set은 저장하지 않음
             prev_movie_times[key] = prev_times_set
     
-    # 현재 상태와 비교
+    # 현재 상태와 비교 (날짜 일치 확인)
     for movie in current_shows:
         movie_date = normalize_string(movie.get('date', ''))
+        
+        # 날짜 일치 확인 (안전 장치)
+        if movie_date != normalized_target_date:
+            print(f"  ⚠️ 날짜 불일치 경고: 예상 '{normalized_target_date}', 실제 '{movie_date}'")
+            continue
+        
         key = create_movie_key(movie)
         
         current_times_set = set()
@@ -495,8 +521,9 @@ def find_new_showtimes_for_date(current_shows, previous_movies):
             new_times_only = current_times_set - prev_times
             
             if new_times_only:
-                # 디버깅: 실제로 새로운 시간인지 확인
+                # 디버깅: 상세 로그
                 print(f"  🔍 변화 감지: {movie.get('title')} - 새로운 시간 {len(new_times_only)}개")
+                print(f"     이전 시간 수: {len(prev_times)}, 현재 시간 수: {len(current_times_set)}")
                 new_times_full = [current_times_full[t] for t in new_times_only]
                 new_showtimes.append({
                     'date': movie_date,
@@ -661,7 +688,15 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                         # 날짜 키도 정규화하여 비교
                         normalized_date_key = normalize_string(date_key)
                         prev_movies = prev_movies_by_date.get(normalized_date_key, [])
-                        new_showtimes = find_new_showtimes_for_date(shows, prev_movies)
+                        
+                        # 수집한 데이터의 날짜가 정확한지 확인
+                        for show in shows:
+                            show_date = normalize_string(show.get('date', ''))
+                            if show_date != normalized_date_key:
+                                print(f"  ⚠️ 날짜 불일치: 예상 '{normalized_date_key}', 수집된 '{show_date}' - 수정")
+                                show['date'] = normalized_date_key  # 날짜 강제 수정
+                        
+                        new_showtimes = find_new_showtimes_for_date(shows, prev_movies, date_key)
                         
                         if new_showtimes:
                             print(f"  🔔 알림 대상 발견: {len(new_showtimes)}개 영화에 새로운 상영시간")
