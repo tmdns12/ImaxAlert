@@ -470,18 +470,39 @@ def find_new_showtimes_for_date(current_shows, previous_movies):
     
     return new_showtimes
 
+def extract_start_time(time_str):
+    """상영시간 문자열에서 시작 시간 추출 (정렬용)"""
+    try:
+        # 형식: "14:40 ~ 16:38 | 387/387석" 또는 "14:40 ~ 16:38"
+        parts = time_str.split(' ~ ')
+        if parts:
+            time_part = parts[0].strip()
+            # 시간을 분으로 변환 (예: "14:40" -> 14*60 + 40 = 880)
+            if ':' in time_part:
+                hour, minute = map(int, time_part.split(':'))
+                return hour * 60 + minute
+    except:
+        pass
+    return 0  # 파싱 실패 시 맨 앞에
+
 def send_notification_for_date(date_key, new_showtimes):
-    """특정 날짜의 새로운 상영시간 알림 전송"""
+    """특정 날짜의 새로운 상영시간 알림 전송 (상영시간 순서대로 정렬)"""
     msg_parts = []
     msg_parts.append("⏰ 새로운 상영시간이 추가되었습니다!\n")
     msg_parts.append(f"📅 {date_key}\n")
     
-    for item in new_showtimes:
+    # 영화별로 정렬 (제목 순)
+    sorted_items = sorted(new_showtimes, key=lambda x: x['title'])
+    
+    for item in sorted_items:
         if item['theater_info']:
             msg_parts.append(f"{item['title']} ({item['theater_info']})")
         else:
             msg_parts.append(item['title'])
-        for time_info in item['new_times']:
+        
+        # 상영시간을 시작 시간 순서로 정렬
+        sorted_times = sorted(item['new_times'], key=lambda t: extract_start_time(t))
+        for time_info in sorted_times:
             msg_parts.append(f"  {time_info}")
         msg_parts.append("")
     
