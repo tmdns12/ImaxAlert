@@ -9,6 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import json
 import os
+import re
 from datetime import datetime
 
 CHROMEDRIVER_PATH = r"C:\Users\24011\Downloads\chromedriver-win64\chromedriver.exe"
@@ -323,6 +324,148 @@ def get_selected_date(driver):
         return "날짜 정보 없음"
 
 
+def check_network_idle(driver, timeout=2):
+    """네트워크 요청이 완료되었는지 확인 (간단한 방법: DOM 안정화 확인)"""
+    try:
+        # DOM이 안정화되었는지 확인 (짧은 시간 대기 후 요소 재확인)
+        initial_html_length = len(driver.page_source)
+        time.sleep(0.2)
+        final_html_length = len(driver.page_source)
+        
+        # HTML 길이가 크게 변하지 않으면 안정화된 것으로 간주
+        # (크게 변하지 않음 = 새로운 데이터 로딩 없음)
+        change_ratio = abs(final_html_length - initial_html_length) / max(initial_html_length, 1)
+        
+        # 0.1% 미만의 변화면 안정화된 것으로 간주
+        return change_ratio < 0.001
+    except Exception as e:
+        # 오류 발생 시 True 반환 (계속 진행)
+        return True
+
+
+def verify_date_selected(driver, expected_date_key):
+    """하이브리드 검증: 날짜가 실제로 선택되었는지 확인"""
+    normalized_expected = normalize_string(expected_date_key)
+    
+    # 조건 1: 날짜 버튼이 active 상태인지 확인
+    try:
+        active_btn = driver.find_element(
+            By.CSS_SELECTOR,
+            ".dayScroll_scrollItem__IZ35T.dayScroll_itemActive__fZ5Sq"
+        )
+        day_num = active_btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text.strip()
+        day_txt = active_btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text.strip()
+        selected_date = normalize_string(f"{day_txt} {day_num}")
+        
+        if selected_date != normalized_expected:
+            return False
+    except:
+        return False
+    
+    # 조건 2: DOM 요소가 존재하는지 확인
+    try:
+        containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+        if not containers:
+            return False
+    except:
+        return False
+    
+    # 조건 3: 네트워크가 idle 상태인지 확인 (선택적)
+    if not check_network_idle(driver, timeout=1):
+        return False
+    
+    return True
+
+
+def verify_showtimes_loaded(driver, container_idx=None):
+    """하이브리드 검증: 상영시간 데이터가 실제로 로드되었는지 확인"""
+    try:
+        containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+        if not containers:
+            return False
+        
+        # 특정 컨테이너만 확인하는 경우
+        if container_idx is not None:
+            if container_idx >= len(containers):
+                return False
+            containers = [containers[container_idx]]
+        
+        # 각 컨테이너의 상영시간이 로드되었는지 확인
+        for container in containers:
+            try:
+                # 조건 1: 시간 아이템 요소가 존재하는지
+                time_items = container.find_elements(
+                    By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
+                )
+                
+                if not time_items:
+                    # IMAX가 아닌 영화일 수도 있으므로 계속 확인
+                    continue
+                
+                # 조건 2: 각 시간 아이템에 실제 데이터가 있는지 검증
+                valid_times_count = 0
+                for item in time_items:
+                    try:
+                        start_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu")
+                        end_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0")
+                        
+                        start_text = start_elem.text.strip()
+                        end_text = end_elem.text.strip()
+                        
+                        # 빈 문자열이 아닌지 확인
+                        if not start_text or not end_text:
+                            continue
+                        
+                        # 시간 형식 검증 (HH:MM 형식)
+                        if re.match(r'^\d{2}:\d{2}$', start_text) and (
+                            re.match(r'^\d{2}:\d{2}$', end_text) or 
+                            re.match(r'^-\s*\d{2}:\d{2}$', end_text)
+                        ):
+                            valid_times_count += 1
+                    except:
+                        continue
+                
+                # 최소 1개 이상의 유효한 시간이 있어야 함
+                if valid_times_count > 0:
+                    return True
+                    
+            except:
+                continue
+        
+        # IMAX 영화가 없거나 아직 로드되지 않은 경우
+        return False
+    except:
+        return False
+
+
+def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=5):
+    """하이브리드 대기: 날짜 선택 완료까지 모든 조건 확인"""
+    start_time = time.time()
+    
+    while time.time() - start_time < max_wait:
+        if verify_date_selected(driver, expected_date_key):
+            # 날짜 선택 확인 후 추가로 페이지 안정화 대기
+            time.sleep(0.2)
+            return True
+        time.sleep(0.1)
+    
+    return False
+
+
+def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=3):
+    """하이브리드 대기: 상영시간 로딩 완료까지 모든 조건 확인"""
+    start_time = time.time()
+    
+    while time.time() - start_time < max_wait:
+        if verify_showtimes_loaded(driver, container_idx):
+            # 데이터 로드 확인 후 추가로 안정화 대기
+            time.sleep(0.1)
+            return True
+        time.sleep(0.1)
+    
+    return False
+
+
 def scrape_imax_shows(driver, date_key=None):
     """현재 선택된 날짜의 IMAX 상영 정보 수집"""
     try:
@@ -361,7 +504,8 @@ def scrape_imax_shows(driver, date_key=None):
                     is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
                     if not is_expanded:
                         driver.execute_script("arguments[0].click();", accordion_btn)
-                        # 스마트 대기: 아코디언 펼쳐질 때까지 대기
+                        
+                        # 기본 대기: 아코디언 펼쳐질 때까지 대기
                         try:
                             WebDriverWait(driver, 2).until(
                                 EC.presence_of_element_located((By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT"))
@@ -369,27 +513,12 @@ def scrape_imax_shows(driver, date_key=None):
                         except:
                             time.sleep(0.3)  # fallback
                         
-                        # 상영시간이 실제로 로드될 때까지 대기 (최대 1초)
-                        max_wait = 10  # 1초 (0.1초씩 10번)
-                        times_loaded = False
-                        for _ in range(max_wait):
-                            try:
-                                # 컨테이너를 다시 찾아서 시간 아이템 확인
-                                containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                                if idx < len(containers):
-                                    test_container = containers[idx]
-                                    time_items_test = test_container.find_elements(
-                                        By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
-                                    )
-                                    if time_items_test:  # 시간 아이템이 하나라도 있으면 로드된 것으로 간주
-                                        times_loaded = True
-                                        break
-                            except:
-                                pass
-                            time.sleep(0.1)
+                        # 하이브리드 대기: 상영시간 데이터가 실제로 로드되었는지 확인
+                        showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=2)
                         
-                        if not times_loaded:
-                            time.sleep(0.3)  # 추가 대기
+                        if not showtimes_loaded:
+                            # Fallback: 추가 대기
+                            time.sleep(0.3)
                 except:
                     pass
                 
@@ -756,33 +885,19 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 time.sleep(0.1)  # 스크롤 대기
                 driver.execute_script("arguments[0].click();", target_button)
                 
-                # 스마트 대기: 날짜 변경 후 영화 목록이 로드될 때까지 대기
-                try:
-                    WebDriverWait(driver, 5).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
-                    )
-                except:
-                    time.sleep(0.8)  # fallback
+                # 하이브리드 대기: 날짜 선택 완료 확인 (네트워크 + DOM + 데이터 검증)
+                date_loaded = wait_for_date_fully_loaded(driver, date_key, max_wait=5)
                 
-                # 날짜가 실제로 선택되었는지 확인 (최대 3초 대기)
-                max_wait = 30  # 3초 (0.1초씩 30번)
-                date_selected = False
-                normalized_date_key = normalize_string(date_key)
-                for _ in range(max_wait):
+                if not date_loaded:
+                    print(f"  ⚠️ 날짜 '{date_key}' 하이브리드 검증 실패, 계속 진행하지만 데이터 정확도가 떨어질 수 있음")
+                    # Fallback: 기본 대기
                     try:
-                        selected_date = get_selected_date(driver)
-                        if normalize_string(selected_date) == normalized_date_key:
-                            date_selected = True
-                            break
+                        WebDriverWait(driver, 3).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
+                        )
+                        time.sleep(0.5)
                     except:
-                        pass
-                    time.sleep(0.1)
-                
-                if not date_selected:
-                    print(f"  ⚠️ 날짜 '{date_key}' 선택 확인 실패, 계속 진행하지만 데이터 정확도가 떨어질 수 있음")
-                
-                # 추가 대기: 페이지 업데이트가 완전히 반영될 때까지
-                time.sleep(0.5)
+                        time.sleep(0.8)
                 
                 # 데이터 수집
                 shows = scrape_imax_shows(driver, date_key)
