@@ -19,6 +19,9 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 GIST_ID = os.getenv("GIST_ID", "")
 STATE_FILE = "imax_state.json"
 
+# 전역 드라이버 변수 (브라우저 유지)
+_global_driver = None
+
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -856,8 +859,54 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 # 정확한 데이터 수집을 위한 대기 (페이지 안정화)
                 time.sleep(0.3)
                 
-                # 데이터 수집 (모든 상영시간이 로드될 때까지 대기하는 개선된 함수 사용)
-                shows = scrape_imax_shows(driver, date_key)
+                # 이중 스크래핑 검증: 두 번 수집하여 일관성 확인
+                shows_first = scrape_imax_shows(driver, date_key)
+                time.sleep(0.5)  # 두 번째 수집 전 대기
+                shows_second = scrape_imax_shows(driver, date_key)
+                
+                # 두 결과 비교: 영화별로 상영시간 비교
+                def compare_shows(shows1, shows2):
+                    """두 수집 결과를 비교하여 일치 여부 확인"""
+                    if len(shows1) != len(shows2):
+                        return False
+                    
+                    # 영화별로 매칭하여 비교
+                    shows1_dict = {}
+                    for s in shows1:
+                        key = create_movie_key(s)
+                        shows1_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
+                    
+                    shows2_dict = {}
+                    for s in shows2:
+                        key = create_movie_key(s)
+                        shows2_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
+                    
+                    if set(shows1_dict.keys()) != set(shows2_dict.keys()):
+                        return False
+                    
+                    for key in shows1_dict:
+                        if shows1_dict[key] != shows2_dict[key]:
+                            return False
+                    
+                    return True
+                
+                if compare_shows(shows_first, shows_second):
+                    shows = shows_first
+                else:
+                    # 불일치 시 더 많은 데이터를 가진 결과 사용 (누락 방지)
+                    first_total_times = sum(len(s.get('times', [])) for s in shows_first)
+                    second_total_times = sum(len(s.get('times', [])) for s in shows_second)
+                    
+                    if second_total_times > first_total_times:
+                        shows = shows_second
+                        print(f"  ⚠️ 데이터 불안정 감지: 두 번째 결과 사용 ({len(shows_second)}개 영화, {second_total_times}개 상영시간)")
+                    elif first_total_times > second_total_times:
+                        shows = shows_first
+                        print(f"  ⚠️ 데이터 불안정 감지: 첫 번째 결과 사용 ({len(shows_first)}개 영화, {first_total_times}개 상영시간)")
+                    else:
+                        # 상영시간 수가 같으면 두 번째 결과 사용 (더 최신)
+                        shows = shows_second
+                        print(f"  ⚠️ 데이터 불안정 감지: 두 번째 결과 사용 (상영시간 수 동일)")
                 
                 if shows:
                     # 날짜 키 정규화
@@ -1085,44 +1134,115 @@ def get_all_date_info(driver):
 
 
 def main():
-    driver = init_driver()
-    driver.get("https://cgv.co.kr/cnm/movieBook/cinema")
+    global _global_driver
     
-    # 스마트 대기: 페이지 로딩 완료
-    try:
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//li/button[contains(., '서울')]"))
-        )
-    except:
-        time.sleep(1)  # fallback
+    # 전역 드라이버가 없거나 유효하지 않으면 초기화
+    if _global_driver is None:
+        try:
+            _global_driver = init_driver()
+            _global_driver.get("https://cgv.co.kr/cnm/movieBook/cinema")
+            
+            # 스마트 대기: 페이지 로딩 완료
+            try:
+                WebDriverWait(_global_driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, "//li/button[contains(., '서울')]"))
+                )
+            except:
+                time.sleep(1)  # fallback
 
-    select_region_seoul(driver)
-    # 스마트 대기: 지역 선택 후 로딩
-    try:
-        WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.XPATH, "//button[p[text()='영등포타임스퀘어']]"))
-        )
-    except:
-        time.sleep(0.5)  # fallback
+            select_region_seoul(_global_driver)
+            # 스마트 대기: 지역 선택 후 로딩
+            try:
+                WebDriverWait(_global_driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, "//button[p[text()='영등포타임스퀘어']]"))
+                )
+            except:
+                time.sleep(0.5)  # fallback
 
-    select_yeongdeungpo(driver)
-    # 스마트 대기: 극장 선택 후 로딩
-    try:
-        WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.XPATH, "//div[contains(@class,'cnms01510_movieTitleWrap__69alk')]//button"))
-        )
-    except:
-        time.sleep(1)  # fallback
+            select_yeongdeungpo(_global_driver)
+            # 스마트 대기: 극장 선택 후 로딩
+            try:
+                WebDriverWait(_global_driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, "//div[contains(@class,'cnms01510_movieTitleWrap__69alk')]//button"))
+                )
+            except:
+                time.sleep(1)  # fallback
 
-    click_imax_filter(driver)
-    # 스마트 대기: 필터 적용 후 로딩
-    try:
-        WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".dayScroll_container__e9cLv"))
-        )
-    except:
-        time.sleep(0.5)  # fallback
+            click_imax_filter(_global_driver)
+            # 스마트 대기: 필터 적용 후 로딩
+            try:
+                WebDriverWait(_global_driver, 5).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, ".dayScroll_container__e9cLv"))
+                )
+            except:
+                time.sleep(0.5)  # fallback
+            
+            print("크롬 브라우저 초기화 완료 (유지 모드)")
+        except Exception as e:
+            print(f"드라이버 초기화 실패: {e}")
+            # 실패 시 재시도
+            try:
+                if _global_driver:
+                    _global_driver.quit()
+            except:
+                pass
+            _global_driver = None
+            return
+    else:
+        # 기존 드라이버가 있으면 새로고침만 수행
+        try:
+            # 드라이버가 유효한지 확인
+            _global_driver.current_url
+            print("기존 브라우저 사용 (새로고침)")
+            _global_driver.refresh()
+            
+            # 스마트 대기: 페이지 로딩 완료
+            try:
+                WebDriverWait(_global_driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, "//li/button[contains(., '서울')]"))
+                )
+            except:
+                time.sleep(1)  # fallback
 
+            select_region_seoul(_global_driver)
+            # 스마트 대기: 지역 선택 후 로딩
+            try:
+                WebDriverWait(_global_driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, "//button[p[text()='영등포타임스퀘어']]"))
+                )
+            except:
+                time.sleep(0.5)  # fallback
+
+            select_yeongdeungpo(_global_driver)
+            # 스마트 대기: 극장 선택 후 로딩
+            try:
+                WebDriverWait(_global_driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, "//div[contains(@class,'cnms01510_movieTitleWrap__69alk')]//button"))
+                )
+            except:
+                time.sleep(1)  # fallback
+
+            click_imax_filter(_global_driver)
+            # 스마트 대기: 필터 적용 후 로딩
+            try:
+                WebDriverWait(_global_driver, 5).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, ".dayScroll_container__e9cLv"))
+                )
+            except:
+                time.sleep(0.5)  # fallback
+        except Exception as e:
+            # 드라이버가 유효하지 않으면 재초기화
+            print(f"기존 드라이버 무효화 감지: {e}, 재초기화 중...")
+            try:
+                _global_driver.quit()
+            except:
+                pass
+            _global_driver = None
+            # 재귀 호출로 재초기화
+            return main()
+    
+    driver = _global_driver
+    
     all_date_info = get_all_date_info(driver)
     print(f"전체 날짜 수: {len(all_date_info)}개")
     
@@ -1142,7 +1262,7 @@ def main():
         
         save_current_state(current_date_states, all_movies_current)
         print("초기 상태 저장 완료")
-        driver.quit()
+        # 첫 실행 시에도 드라이버 유지 (quit 제거)
         return
     
     # 기존 상태가 있는 경우: HTML에서 모든 데이터 수집 및 즉시 알림
@@ -1153,8 +1273,8 @@ def main():
     
     save_current_state(current_date_states, all_movies_current)
     print("상태 저장 완료")
-
-    driver.quit()
+    
+    # 드라이버 유지 (quit 제거)
 
 
 if __name__ == "__main__":
