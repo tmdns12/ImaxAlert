@@ -678,31 +678,125 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
             # 조건:
             # 1. 새로운 시간이 있어야 함
             # 2. 사라진 시간이 없어야 함 (순수 추가만 알림) - 또는
-            # 3. 사라진 시간이 있더라도, 이전 시간의 대부분(80% 이상)이 남아있고 추가가 사라진 것보다 훨씬 많은 경우만
+            # 3. 사라진 시간이 있더라도, 종료 시간이 같은 시간대 교체가 아닌지 확인
+            
             common_times = prev_times & current_times_set
             common_ratio = len(common_times) / len(prev_times) if prev_times else 0
             
-            # 실제 추가인지 확인 (더 엄격한 기준)
+            # 종료 시간 기준으로 그룹화하여 시간 변경 감지
+            def extract_end_time(time_str):
+                """종료 시간 추출"""
+                if " ~ " in time_str:
+                    parts = time_str.split(" ~ ")
+                    if len(parts) == 2:
+                        return parts[1].strip()
+                return ""
+            
+            # 종료 시간이 같은 시간대 교체 확인
+            removed_end_times = {}  # 종료시간 -> 시작시간 리스트
+            for removed in removed_times_only:
+                end_time = extract_end_time(removed)
+                if end_time:
+                    if end_time not in removed_end_times:
+                        removed_end_times[end_time] = []
+                    removed_end_times[end_time].append(removed)
+            
+            new_end_times = {}  # 종료시간 -> 시작시간 리스트
+            for new_time in new_times_only:
+                end_time = extract_end_time(new_time)
+                if end_time:
+                    if end_time not in new_end_times:
+                        new_end_times[end_time] = []
+                    new_end_times[end_time].append(new_time)
+            
+            # 종료 시간이 같은 시간대 변경 분리
+            time_change_pairs = []  # (removed, new) 쌍
+            real_new_times = set(new_times_only)
+            real_removed_times = set(removed_times_only)
+            
+            # 시작 시간을 분으로 변환하는 헬퍼 함수
+            def time_to_minutes(time_str):
+                try:
+                    h, m = map(int, time_str.split(":"))
+                    return h * 60 + m
+                except:
+                    return 0
+            
+            for end_time in removed_end_times:
+                if end_time in new_end_times:
+                    # 같은 종료 시간에 대해 시작 시간이 변경된 경우
+                    removed_list = [r for r in removed_end_times[end_time] if r in real_removed_times]
+                    new_list = [n for n in new_end_times[end_time] if n in real_new_times]
+                    
+                    # 1:1 매칭 (가장 가까운 시작 시간 찾기)
+                    matched_removed = set()
+                    matched_new = set()
+                    
+                    for removed in removed_list:
+                        if removed in matched_removed:
+                            continue
+                        
+                        removed_start = removed.split(" ~ ")[0] if " ~ " in removed else ""
+                        if not removed_start:
+                            continue
+                        
+                        removed_minutes = time_to_minutes(removed_start)
+                        best_match = None
+                        min_diff = 180  # 최대 3시간 차이까지만 시간 변경으로 간주
+                        
+                        for new_time in new_list:
+                            if new_time in matched_new:
+                                continue
+                            
+                            new_start = new_time.split(" ~ ")[0] if " ~ " in new_time else ""
+                            if not new_start:
+                                continue
+                            
+                            new_minutes = time_to_minutes(new_start)
+                            diff = abs(new_minutes - removed_minutes)
+                            
+                            if diff < min_diff:
+                                min_diff = diff
+                                best_match = new_time
+                        
+                        if best_match:
+                            time_change_pairs.append((removed, best_match))
+                            matched_removed.add(removed)
+                            matched_new.add(best_match)
+                            real_new_times.discard(best_match)
+                            real_removed_times.discard(removed)
+            
+            # 실제 추가인지 확인 (시간 변경 제외한 순수 추가만)
             is_real_addition = (
-                new_times_only and  # 새로운 시간이 있고
+                real_new_times and  # 시간 변경 제외한 순수 새로운 시간이 있고
                 (
-                    not removed_times_only or  # 사라진 시간이 없거나 (순수 추가)
+                    not real_removed_times or  # 사라진 시간이 없거나 (순수 추가)
                     (
-                        common_ratio >= 0.8 and  # 이전 시간의 80% 이상이 남아있고
-                        len(new_times_only) >= len(removed_times_only) * 2  # 추가된 시간이 사라진 시간의 2배 이상
+                        common_ratio >= 0.9 and  # 이전 시간의 90% 이상이 남아있고
+                        len(real_new_times) > len(real_removed_times) * 2  # 순수 추가가 순수 제거보다 2배 이상
                     )
                 )
             )
             
+            # 시간 변경이 있으면 로그 출력
+            if time_change_pairs:
+                is_time_change = True
+            else:
+                is_time_change = False
+            
             if is_real_addition:
                 # 디버깅: 상세 로그
-                print(f"  🔍 변화 감지: {movie.get('title')} - 새로운 시간 {len(new_times_only)}개")
+                if time_change_pairs:
+                    print(f"  🔍 시간 변경 감지: {len(time_change_pairs)}개 (알림 제외)")
+                    for removed, new_time in time_change_pairs:
+                        print(f"     변경: {removed} → {new_time}")
+                print(f"  🔍 변화 감지: {movie.get('title')} - 순수 새로운 시간 {len(real_new_times)}개")
                 print(f"     이전 시간 수: {len(prev_times)}, 현재 시간 수: {len(current_times_set)}")
                 print(f"     공통 시간 수: {len(common_times)}, 공통 비율: {common_ratio:.1%}")
-                print(f"     새로운 시간: {sorted(new_times_only)}")
-                if removed_times_only:
-                    print(f"     사라진 시간: {sorted(removed_times_only)}")
-                new_times_full = [current_times_full[t] for t in new_times_only]
+                print(f"     순수 새로운 시간: {sorted(real_new_times)}")
+                if real_removed_times:
+                    print(f"     순수 사라진 시간: {sorted(real_removed_times)}")
+                new_times_full = [current_times_full[t] for t in real_new_times]  # 순수 새로운 시간만
                 new_showtimes.append({
                     'date': movie_date,
                     'title': normalize_string(movie.get('title', '')),
@@ -710,13 +804,16 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
                     'new_times': new_times_full
                 })
             elif new_times_only and removed_times_only:
-                # 시간대가 교체되었거나 이전 상태가 부정확한 경우 - 알림 없음
-                print(f"  ⚠️ 시간대 변경 감지 ({movie.get('title')}): 알림 없음")
+                # 시간대가 교체되었거나 시작 시간만 변경된 경우 - 알림 없음
+                print(f"  ⚠️ 시간 변경/교체 감지 ({movie.get('title')}): 알림 없음")
                 print(f"     이전 시간: {sorted(prev_times)}")
                 print(f"     현재 시간: {sorted(current_times_set)}")
-                print(f"     공통 시간 비율: {common_ratio:.1%} (50% 미만이므로 교체로 판단)")
+                print(f"     공통 시간 비율: {common_ratio:.1%}")
                 print(f"     추가: {len(new_times_only)}개, 사라짐: {len(removed_times_only)}개")
-                print(f"     (시간대가 교체되었거나 이전 상태가 부정확한 것으로 판단, 알림하지 않음)")
+                if is_time_change:
+                    print(f"     (종료 시간이 같은 시간대의 시작 시간 변경으로 판단, 알림하지 않음)")
+                else:
+                    print(f"     (시간대가 교체되었거나 이전 상태가 부정확한 것으로 판단, 알림하지 않음)")
         else:
             # 새로운 영화 (이전에 없던 영화) - 알림 없음 (첫 실행이 아닌 경우)
             pass
