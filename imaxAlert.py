@@ -853,8 +853,45 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     except:
                         time.sleep(0.3)
                 
-                # 데이터 수집
-                shows = scrape_imax_shows(driver, date_key)
+                # 궁극적인 해결책: 이중 스크래핑 검증
+                # 같은 데이터를 두 번 수집하여 일관성 확인
+                shows_first = scrape_imax_shows(driver, date_key)
+                
+                # 짧은 대기 후 재수집
+                time.sleep(0.5)
+                shows_second = scrape_imax_shows(driver, date_key)
+                
+                # 두 결과가 일치하는지 확인 (안정적인 데이터만 사용)
+                if shows_first and shows_second:
+                    # 각 영화별로 시간 비교
+                    shows_dict_first = {}
+                    shows_dict_second = {}
+                    
+                    for show in shows_first:
+                        key = create_movie_key(show)
+                        times_set = set(extract_time_only(t) for t in show.get('times', []))
+                        shows_dict_first[key] = times_set
+                    
+                    for show in shows_second:
+                        key = create_movie_key(show)
+                        times_set = set(extract_time_only(t) for t in show.get('times', []))
+                        shows_dict_second[key] = times_set
+                    
+                    # 두 결과가 동일한 영화만 사용
+                    stable_shows = []
+                    for show in shows_first:
+                        key = create_movie_key(show)
+                        if key in shows_dict_second:
+                            # 시간이 일치하는 경우만 사용
+                            if shows_dict_first[key] == shows_dict_second[key]:
+                                stable_shows.append(show)
+                            else:
+                                print(f"  ⚠️ 데이터 불안정 감지: {show.get('title')} - 첫 번째와 두 번째 수집 결과가 다름")
+                    
+                    shows = stable_shows if stable_shows else shows_first  # 검증 실패 시 첫 번째 결과 사용
+                else:
+                    shows = shows_first if shows_first else shows_second
+                
                 if shows:
                     # 날짜 키 정규화
                     normalized_date_key = normalize_string(date_key)
