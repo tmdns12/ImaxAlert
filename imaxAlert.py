@@ -324,23 +324,11 @@ def get_selected_date(driver):
         return "날짜 정보 없음"
 
 
-def check_network_idle(driver, timeout=2):
-    """네트워크 요청이 완료되었는지 확인 (가벼운 방법)"""
-    try:
-        # page_source 전체 읽기는 너무 느리므로 가벼운 방법 사용
-        # 단순히 짧은 대기만 수행 (실제로는 DOM 체크로 충분)
-        time.sleep(0.05)
-        return True
-    except Exception as e:
-        return True
-
-
 def verify_date_selected(driver, expected_date_key):
-    """빠른 검증: 날짜가 실제로 선택되었는지 확인 (핵심만 확인)"""
+    """날짜가 실제로 선택되었는지 확인"""
     normalized_expected = normalize_string(expected_date_key)
     
     try:
-        # 조건 1: 날짜 버튼이 active 상태인지 확인 (가장 빠르고 확실)
         active_btn = driver.find_element(
             By.CSS_SELECTOR,
             ".dayScroll_scrollItem__IZ35T.dayScroll_itemActive__fZ5Sq"
@@ -360,7 +348,7 @@ def verify_date_selected(driver, expected_date_key):
 
 
 def verify_showtimes_loaded(driver, container_idx=None):
-    """빠른 검증: 상영시간 데이터가 실제로 로드되었는지 확인 (간소화)"""
+    """상영시간 데이터가 실제로 로드되었는지 확인"""
     try:
         containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
         if not containers:
@@ -405,41 +393,34 @@ def verify_showtimes_loaded(driver, container_idx=None):
 
 
 def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=2):
-    """빠른 대기: 날짜 선택 완료까지 확인 (타임아웃 단축)"""
-    # 즉시 첫 번째 확인 (대부분 성공)
+    """날짜 선택 완료까지 확인"""
     if verify_date_selected(driver, expected_date_key):
         return True
     
-    # 실패 시에만 재시도 (간격 단축)
     start_time = time.time()
     while time.time() - start_time < max_wait:
         if verify_date_selected(driver, expected_date_key):
             return True
-        time.sleep(0.05)  # 0.1초 -> 0.05초로 단축
-    
+        time.sleep(0.05)
     return False
 
 
 def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1):
-    """빠른 대기: 상영시간 로딩 완료까지 확인 (타임아웃 단축)"""
-    # 즉시 첫 번째 확인
+    """상영시간 로딩 완료까지 확인"""
     if verify_showtimes_loaded(driver, container_idx):
         return True
     
-    # 실패 시에만 재시도
     start_time = time.time()
     while time.time() - start_time < max_wait:
         if verify_showtimes_loaded(driver, container_idx):
             return True
-        time.sleep(0.05)  # 0.1초 -> 0.05초로 단축
-    
+        time.sleep(0.05)
     return False
 
 
 def scrape_imax_shows(driver, date_key=None):
     """현재 선택된 날짜의 IMAX 상영 정보 수집"""
     try:
-        # 스마트 대기: 페이지 로딩 완료까지 대기
         try:
             WebDriverWait(driver, 5).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
@@ -483,10 +464,7 @@ def scrape_imax_shows(driver, date_key=None):
                         except:
                             time.sleep(0.3)  # fallback
                         
-                        # 빠른 검증: 상영시간 데이터가 실제로 로드되었는지 확인
                         showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=1)
-                        
-                        # 검증 실패 시 최소 대기만 (0.1초)
                         if not showtimes_loaded:
                             time.sleep(0.1)
                 except:
@@ -609,22 +587,21 @@ def extract_time_only(time_str):
     return time_part
 
 def create_movie_key(movie):
-    """영화 키 생성 (정규화 적용)"""
+    """영화 키 생성"""
     date = normalize_string(movie.get('date', ''))
     title = normalize_string(movie.get('title', ''))
     theater_info = normalize_string(movie.get('theater_info', ''))
     return f"{date}|{title}|{theater_info}"
 
 def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key):
-    """특정 날짜의 새로운 상영시간 찾기 (정규화된 비교, 날짜 검증 강화)"""
+    """특정 날짜의 새로운 상영시간 찾기"""
     new_showtimes = []
     prev_movie_times = {}
     normalized_target_date = normalize_string(target_date_key)
     
-    # 이전 상태에서 해당 날짜의 영화 정보만 가져오기 (날짜 재확인)
+    # 이전 상태에서 해당 날짜의 영화 정보만 가져오기
     for movie in previous_movies:
         movie_date = normalize_string(movie.get('date', ''))
-        # 날짜가 일치하는지 확인 (안전 장치)
         if movie_date != normalized_target_date:
             continue
         
@@ -634,18 +611,13 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
             time_only = extract_time_only(time_str)
             if time_only:  # 빈 문자열 제외
                 prev_times_set.add(time_only)
-        if prev_times_set:  # 빈 set은 저장하지 않음
+        if prev_times_set:
             prev_movie_times[key] = prev_times_set
-            # 디버깅: 이전 시간 로그
-            print(f"  📌 이전 상태 로드: {movie.get('title')} - 시간 {len(prev_times_set)}개: {sorted(prev_times_set)}")
     
-    # 현재 상태와 비교 (날짜 일치 확인)
+    # 현재 상태와 비교
     for movie in current_shows:
         movie_date = normalize_string(movie.get('date', ''))
-        
-        # 날짜 일치 확인 (안전 장치)
         if movie_date != normalized_target_date:
-            print(f"  ⚠️ 날짜 불일치 경고: 예상 '{normalized_target_date}', 실제 '{movie_date}'")
             continue
         
         key = create_movie_key(movie)
@@ -654,7 +626,7 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
         current_times_full = {}
         for time_str in movie.get('times', []):
             time_only = extract_time_only(time_str)
-            if time_only:  # 빈 문자열 제외
+            if time_only:
                 current_times_set.add(time_only)
                 current_times_full[time_only] = time_str
         
@@ -665,27 +637,11 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
             new_times_only = current_times_set - prev_times
             removed_times_only = prev_times - current_times_set
             
-            # 디버깅: 상세 비교 로그
-            if len(prev_times) == len(current_times_set) or (new_times_only and removed_times_only):
-                # 개수가 같거나 시간대가 교체된 경우 - 상세 로그 출력
-                print(f"  🔍 상세 비교 ({movie.get('title')}):")
-                print(f"     이전 시간: {sorted(prev_times)}")
-                print(f"     현재 시간: {sorted(current_times_set)}")
-                print(f"     추가된 시간: {sorted(new_times_only)}")
-                print(f"     사라진 시간: {sorted(removed_times_only)}")
-            
-            # 궁극적인 해결책: 단순화된 비교
-            # 복잡한 시간 변경 감지 로직 제거 → 순수 추가만 감지
-            
             common_times = prev_times & current_times_set
             common_ratio = len(common_times) / len(prev_times) if prev_times else 0
             
-            # 궁극적인 해결책: 단순한 조건으로 순수 추가만 감지
-            # 복잡한 시간 변경 감지 제거 → 기존 시간의 80% 이상이 유지되고 새로운 시간이 있으면 알림
-            is_real_addition = (
-                new_times_only and  # 새로운 시간이 있고
-                common_ratio >= 0.8  # 이전 시간의 80% 이상이 남아있어야 함 (시간 변경이 아닌 순수 추가)
-            )
+            # 새로운 시간이 있고 기존 시간의 80% 이상이 유지되면 알림
+            is_real_addition = new_times_only and common_ratio >= 0.8
             
             if is_real_addition:
                 print(f"  ✅ 새로운 상영시간 발견: {movie.get('title')} - {len(new_times_only)}개 추가")
@@ -699,13 +655,8 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
                     'new_times': new_times_full
                 })
             elif new_times_only:
-                # 새로운 시간이 있지만 공통 비율이 80% 미만 → 시간 변경 또는 데이터 불안정으로 판단
                 removed_count = len(removed_times_only)
                 print(f"  ⏭️ 변화 무시: {movie.get('title')} (공통 비율 {common_ratio:.0%} < 80%, 제거 {removed_count}개)")
-                print(f"     → 시간 변경이거나 데이터 불안정으로 판단 (알림 없음)")
-        else:
-            # 새로운 영화 (이전에 없던 영화) - 알림 없음 (첫 실행이 아닌 경우)
-            pass
     
     return new_showtimes
 
