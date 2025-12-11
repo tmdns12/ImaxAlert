@@ -368,6 +368,28 @@ def scrape_imax_shows(driver, date_key=None):
                             )
                         except:
                             time.sleep(0.3)  # fallback
+                        
+                        # 상영시간이 실제로 로드될 때까지 대기 (최대 1초)
+                        max_wait = 10  # 1초 (0.1초씩 10번)
+                        times_loaded = False
+                        for _ in range(max_wait):
+                            try:
+                                # 컨테이너를 다시 찾아서 시간 아이템 확인
+                                containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+                                if idx < len(containers):
+                                    test_container = containers[idx]
+                                    time_items_test = test_container.find_elements(
+                                        By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
+                                    )
+                                    if time_items_test:  # 시간 아이템이 하나라도 있으면 로드된 것으로 간주
+                                        times_loaded = True
+                                        break
+                            except:
+                                pass
+                            time.sleep(0.1)
+                        
+                        if not times_loaded:
+                            time.sleep(0.3)  # 추가 대기
                 except:
                     pass
                 
@@ -739,10 +761,28 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     WebDriverWait(driver, 5).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
                     )
-                    # 추가 대기: 날짜 변경이 완전히 반영될 때까지
-                    time.sleep(0.3)
                 except:
-                    time.sleep(0.8)  # fallback 대기 시간 증가
+                    time.sleep(0.8)  # fallback
+                
+                # 날짜가 실제로 선택되었는지 확인 (최대 3초 대기)
+                max_wait = 30  # 3초 (0.1초씩 30번)
+                date_selected = False
+                normalized_date_key = normalize_string(date_key)
+                for _ in range(max_wait):
+                    try:
+                        selected_date = get_selected_date(driver)
+                        if normalize_string(selected_date) == normalized_date_key:
+                            date_selected = True
+                            break
+                    except:
+                        pass
+                    time.sleep(0.1)
+                
+                if not date_selected:
+                    print(f"  ⚠️ 날짜 '{date_key}' 선택 확인 실패, 계속 진행하지만 데이터 정확도가 떨어질 수 있음")
+                
+                # 추가 대기: 페이지 업데이트가 완전히 반영될 때까지
+                time.sleep(0.5)
                 
                 # 데이터 수집
                 shows = scrape_imax_shows(driver, date_key)
