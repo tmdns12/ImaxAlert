@@ -516,7 +516,7 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
         if prev_times_set:  # 빈 set은 저장하지 않음
             prev_movie_times[key] = prev_times_set
             # 디버깅: 이전 시간 로그
-            print(f"  📌 이전 상태 로드: {movie.get('title')} - 시간 {len(prev_times_set)}개")
+            print(f"  📌 이전 상태 로드: {movie.get('title')} - 시간 {len(prev_times_set)}개: {sorted(prev_times_set)}")
     
     # 현재 상태와 비교 (날짜 일치 확인)
     for movie in current_shows:
@@ -553,15 +553,34 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
                 print(f"     추가된 시간: {sorted(new_times_only)}")
                 print(f"     사라진 시간: {sorted(removed_times_only)}")
             
-            # 실제로 시간대가 추가된 경우만 알림 (시간대가 교체된 경우는 제외)
-            # 조건: 새로운 시간이 있고, 이전 시간의 일부라도 남아있어야 함
-            if new_times_only and (not removed_times_only or len(removed_times_only) < len(new_times_only)):
+            # 실제로 시간대가 추가된 경우만 알림
+            # 조건:
+            # 1. 새로운 시간이 있어야 함
+            # 2. 사라진 시간이 없어야 함 (순수 추가만 알림) - 또는
+            # 3. 사라진 시간이 있더라도, 이전 시간의 대부분(80% 이상)이 남아있고 추가가 사라진 것보다 훨씬 많은 경우만
+            common_times = prev_times & current_times_set
+            common_ratio = len(common_times) / len(prev_times) if prev_times else 0
+            
+            # 실제 추가인지 확인 (더 엄격한 기준)
+            is_real_addition = (
+                new_times_only and  # 새로운 시간이 있고
+                (
+                    not removed_times_only or  # 사라진 시간이 없거나 (순수 추가)
+                    (
+                        common_ratio >= 0.8 and  # 이전 시간의 80% 이상이 남아있고
+                        len(new_times_only) >= len(removed_times_only) * 2  # 추가된 시간이 사라진 시간의 2배 이상
+                    )
+                )
+            )
+            
+            if is_real_addition:
                 # 디버깅: 상세 로그
                 print(f"  🔍 변화 감지: {movie.get('title')} - 새로운 시간 {len(new_times_only)}개")
                 print(f"     이전 시간 수: {len(prev_times)}, 현재 시간 수: {len(current_times_set)}")
+                print(f"     공통 시간 수: {len(common_times)}, 공통 비율: {common_ratio:.1%}")
                 print(f"     새로운 시간: {sorted(new_times_only)}")
                 if removed_times_only:
-                    print(f"     사라진 시간: {sorted(removed_times_only)} (시간대 교체로 인한 알림)")
+                    print(f"     사라진 시간: {sorted(removed_times_only)}")
                 new_times_full = [current_times_full[t] for t in new_times_only]
                 new_showtimes.append({
                     'date': movie_date,
@@ -569,12 +588,14 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
                     'theater_info': normalize_string(movie.get('theater_info', '')),
                     'new_times': new_times_full
                 })
-            elif new_times_only and removed_times_only and len(removed_times_only) >= len(new_times_only):
-                # 시간대가 교체된 경우 (사라진 시간이 추가된 시간보다 많거나 같음) - 알림 없음
-                print(f"  ⚠️ 시간대 교체 감지 ({movie.get('title')}): 알림 없음")
+            elif new_times_only and removed_times_only:
+                # 시간대가 교체되었거나 이전 상태가 부정확한 경우 - 알림 없음
+                print(f"  ⚠️ 시간대 변경 감지 ({movie.get('title')}): 알림 없음")
                 print(f"     이전 시간: {sorted(prev_times)}")
                 print(f"     현재 시간: {sorted(current_times_set)}")
-                print(f"     (시간대가 교체되었지만 추가되지 않았으므로 알림하지 않음)")
+                print(f"     공통 시간 비율: {common_ratio:.1%} (50% 미만이므로 교체로 판단)")
+                print(f"     추가: {len(new_times_only)}개, 사라짐: {len(removed_times_only)}개")
+                print(f"     (시간대가 교체되었거나 이전 상태가 부정확한 것으로 판단, 알림하지 않음)")
         else:
             # 새로운 영화 (이전에 없던 영화) - 알림 없음 (첫 실행이 아닌 경우)
             pass
