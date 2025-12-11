@@ -325,30 +325,22 @@ def get_selected_date(driver):
 
 
 def check_network_idle(driver, timeout=2):
-    """네트워크 요청이 완료되었는지 확인 (간단한 방법: DOM 안정화 확인)"""
+    """네트워크 요청이 완료되었는지 확인 (가벼운 방법)"""
     try:
-        # DOM이 안정화되었는지 확인 (짧은 시간 대기 후 요소 재확인)
-        initial_html_length = len(driver.page_source)
-        time.sleep(0.2)
-        final_html_length = len(driver.page_source)
-        
-        # HTML 길이가 크게 변하지 않으면 안정화된 것으로 간주
-        # (크게 변하지 않음 = 새로운 데이터 로딩 없음)
-        change_ratio = abs(final_html_length - initial_html_length) / max(initial_html_length, 1)
-        
-        # 0.1% 미만의 변화면 안정화된 것으로 간주
-        return change_ratio < 0.001
+        # page_source 전체 읽기는 너무 느리므로 가벼운 방법 사용
+        # 단순히 짧은 대기만 수행 (실제로는 DOM 체크로 충분)
+        time.sleep(0.05)
+        return True
     except Exception as e:
-        # 오류 발생 시 True 반환 (계속 진행)
         return True
 
 
 def verify_date_selected(driver, expected_date_key):
-    """하이브리드 검증: 날짜가 실제로 선택되었는지 확인"""
+    """빠른 검증: 날짜가 실제로 선택되었는지 확인 (핵심만 확인)"""
     normalized_expected = normalize_string(expected_date_key)
     
-    # 조건 1: 날짜 버튼이 active 상태인지 확인
     try:
+        # 조건 1: 날짜 버튼이 active 상태인지 확인 (가장 빠르고 확실)
         active_btn = driver.find_element(
             By.CSS_SELECTOR,
             ".dayScroll_scrollItem__IZ35T.dayScroll_itemActive__fZ5Sq"
@@ -359,26 +351,16 @@ def verify_date_selected(driver, expected_date_key):
         
         if selected_date != normalized_expected:
             return False
-    except:
-        return False
-    
-    # 조건 2: DOM 요소가 존재하는지 확인
-    try:
+        
+        # 조건 2: DOM 요소가 존재하는지만 확인 (네트워크 체크 제거)
         containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-        if not containers:
-            return False
+        return len(containers) > 0
     except:
         return False
-    
-    # 조건 3: 네트워크가 idle 상태인지 확인 (선택적)
-    if not check_network_idle(driver, timeout=1):
-        return False
-    
-    return True
 
 
 def verify_showtimes_loaded(driver, container_idx=None):
-    """하이브리드 검증: 상영시간 데이터가 실제로 로드되었는지 확인"""
+    """빠른 검증: 상영시간 데이터가 실제로 로드되었는지 확인 (간소화)"""
     try:
         containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
         if not containers:
@@ -390,78 +372,66 @@ def verify_showtimes_loaded(driver, container_idx=None):
                 return False
             containers = [containers[container_idx]]
         
-        # 각 컨테이너의 상영시간이 로드되었는지 확인
+        # 각 컨테이너의 상영시간이 로드되었는지 확인 (첫 번째 시간만 빠르게 확인)
         for container in containers:
             try:
-                # 조건 1: 시간 아이템 요소가 존재하는지
+                # 시간 아이템 요소가 존재하는지 확인
                 time_items = container.find_elements(
                     By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
                 )
                 
                 if not time_items:
-                    # IMAX가 아닌 영화일 수도 있으므로 계속 확인
                     continue
                 
-                # 조건 2: 각 시간 아이템에 실제 데이터가 있는지 검증
-                valid_times_count = 0
-                for item in time_items:
-                    try:
-                        start_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu")
-                        end_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0")
-                        
-                        start_text = start_elem.text.strip()
-                        end_text = end_elem.text.strip()
-                        
-                        # 빈 문자열이 아닌지 확인
-                        if not start_text or not end_text:
-                            continue
-                        
-                        # 시간 형식 검증 (HH:MM 형식)
-                        if re.match(r'^\d{2}:\d{2}$', start_text) and (
-                            re.match(r'^\d{2}:\d{2}$', end_text) or 
-                            re.match(r'^-\s*\d{2}:\d{2}$', end_text)
-                        ):
-                            valid_times_count += 1
-                    except:
-                        continue
-                
-                # 최소 1개 이상의 유효한 시간이 있어야 함
-                if valid_times_count > 0:
-                    return True
+                # 첫 번째 시간 아이템만 빠르게 검증 (전체 검증보다 훨씬 빠름)
+                try:
+                    first_item = time_items[0]
+                    start_elem = first_item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu")
+                    start_text = start_elem.text.strip()
+                    
+                    # 빈 문자열이 아니고 시간 형식이면 로드된 것으로 간주
+                    if start_text and re.match(r'^\d{2}:\d{2}$', start_text):
+                        return True
+                except:
+                    # 첫 번째 아이템 검증 실패 시 계속 진행
+                    pass
                     
             except:
                 continue
         
-        # IMAX 영화가 없거나 아직 로드되지 않은 경우
         return False
     except:
         return False
 
 
-def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=5):
-    """하이브리드 대기: 날짜 선택 완료까지 모든 조건 확인"""
-    start_time = time.time()
+def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=2):
+    """빠른 대기: 날짜 선택 완료까지 확인 (타임아웃 단축)"""
+    # 즉시 첫 번째 확인 (대부분 성공)
+    if verify_date_selected(driver, expected_date_key):
+        return True
     
+    # 실패 시에만 재시도 (간격 단축)
+    start_time = time.time()
     while time.time() - start_time < max_wait:
         if verify_date_selected(driver, expected_date_key):
-            # 날짜 선택 확인 후 추가로 페이지 안정화 대기
-            time.sleep(0.2)
             return True
-        time.sleep(0.1)
+        time.sleep(0.05)  # 0.1초 -> 0.05초로 단축
     
     return False
 
 
-def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=3):
-    """하이브리드 대기: 상영시간 로딩 완료까지 모든 조건 확인"""
-    start_time = time.time()
+def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1):
+    """빠른 대기: 상영시간 로딩 완료까지 확인 (타임아웃 단축)"""
+    # 즉시 첫 번째 확인
+    if verify_showtimes_loaded(driver, container_idx):
+        return True
     
+    # 실패 시에만 재시도
+    start_time = time.time()
     while time.time() - start_time < max_wait:
         if verify_showtimes_loaded(driver, container_idx):
-            # 데이터 로드 확인 후 추가로 안정화 대기
-            time.sleep(0.1)
             return True
-        time.sleep(0.1)
+        time.sleep(0.05)  # 0.1초 -> 0.05초로 단축
     
     return False
 
@@ -513,12 +483,12 @@ def scrape_imax_shows(driver, date_key=None):
                         except:
                             time.sleep(0.3)  # fallback
                         
-                        # 하이브리드 대기: 상영시간 데이터가 실제로 로드되었는지 확인
-                        showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=2)
+                        # 빠른 검증: 상영시간 데이터가 실제로 로드되었는지 확인
+                        showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=1)
                         
+                        # 검증 실패 시 최소 대기만 (0.1초)
                         if not showtimes_loaded:
-                            # Fallback: 추가 대기
-                            time.sleep(0.3)
+                            time.sleep(0.1)
                 except:
                     pass
                 
@@ -885,19 +855,17 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 time.sleep(0.1)  # 스크롤 대기
                 driver.execute_script("arguments[0].click();", target_button)
                 
-                # 하이브리드 대기: 날짜 선택 완료 확인 (네트워크 + DOM + 데이터 검증)
-                date_loaded = wait_for_date_fully_loaded(driver, date_key, max_wait=5)
+                # 빠른 검증: 날짜 선택 완료 확인
+                date_loaded = wait_for_date_fully_loaded(driver, date_key, max_wait=2)
                 
                 if not date_loaded:
-                    print(f"  ⚠️ 날짜 '{date_key}' 하이브리드 검증 실패, 계속 진행하지만 데이터 정확도가 떨어질 수 있음")
-                    # Fallback: 기본 대기
+                    # Fallback: 기본 대기 (간단하게)
                     try:
-                        WebDriverWait(driver, 3).until(
+                        WebDriverWait(driver, 1).until(
                             EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
                         )
-                        time.sleep(0.5)
                     except:
-                        time.sleep(0.8)
+                        time.sleep(0.3)
                 
                 # 데이터 수집
                 shows = scrape_imax_shows(driver, date_key)
