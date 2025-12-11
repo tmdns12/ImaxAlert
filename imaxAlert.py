@@ -350,8 +350,12 @@ def verify_date_selected(driver, expected_date_key):
         return False
 
 
-def verify_showtimes_loaded(driver, container_idx=None):
-    """상영시간 데이터가 실제로 로드되었는지 확인 (빠른 검증: 첫/중간/마지막 샘플링)"""
+def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
+    """상영시간 데이터가 실제로 로드되었는지 확인
+    
+    Args:
+        check_all: True면 모든 아이템 검증, False면 샘플링 (기본값: False)
+    """
     try:
         containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
         if not containers:
@@ -371,27 +375,46 @@ def verify_showtimes_loaded(driver, container_idx=None):
                 if not time_items:
                     continue
                 
-                # 성능 최적화: 첫 번째, 중간, 마지막 아이템만 빠르게 확인
-                check_indices = [0]  # 항상 첫 번째 확인
-                if len(time_items) > 1:
-                    check_indices.append(len(time_items) - 1)  # 마지막
-                if len(time_items) > 3:
-                    check_indices.append(len(time_items) // 2)  # 중간
-                
-                valid_count = 0
-                for idx in check_indices:
-                    try:
-                        item = time_items[idx]
-                        start_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu")
-                        start_text = start_elem.text.strip()
-                        if start_text and re.match(r'^\d{2}:\d{2}$', start_text):
-                            valid_count += 1
-                    except:
-                        return False  # 샘플 중 하나라도 실패하면 아직 로딩 중
-                
-                # 샘플 검증이 모두 성공하면 로드된 것으로 간주
-                if valid_count == len(check_indices):
+                if check_all:
+                    # 모든 아이템 검증 (정확하지만 느림)
+                    for item in time_items:
+                        try:
+                            start_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu")
+                            start_text = start_elem.text.strip()
+                            end_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0")
+                            end_text = end_elem.text.strip()
+                            
+                            # 시작/종료 시간이 모두 유효한 형식인지 확인
+                            if not (start_text and re.match(r'^\d{2}:\d{2}$', start_text)):
+                                return False
+                            if not (end_text and (re.match(r'^\d{2}:\d{2}$', end_text) or re.match(r'^-\s*\d{2}:\d{2}$', end_text))):
+                                return False
+                        except:
+                            return False  # 하나라도 실패하면 아직 로딩 중
+                    
                     return True
+                else:
+                    # 샘플링 검증 (빠름)
+                    check_indices = [0]  # 항상 첫 번째 확인
+                    if len(time_items) > 1:
+                        check_indices.append(len(time_items) - 1)  # 마지막
+                    if len(time_items) > 3:
+                        check_indices.append(len(time_items) // 2)  # 중간
+                    
+                    valid_count = 0
+                    for idx in check_indices:
+                        try:
+                            item = time_items[idx]
+                            start_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu")
+                            start_text = start_elem.text.strip()
+                            if start_text and re.match(r'^\d{2}:\d{2}$', start_text):
+                                valid_count += 1
+                        except:
+                            return False  # 샘플 중 하나라도 실패하면 아직 로딩 중
+                    
+                    # 샘플 검증이 모두 성공하면 로드된 것으로 간주
+                    if valid_count == len(check_indices):
+                        return True
             except:
                 continue
         
@@ -413,23 +436,27 @@ def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=2):
     return False
 
 
-def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1.5):
-    """상영시간 로딩 완료까지 확인 (최적화된 빠른 검증)"""
+def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=3.0, strict=False):
+    """상영시간 로딩 완료까지 확인
+    
+    Args:
+        strict: True면 모든 아이템 검증, False면 샘플링 (기본값: False)
+    """
     # 즉시 첫 번째 확인 (대부분 성공)
-    if verify_showtimes_loaded(driver, container_idx):
+    if verify_showtimes_loaded(driver, container_idx, check_all=strict):
         return True
     
-    # 실패 시 짧은 대기 후 재확인 (안정화 확인)
+    # 실패 시 대기 후 재확인 (안정화 확인)
     stable_count = None
     stable_iterations = 0
-    required_stable = 2  # 연속 2번 동일하면 안정화된 것으로 간주
+    required_stable = 3 if strict else 2  # strict 모드에서는 더 많은 안정화 확인
     
     start_time = time.time()
     while time.time() - start_time < max_wait:
         try:
             containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
             if not containers:
-                time.sleep(0.05)
+                time.sleep(0.1)
                 continue
             
             if container_idx is not None and container_idx < len(containers):
@@ -444,14 +471,14 @@ def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1.5):
                     if not time_items:
                         continue
                     
-                    # 빠른 검증: 아이템 개수만 확인
+                    # 아이템 개수 안정화 확인
                     current_count = len(time_items)
                     if current_count > 0:
                         if stable_count == current_count:
                             stable_iterations += 1
                             if stable_iterations >= required_stable:
-                                # 안정화되면 최종 검증
-                                if verify_showtimes_loaded(driver, container_idx):
+                                # 안정화되면 최종 검증 (strict 모드에서는 모든 아이템 검증)
+                                if verify_showtimes_loaded(driver, container_idx, check_all=strict):
                                     return True
                         else:
                             stable_count = current_count
@@ -462,10 +489,10 @@ def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1.5):
         except:
             pass
         
-        time.sleep(0.05)  # 0.1초 → 0.05초로 단축
+        time.sleep(0.1)  # 안정화를 위해 0.1초로 증가
     
-    # 타임아웃 시 최종 검증
-    return verify_showtimes_loaded(driver, container_idx)
+    # 타임아웃 시 최종 검증 (strict 모드에서는 모든 아이템 검증)
+    return verify_showtimes_loaded(driver, container_idx, check_all=strict)
 
 
 def scrape_imax_shows(driver, date_key=None):
@@ -514,11 +541,12 @@ def scrape_imax_shows(driver, date_key=None):
                         except:
                             time.sleep(0.3)  # fallback
                         
-                        # 상영시간 로드 확인 (최적화된 빠른 검증)
-                        showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=1.5)
+                        # 상영시간 로드 확인 (strict 모드: 모든 아이템 검증)
+                        showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=3.0, strict=True)
                         if not showtimes_loaded:
-                            # 실패 시 최소 대기
-                            time.sleep(0.2)
+                            # 실패 시 추가 대기 후 재확인
+                            time.sleep(0.5)
+                            showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=2.0, strict=True)
                 except:
                     pass
                 
@@ -545,8 +573,16 @@ def scrape_imax_shows(driver, date_key=None):
                 except:
                     continue
                 
-                # 상영시간 수집 (재찾은 컨테이너 사용)
+                # 상영시간 수집 전 최종 검증 (재찾은 컨테이너 사용)
                 try:
+                    # 수집 직전에 한 번 더 검증하여 모든 아이템이 로드되었는지 확인
+                    if not verify_showtimes_loaded(driver, container_idx=idx, check_all=True):
+                        # 검증 실패 시 짧은 대기 후 재시도
+                        time.sleep(0.3)
+                        if not verify_showtimes_loaded(driver, container_idx=idx, check_all=True):
+                            print(f"  ⚠️ 상영시간 로딩 불완전: {movie_title} (건너뜀)")
+                            continue
+                    
                     time_items = container.find_elements(
                         By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
                     )
@@ -861,7 +897,7 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 
                 # 이중 스크래핑 검증: 두 번 수집하여 일관성 확인
                 shows_first = scrape_imax_shows(driver, date_key)
-                time.sleep(0.5)  # 두 번째 수집 전 대기
+                time.sleep(0.8)  # 두 번째 수집 전 충분한 대기 (로딩 완료 보장)
                 shows_second = scrape_imax_shows(driver, date_key)
                 
                 # 두 결과 비교: 영화별로 상영시간 비교
