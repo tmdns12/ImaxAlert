@@ -495,8 +495,12 @@ def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=3.0, st
     return verify_showtimes_loaded(driver, container_idx, check_all=strict)
 
 
-def scrape_imax_shows(driver, date_key=None):
-    """현재 선택된 날짜의 IMAX 상영 정보 수집"""
+def scrape_imax_shows(driver, date_key=None, strict_mode=False):
+    """현재 선택된 날짜의 IMAX 상영 정보 수집
+    
+    Args:
+        strict_mode: True면 모든 아이템 검증, False면 샘플링 (기본값: False)
+    """
     try:
         try:
             WebDriverWait(driver, 5).until(
@@ -541,12 +545,13 @@ def scrape_imax_shows(driver, date_key=None):
                         except:
                             time.sleep(0.3)  # fallback
                         
-                        # 상영시간 로드 확인 (strict 모드: 모든 아이템 검증)
-                        showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=3.0, strict=True)
+                        # 상영시간 로드 확인 (strict_mode에 따라 다르게)
+                        max_wait = 3.0 if strict_mode else 1.5
+                        showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=max_wait, strict=strict_mode)
                         if not showtimes_loaded:
                             # 실패 시 추가 대기 후 재확인
-                            time.sleep(0.5)
-                            showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=2.0, strict=True)
+                            time.sleep(0.3 if strict_mode else 0.2)
+                            showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=max_wait * 0.7, strict=strict_mode)
                 except:
                     pass
                 
@@ -575,13 +580,21 @@ def scrape_imax_shows(driver, date_key=None):
                 
                 # 상영시간 수집 전 최종 검증 (재찾은 컨테이너 사용)
                 try:
-                    # 수집 직전에 한 번 더 검증하여 모든 아이템이 로드되었는지 확인
-                    if not verify_showtimes_loaded(driver, container_idx=idx, check_all=True):
-                        # 검증 실패 시 짧은 대기 후 재시도
-                        time.sleep(0.3)
+                    # strict_mode에 따라 검증 강도 조절
+                    if strict_mode:
+                        # strict 모드: 모든 아이템 검증
                         if not verify_showtimes_loaded(driver, container_idx=idx, check_all=True):
-                            print(f"  ⚠️ 상영시간 로딩 불완전: {movie_title} (건너뜀)")
-                            continue
+                            time.sleep(0.3)
+                            if not verify_showtimes_loaded(driver, container_idx=idx, check_all=True):
+                                print(f"  ⚠️ 상영시간 로딩 불완전: {movie_title} (건너뜀)")
+                                continue
+                    else:
+                        # 빠른 모드: 샘플링 검증만
+                        if not verify_showtimes_loaded(driver, container_idx=idx, check_all=False):
+                            time.sleep(0.2)
+                            if not verify_showtimes_loaded(driver, container_idx=idx, check_all=False):
+                                # 샘플링 실패 시에도 계속 진행 (속도 우선)
+                                pass
                     
                     time_items = container.find_elements(
                         By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
@@ -895,10 +908,10 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 # 정확한 데이터 수집을 위한 대기 (페이지 안정화)
                 time.sleep(0.3)
                 
-                # 이중 스크래핑 검증: 두 번 수집하여 일관성 확인
-                shows_first = scrape_imax_shows(driver, date_key)
-                time.sleep(0.8)  # 두 번째 수집 전 충분한 대기 (로딩 완료 보장)
-                shows_second = scrape_imax_shows(driver, date_key)
+                # 스마트 이중 스크래핑 검증: 빠른 모드로 먼저 수집
+                shows_first = scrape_imax_shows(driver, date_key, strict_mode=False)
+                time.sleep(0.5)  # 두 번째 수집 전 대기
+                shows_second = scrape_imax_shows(driver, date_key, strict_mode=False)
                 
                 # 두 결과 비교: 영화별로 상영시간 비교
                 def compare_shows(shows1, shows2):
@@ -927,22 +940,30 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     return True
                 
                 if compare_shows(shows_first, shows_second):
+                    # 일치하면 첫 번째 결과 사용 (빠름)
                     shows = shows_first
                 else:
-                    # 불일치 시 더 많은 데이터를 가진 결과 사용 (누락 방지)
+                    # 불일치 시 strict 모드로 재수집 (정확도 우선)
+                    print(f"  ⚠️ 데이터 불일치 감지: strict 모드로 재수집 중...")
+                    time.sleep(0.5)  # 안정화 대기
+                    shows_strict = scrape_imax_shows(driver, date_key, strict_mode=True)
+                    
+                    # strict 모드 결과와 비교하여 가장 많은 데이터 사용
                     first_total_times = sum(len(s.get('times', [])) for s in shows_first)
                     second_total_times = sum(len(s.get('times', [])) for s in shows_second)
+                    strict_total_times = sum(len(s.get('times', [])) for s in shows_strict)
                     
-                    if second_total_times > first_total_times:
+                    # 가장 많은 상영시간을 가진 결과 사용
+                    max_times = max(first_total_times, second_total_times, strict_total_times)
+                    if strict_total_times == max_times:
+                        shows = shows_strict
+                        print(f"  ✓ strict 모드 결과 사용 ({len(shows_strict)}개 영화, {strict_total_times}개 상영시간)")
+                    elif second_total_times == max_times:
                         shows = shows_second
-                        print(f"  ⚠️ 데이터 불안정 감지: 두 번째 결과 사용 ({len(shows_second)}개 영화, {second_total_times}개 상영시간)")
-                    elif first_total_times > second_total_times:
-                        shows = shows_first
-                        print(f"  ⚠️ 데이터 불안정 감지: 첫 번째 결과 사용 ({len(shows_first)}개 영화, {first_total_times}개 상영시간)")
+                        print(f"  ⚠️ 두 번째 결과 사용 ({len(shows_second)}개 영화, {second_total_times}개 상영시간)")
                     else:
-                        # 상영시간 수가 같으면 두 번째 결과 사용 (더 최신)
-                        shows = shows_second
-                        print(f"  ⚠️ 데이터 불안정 감지: 두 번째 결과 사용 (상영시간 수 동일)")
+                        shows = shows_first
+                        print(f"  ⚠️ 첫 번째 결과 사용 ({len(shows_first)}개 영화, {first_total_times}개 상영시간)")
                 
                 if shows:
                     # 날짜 키 정규화
