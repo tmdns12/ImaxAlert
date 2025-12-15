@@ -311,9 +311,8 @@ def click_imax_filter(driver):
             return
         
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", filter_btn)
-        time.sleep(1)
         driver.execute_script("arguments[0].click();", filter_btn)
-        time.sleep(1)
+        time.sleep(0.3)
 
         imax_btn = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((
@@ -322,7 +321,7 @@ def click_imax_filter(driver):
             ))
         )
         driver.execute_script("arguments[0].click();", imax_btn)
-        time.sleep(0.5)
+        time.sleep(0.2)
 
         confirm_btn = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((
@@ -331,7 +330,7 @@ def click_imax_filter(driver):
             ))
         )
         driver.execute_script("arguments[0].click();", confirm_btn)
-        time.sleep(1)
+        time.sleep(0.3)
 
         WebDriverWait(driver, 10).until(
             EC.text_to_be_present_in_element(
@@ -467,62 +466,20 @@ def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=2):
     return False
 
 
-def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=3.0, strict=False):
-    """상영시간 로딩 완료까지 확인
-    
-    Args:
-        strict: True면 모든 아이템 검증, False면 샘플링 (기본값: False)
-    """
-    # 즉시 첫 번째 확인 (대부분 성공)
+def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1.5, strict=True):
+    """상영시간 로딩 완료까지 확인 (strict 모드만 사용)"""
+    # 즉시 첫 번째 확인
     if verify_showtimes_loaded(driver, container_idx, check_all=strict):
         return True
     
-    # 실패 시 대기 후 재확인 (안정화 확인)
-    stable_count = None
-    stable_iterations = 0
-    required_stable = 3 if strict else 2  # strict 모드에서는 더 많은 안정화 확인
-    
+    # 실패 시 짧은 대기 후 재확인
     start_time = time.time()
     while time.time() - start_time < max_wait:
-        try:
-            containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-            if not containers:
-                time.sleep(0.1)
-                continue
-            
-            if container_idx is not None and container_idx < len(containers):
-                containers = [containers[container_idx]]
-            
-            for container in containers:
-                try:
-                    time_items = container.find_elements(
-                        By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
-                    )
-                    
-                    if not time_items:
-                        continue
-                    
-                    # 아이템 개수 안정화 확인
-                    current_count = len(time_items)
-                    if current_count > 0:
-                        if stable_count == current_count:
-                            stable_iterations += 1
-                            if stable_iterations >= required_stable:
-                                # 안정화되면 최종 검증 (strict 모드에서는 모든 아이템 검증)
-                                if verify_showtimes_loaded(driver, container_idx, check_all=strict):
-                                    return True
-                        else:
-                            stable_count = current_count
-                            stable_iterations = 0
-                except:
-                    continue
-        
-        except:
-            pass
-        
-        time.sleep(0.1)  # 안정화를 위해 0.1초로 증가
+        if verify_showtimes_loaded(driver, container_idx, check_all=strict):
+            return True
+        time.sleep(0.1)
     
-    # 타임아웃 시 최종 검증 (strict 모드에서는 모든 아이템 검증)
+    # 타임아웃 시 최종 검증
     return verify_showtimes_loaded(driver, container_idx, check_all=strict)
 
 
@@ -569,20 +526,8 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                         driver.execute_script("arguments[0].click();", accordion_btn)
                         
                         # 기본 대기: 아코디언 펼쳐질 때까지 대기
-                        try:
-                            WebDriverWait(driver, 2).until(
-                                EC.presence_of_element_located((By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT"))
-                            )
-                        except:
-                            time.sleep(0.3)  # fallback
-                        
-                        # 상영시간 로드 확인 (strict_mode에 따라 다르게)
-                        max_wait = 3.0 if strict_mode else 1.5
-                        showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=max_wait, strict=strict_mode)
-                        if not showtimes_loaded:
-                            # 실패 시 추가 대기 후 재확인
-                            time.sleep(0.3 if strict_mode else 0.2)
-                            showtimes_loaded = wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=max_wait * 0.7, strict=strict_mode)
+                        # 상영시간 로드 확인 (strict 모드만 사용)
+                        wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=1.0, strict=True)
                 except:
                     pass
                 
@@ -609,24 +554,8 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                 except:
                     continue
                 
-                # 상영시간 수집 전 최종 검증 (재찾은 컨테이너 사용)
+                # 상영시간 수집
                 try:
-                    # strict_mode에 따라 검증 강도 조절
-                    if strict_mode:
-                        # strict 모드: 모든 아이템 검증
-                        if not verify_showtimes_loaded(driver, container_idx=idx, check_all=True):
-                            time.sleep(0.3)
-                            if not verify_showtimes_loaded(driver, container_idx=idx, check_all=True):
-                                print(f"  ⚠️ 상영시간 로딩 불완전: {movie_title} (건너뜀)")
-                                continue
-                    else:
-                        # 빠른 모드: 샘플링 검증만
-                        if not verify_showtimes_loaded(driver, container_idx=idx, check_all=False):
-                            time.sleep(0.2)
-                            if not verify_showtimes_loaded(driver, container_idx=idx, check_all=False):
-                                # 샘플링 실패 시에도 계속 진행 (속도 우선)
-                                pass
-                    
                     time_items = container.find_elements(
                         By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
                     )
@@ -764,20 +693,11 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
         
         if key in prev_movie_times:
             prev_times = prev_movie_times[key]
-            
-            # 새로운 시간과 사라진 시간 계산
             new_times_only = current_times_set - prev_times
-            removed_times_only = prev_times - current_times_set
             
-            common_times = prev_times & current_times_set
-            common_ratio = len(common_times) / len(prev_times) if prev_times else 0
-            
-            # 새로운 시간이 있고 기존 시간의 80% 이상이 유지되면 알림
-            is_real_addition = new_times_only and common_ratio >= 0.8
-            
-            if is_real_addition:
+            # 새로운 시간이 있으면 바로 알림
+            if new_times_only:
                 print(f"  ✅ 새로운 상영시간 발견: {movie.get('title')} - {len(new_times_only)}개 추가")
-                print(f"     이전: {len(prev_times)}개, 현재: {len(current_times_set)}개, 공통: {len(common_times)}개 ({common_ratio:.0%})")
                 print(f"     추가된 시간: {sorted(new_times_only)}")
                 new_times_full = [current_times_full[t] for t in new_times_only]
                 new_showtimes.append({
@@ -786,9 +706,17 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
                     'theater_info': normalize_string(movie.get('theater_info', '')),
                     'new_times': new_times_full
                 })
-            elif new_times_only:
-                removed_count = len(removed_times_only)
-                print(f"  ⏭️ 변화 무시: {movie.get('title')} (공통 비율 {common_ratio:.0%} < 80%, 제거 {removed_count}개)")
+        else:
+            # 새로운 영화인 경우 모든 시간을 새로 추가된 것으로 처리
+            if current_times_set:
+                print(f"  ✅ 새로운 영화 발견: {movie.get('title')} - {len(current_times_set)}개 상영시간")
+                new_times_full = [current_times_full[t] for t in current_times_set]
+                new_showtimes.append({
+                    'date': movie_date,
+                    'title': normalize_string(movie.get('title', '')),
+                    'theater_info': normalize_string(movie.get('theater_info', '')),
+                    'new_times': new_times_full
+                })
     
     return new_showtimes
 
@@ -921,80 +849,16 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 
                 # 날짜 버튼 클릭
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
-                time.sleep(0.1)  # 스크롤 대기
                 driver.execute_script("arguments[0].click();", target_button)
                 
-                # 빠른 검증: 날짜 선택 완료 확인
-                date_loaded = wait_for_date_fully_loaded(driver, date_key, max_wait=2)
+                # 날짜 선택 완료 확인
+                wait_for_date_fully_loaded(driver, date_key, max_wait=0.5)
                 
-                if not date_loaded:
-                    # Fallback: 기본 대기 (간단하게)
-                    try:
-                        WebDriverWait(driver, 1).until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
-                        )
-                    except:
-                        time.sleep(0.3)
+                # 상영시간 로딩 대기 (strict 모드)
+                wait_for_showtimes_fully_loaded(driver, max_wait=1.0, strict=True)
                 
-                # 정확한 데이터 수집을 위한 대기 (페이지 안정화)
-                time.sleep(0.3)
-                
-                # 스마트 이중 스크래핑 검증: 빠른 모드로 먼저 수집
-                shows_first = scrape_imax_shows(driver, date_key, strict_mode=False)
-                time.sleep(0.5)  # 두 번째 수집 전 대기
-                shows_second = scrape_imax_shows(driver, date_key, strict_mode=False)
-                
-                # 두 결과 비교: 영화별로 상영시간 비교
-                def compare_shows(shows1, shows2):
-                    """두 수집 결과를 비교하여 일치 여부 확인"""
-                    if len(shows1) != len(shows2):
-                        return False
-                    
-                    # 영화별로 매칭하여 비교
-                    shows1_dict = {}
-                    for s in shows1:
-                        key = create_movie_key(s)
-                        shows1_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
-                    
-                    shows2_dict = {}
-                    for s in shows2:
-                        key = create_movie_key(s)
-                        shows2_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
-                    
-                    if set(shows1_dict.keys()) != set(shows2_dict.keys()):
-                        return False
-                    
-                    for key in shows1_dict:
-                        if shows1_dict[key] != shows2_dict[key]:
-                            return False
-                    
-                    return True
-                
-                if compare_shows(shows_first, shows_second):
-                    # 일치하면 첫 번째 결과 사용 (빠름)
-                    shows = shows_first
-                else:
-                    # 불일치 시 strict 모드로 재수집 (정확도 우선)
-                    print(f"  ⚠️ 데이터 불일치 감지: strict 모드로 재수집 중...")
-                    time.sleep(0.5)  # 안정화 대기
-                    shows_strict = scrape_imax_shows(driver, date_key, strict_mode=True)
-                    
-                    # strict 모드 결과와 비교하여 가장 많은 데이터 사용
-                    first_total_times = sum(len(s.get('times', [])) for s in shows_first)
-                    second_total_times = sum(len(s.get('times', [])) for s in shows_second)
-                    strict_total_times = sum(len(s.get('times', [])) for s in shows_strict)
-                    
-                    # 가장 많은 상영시간을 가진 결과 사용
-                    max_times = max(first_total_times, second_total_times, strict_total_times)
-                    if strict_total_times == max_times:
-                        shows = shows_strict
-                        print(f"  ✓ strict 모드 결과 사용 ({len(shows_strict)}개 영화, {strict_total_times}개 상영시간)")
-                    elif second_total_times == max_times:
-                        shows = shows_second
-                        print(f"  ⚠️ 두 번째 결과 사용 ({len(shows_second)}개 영화, {second_total_times}개 상영시간)")
-                    else:
-                        shows = shows_first
-                        print(f"  ⚠️ 첫 번째 결과 사용 ({len(shows_first)}개 영화, {first_total_times}개 상영시간)")
+                # 데이터 수집 (strict 모드만 사용)
+                shows = scrape_imax_shows(driver, date_key, strict_mode=True)
                 
                 if shows:
                     # 날짜 키 정규화
@@ -1095,7 +959,7 @@ def get_all_date_info(driver):
                                 swiper.slideTo(arguments[1], 0);  // 애니메이션 없이 즉시 이동
                             }
                         """, swiper_container, slide_idx)
-                        time.sleep(0.05)  # 슬라이드 이동 대기 시간 단축
+                        time.sleep(0.02)  # 슬라이드 이동 대기 시간 최소화
                     except:
                         pass
                 
