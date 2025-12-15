@@ -466,21 +466,42 @@ def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=2):
     return False
 
 
-def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1.5, strict=True):
+def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=2.0, strict=True):
     """상영시간 로딩 완료까지 확인 (strict 모드만 사용)"""
-    # 즉시 첫 번째 확인
-    if verify_showtimes_loaded(driver, container_idx, check_all=strict):
-        return True
-    
-    # 실패 시 짧은 대기 후 재확인
-    start_time = time.time()
-    while time.time() - start_time < max_wait:
-        if verify_showtimes_loaded(driver, container_idx, check_all=strict):
+    if not strict:
+        # strict 모드가 아니면 빠르게 확인
+        if verify_showtimes_loaded(driver, container_idx, check_all=False):
             return True
-        time.sleep(0.1)
+        time.sleep(0.2)
+        return verify_showtimes_loaded(driver, container_idx, check_all=False)
     
-    # 타임아웃 시 최종 검증
-    return verify_showtimes_loaded(driver, container_idx, check_all=strict)
+    # strict 모드: 모든 아이템 검증
+    # 즉시 첫 번째 확인
+    if verify_showtimes_loaded(driver, container_idx, check_all=True):
+        # 안정성 확인: 연속 2번 성공해야 완전히 로드된 것으로 간주
+        time.sleep(0.1)
+        if verify_showtimes_loaded(driver, container_idx, check_all=True):
+            return True
+    
+    # 실패 시 대기 후 재확인
+    start_time = time.time()
+    consecutive_success = 0
+    while time.time() - start_time < max_wait:
+        if verify_showtimes_loaded(driver, container_idx, check_all=True):
+            consecutive_success += 1
+            if consecutive_success >= 2:  # 연속 2번 성공해야 완전히 로드된 것으로 간주
+                return True
+        else:
+            consecutive_success = 0
+        time.sleep(0.15)
+    
+    # 타임아웃 시 최종 검증 (연속 2번 성공 필요)
+    final_check1 = verify_showtimes_loaded(driver, container_idx, check_all=True)
+    if final_check1:
+        time.sleep(0.1)
+        final_check2 = verify_showtimes_loaded(driver, container_idx, check_all=True)
+        return final_check2
+    return False
 
 
 def scrape_imax_shows(driver, date_key=None, strict_mode=False):
@@ -526,8 +547,12 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                         driver.execute_script("arguments[0].click();", accordion_btn)
                         
                         # 기본 대기: 아코디언 펼쳐질 때까지 대기
-                        # 상영시간 로드 확인 (strict 모드만 사용)
-                        wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=1.0, strict=True)
+                        # 상영시간 로드 확인 (strict 모드일 때만 엄격하게 검증)
+                        if strict_mode:
+                            wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=2.5, strict=True)
+                            time.sleep(0.2)  # 추가 안정화 대기
+                        else:
+                            time.sleep(0.3)  # non-strict 모드에서는 짧은 대기
                 except:
                     pass
                 
@@ -562,12 +587,71 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                 except:
                     continue
                 
-                show_times = []
-                for item in time_items:
+                # strict_mode일 때 모든 아이템이 완전히 로드되었는지 검증
+                if strict_mode and time_items:
+                    # 컨테이너를 다시 찾아서 최신 상태 확인
                     try:
+                        containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+                        if idx < len(containers):
+                            container = containers[idx]
+                            time_items = container.find_elements(
+                                By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
+                            )
+                    except:
+                        pass
+                    
+                    # 모든 아이템이 완전히 로드되었는지 검증
+                    all_loaded = True
+                    for item in time_items:
+                        try:
+                            start_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu")
+                            start_text = start_elem.text.strip()
+                            if not (start_text and re.match(r'^\d{2}:\d{2}$', start_text)):
+                                all_loaded = False
+                                break
+                        except:
+                            all_loaded = False
+                            break
+                    
+                    if not all_loaded:
+                        # 재시도: 짧은 대기 후 다시 확인
+                        time.sleep(0.2)
+                        try:
+                            containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+                            if idx < len(containers):
+                                container = containers[idx]
+                                time_items = container.find_elements(
+                                    By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
+                                )
+                        except:
+                            pass
+                
+                show_times = []
+                for item_idx, item in enumerate(time_items):
+                    try:
+                        # strict_mode일 때는 재찾기로 stale element 방지
+                        if strict_mode:
+                            try:
+                                containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+                                if idx < len(containers):
+                                    container = containers[idx]
+                                    time_items_refresh = container.find_elements(
+                                        By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
+                                    )
+                                    if item_idx < len(time_items_refresh):
+                                        item = time_items_refresh[item_idx]
+                            except:
+                                pass
+                        
                         # 각 아이템도 stale 방지를 위해 텍스트만 빠르게 추출
                         start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
                         end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
+                        
+                        # strict_mode일 때 시간 형식 검증
+                        if strict_mode:
+                            start = normalize_string(start)
+                            if not re.match(r'^\d{2}:\d{2}$', start):
+                                continue  # 유효하지 않은 시간은 건너뛰기
                         
                         try:
                             status_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_status__lT4zd")
@@ -586,6 +670,8 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                         show_times.append(f"{start} ~ {end} | {seat_info}")
                     except Exception as e:
                         # stale element 발생 시 해당 아이템만 건너뛰기
+                        if strict_mode:
+                            print(f"    ⚠️ 상영시간 아이템 {item_idx+1} 건너뛰기: {e}")
                         continue
                 
                 if show_times:
@@ -854,8 +940,11 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 # 날짜 선택 완료 확인
                 wait_for_date_fully_loaded(driver, date_key, max_wait=0.5)
                 
-                # 상영시간 로딩 대기 (strict 모드)
-                wait_for_showtimes_fully_loaded(driver, max_wait=1.0, strict=True)
+                # 상영시간 로딩 대기 (strict 모드, 충분한 대기 시간)
+                wait_for_showtimes_fully_loaded(driver, max_wait=2.5, strict=True)
+                
+                # 추가 안정화 대기 (strict 모드에서 중요)
+                time.sleep(0.2)
                 
                 # 데이터 수집 (strict 모드만 사용)
                 shows = scrape_imax_shows(driver, date_key, strict_mode=True)
