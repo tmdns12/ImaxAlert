@@ -513,10 +513,34 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
         # 각 영화별 아코디언 컨테이너 찾기
         movie_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
 
-        movies_data = []
+        # 1단계: 모든 아코디언 먼저 펼치기
         for idx, container in enumerate(movie_containers):
             try:
-                # 영화 제목 먼저 저장 (아코디언 펼치기 전)
+                accordion_btn = container.find_element(
+                    By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
+                )
+                is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
+                if not is_expanded:
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", accordion_btn)
+                    driver.execute_script("arguments[0].click();", accordion_btn)
+                    time.sleep(0.2)  # 각 아코디언 펼칠 때마다 짧은 대기
+            except:
+                continue
+        
+        # 2단계: 모든 아코디언이 펼쳐질 때까지 대기
+        time.sleep(0.5)
+        if strict_mode:
+            # strict 모드: 모든 컨테이너의 상영시간 로드 확인
+            for idx in range(len(movie_containers)):
+                wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=1.0, strict=True)
+        else:
+            time.sleep(0.3)  # non-strict 모드에서는 짧은 대기
+
+        movies_data = []
+        # 3단계: 모든 영화 데이터 수집 (이미 모두 펼쳐진 상태)
+        for idx, container in enumerate(movie_containers):
+            try:
+                # 영화 제목 저장
                 try:
                     movie_title = container.find_element(
                         By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2"
@@ -524,25 +548,7 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                 except:
                     continue
                 
-                # 아코디언 버튼 찾기 및 클릭
-                try:
-                    accordion_btn = container.find_element(
-                        By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
-                    )
-                    is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
-                    if not is_expanded:
-                        driver.execute_script("arguments[0].click();", accordion_btn)
-                        
-                        # 기본 대기: 아코디언 펼쳐질 때까지 대기
-                        # 상영시간 로드 확인 (strict 모드일 때만 엄격하게 검증)
-                        if strict_mode:
-                            wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=1.5, strict=True)
-                        else:
-                            time.sleep(0.3)  # non-strict 모드에서는 짧은 대기
-                except:
-                    pass
-                
-                # 아코디언을 펼친 후 컨테이너를 다시 찾기 (stale element 방지)
+                # 컨테이너를 다시 찾기 (stale element 방지)
                 try:
                     containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
                     if idx < len(containers):
@@ -578,7 +584,7 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                     continue
                 
                 show_times = []
-                for item in time_items:
+                for item_idx, item in enumerate(time_items):
                     try:
                         # 각 아이템도 stale 방지를 위해 텍스트만 빠르게 추출
                         start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
@@ -872,16 +878,61 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 
                 # 날짜 버튼 클릭
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
+                time.sleep(0.1)
                 driver.execute_script("arguments[0].click();", target_button)
                 
                 # 날짜 선택 완료 확인
-                wait_for_date_fully_loaded(driver, date_key, max_wait=0.5)
+                wait_for_date_fully_loaded(driver, date_key, max_wait=1.0)
                 
-                # 상영시간 로딩 대기 (strict 모드, 최적화된 대기 시간)
-                wait_for_showtimes_fully_loaded(driver, max_wait=1.5, strict=True)
+                # 상영시간 로딩 대기
+                wait_for_showtimes_fully_loaded(driver, max_wait=2.0, strict=True)
+                time.sleep(0.3)  # 추가 안정화 대기
                 
-                # 데이터 수집 (strict 모드만 사용)
-                shows = scrape_imax_shows(driver, date_key, strict_mode=True)
+                # 이중 수집 검증: 두 번 수집하여 일관성 확인
+                shows_first = scrape_imax_shows(driver, date_key, strict_mode=True)
+                time.sleep(0.5)  # 두 번째 수집 전 대기
+                shows_second = scrape_imax_shows(driver, date_key, strict_mode=True)
+                
+                # 두 결과 비교 함수
+                def compare_shows(shows1, shows2):
+                    """두 수집 결과를 비교하여 일치 여부 확인"""
+                    if len(shows1) != len(shows2):
+                        return False
+                    
+                    # 영화별로 매칭하여 비교
+                    shows1_dict = {}
+                    for s in shows1:
+                        key = create_movie_key(s)
+                        shows1_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
+                    
+                    shows2_dict = {}
+                    for s in shows2:
+                        key = create_movie_key(s)
+                        shows2_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
+                    
+                    if set(shows1_dict.keys()) != set(shows2_dict.keys()):
+                        return False
+                    
+                    for key in shows1_dict:
+                        if shows1_dict[key] != shows2_dict[key]:
+                            return False
+                    
+                    return True
+                
+                # 결과 선택: 일치하면 첫 번째 사용, 불일치하면 더 많은 데이터를 가진 것 사용
+                if compare_shows(shows_first, shows_second):
+                    shows = shows_first
+                else:
+                    # 불일치 시 더 많은 영화/상영시간을 가진 결과 사용
+                    first_total = sum(len(s.get('times', [])) for s in shows_first)
+                    second_total = sum(len(s.get('times', [])) for s in shows_second)
+                    
+                    if second_total > first_total:
+                        shows = shows_second
+                        print(f"  ⚠️ 데이터 불일치: 두 번째 결과 사용 ({len(shows_second)}개 영화, {second_total}개 상영시간)")
+                    else:
+                        shows = shows_first
+                        print(f"  ⚠️ 데이터 불일치: 첫 번째 결과 사용 ({len(shows_first)}개 영화, {first_total}개 상영시간)")
                 
                 if shows:
                     # 날짜 키 정규화
