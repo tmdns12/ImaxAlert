@@ -453,17 +453,19 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
         return False
 
 
-def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=2):
-    """날짜 선택 완료까지 확인"""
+def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=0.5):
+    """날짜 선택 완료까지 확인 (최적화: 빠른 경로 우선)"""
     if verify_date_selected(driver, expected_date_key):
         return True
     
+    # 빠른 경로 실패 시에만 대기
     start_time = time.time()
     while time.time() - start_time < max_wait:
         if verify_date_selected(driver, expected_date_key):
             return True
         time.sleep(0.05)
-    return False
+    # 타임아웃 시에도 한 번 더 확인 (안정성)
+    return verify_date_selected(driver, expected_date_key)
 
 
 def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1.5, strict=True):
@@ -513,28 +515,41 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
         # 각 영화별 아코디언 컨테이너 찾기
         movie_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
 
-        # 1단계: 모든 아코디언 먼저 펼치기
-        for idx, container in enumerate(movie_containers):
-            try:
-                accordion_btn = container.find_element(
-                    By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
-                )
-                is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
-                if not is_expanded:
-                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", accordion_btn)
-                    driver.execute_script("arguments[0].click();", accordion_btn)
-                    time.sleep(0.2)  # 각 아코디언 펼칠 때마다 짧은 대기
-            except:
-                continue
+        # 1단계: 모든 아코디언을 JavaScript로 한 번에 펼치기 (속도 최적화)
+        try:
+            driver.execute_script("""
+                var containers = document.querySelectorAll('div.accordion_container__W7nEs');
+                for (var i = 0; i < containers.length; i++) {
+                    var btn = containers[i].querySelector('h2.accordion_accordionTitleArea__AmnDj button');
+                    if (btn && btn.getAttribute('aria-expanded') !== 'true') {
+                        btn.click();
+                    }
+                }
+            """)
+        except:
+            # JavaScript 실패 시 기존 방식으로 폴백
+            for idx, container in enumerate(movie_containers):
+                try:
+                    accordion_btn = container.find_element(
+                        By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
+                    )
+                    is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
+                    if not is_expanded:
+                        driver.execute_script("arguments[0].click();", accordion_btn)
+                except:
+                    continue
         
-        # 2단계: 모든 아코디언이 펼쳐질 때까지 대기
-        time.sleep(0.5)
+        # 2단계: 모든 아코디언이 펼쳐질 때까지 대기 (최적화)
+        time.sleep(0.3)  # 기본 대기 시간 단축
         if strict_mode:
-            # strict 모드: 모든 컨테이너의 상영시간 로드 확인
-            for idx in range(len(movie_containers)):
-                wait_for_showtimes_fully_loaded(driver, container_idx=idx, max_wait=1.0, strict=True)
+            # strict 모드: 샘플링 검증으로 빠르게 확인 (처음과 마지막만)
+            if len(movie_containers) > 0:
+                # 첫 번째와 마지막 컨테이너만 빠르게 검증
+                wait_for_showtimes_fully_loaded(driver, container_idx=0, max_wait=0.8, strict=False)
+                if len(movie_containers) > 1:
+                    wait_for_showtimes_fully_loaded(driver, container_idx=len(movie_containers)-1, max_wait=0.8, strict=False)
         else:
-            time.sleep(0.3)  # non-strict 모드에서는 짧은 대기
+            time.sleep(0.2)  # non-strict 모드에서는 짧은 대기
 
         movies_data = []
         # 3단계: 모든 영화 데이터 수집 (이미 모두 펼쳐진 상태)
@@ -820,119 +835,109 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     except:
                         pass
                 
-                # 저장된 버튼이 유효하지 않으면 다시 찾기 (fallback)
+                # 저장된 버튼이 유효하지 않으면 빠르게 다시 찾기 (fallback)
                 if not target_button:
-                    date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
-                    found_dates = []  # 디버깅용
-                    
-                    for btn in date_buttons:
-                        try:
-                            day_txt = ""
-                            day_num = ""
+                    # XPath로 빠르게 찾기 시도 (텍스트 기반)
+                    try:
+                        parts = date_key.split()
+                        if len(parts) >= 2:
+                            day_txt, day_num = parts[0], parts[1]
+                            # XPath로 직접 찾기
+                            target_button = driver.find_element(
+                                By.XPATH,
+                                f"//button[contains(@class, 'dayScroll_scrollItem__IZ35T') and .//span[@class='dayScroll_txt__GEtA0' and text()='{day_txt}'] and .//span[@class='dayScroll_number__o8i9s' and text()='{day_num}'] and not(contains(@class, 'dayScroll_disabled__t8HIQ')) and not(@disabled)]"
+                            )
+                    except:
+                        # XPath 실패 시 기존 방식으로 폴백 (디버깅용 정보 포함)
+                        date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
+                        found_dates = []
+                        
+                        for btn in date_buttons:
                             try:
                                 day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
-                                day_txt = day_txt_elem.text.strip()
-                            except:
-                                pass
-                            
-                            try:
                                 day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
+                                day_txt = day_txt_elem.text.strip()
                                 day_num = day_num_elem.text.strip()
-                            except:
-                                pass
-                            
-                            if not day_txt or not day_num:
-                                try:
-                                    btn_text = btn.text.strip()
-                                    lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
-                                    if len(lines) >= 2:
-                                        day_txt = lines[0]
-                                        day_num = lines[1]
-                                    elif len(lines) == 1:
-                                        parts = lines[0].split()
-                                        if len(parts) >= 2:
-                                            day_txt = parts[0]
-                                            day_num = parts[1]
-                                except:
-                                    pass
-                            
-                            if day_txt and day_num:
-                                btn_date_key = f"{day_txt} {day_num}"
-                                found_dates.append(btn_date_key)  # 디버깅용
                                 
-                                if btn_date_key == date_key:
-                                    class_attr = btn.get_attribute("class") or ""
-                                    is_disabled_class = "dayScroll_disabled__t8HIQ" in class_attr
-                                    is_disabled_attr = btn.get_attribute("disabled") is not None
-                                    if not (is_disabled_class or is_disabled_attr):
-                                        target_button = btn
-                                        break
-                        except:
-                            continue
+                                if day_txt and day_num:
+                                    btn_date_key = f"{day_txt} {day_num}"
+                                    found_dates.append(btn_date_key)
+                                    
+                                    if btn_date_key == date_key:
+                                        class_attr = btn.get_attribute("class") or ""
+                                        is_disabled = "dayScroll_disabled__t8HIQ" in class_attr or btn.get_attribute("disabled") is not None
+                                        if not is_disabled:
+                                            target_button = btn
+                                            break
+                            except:
+                                continue
                 
                 if not target_button:
                     print(f"  ⚠️ 날짜 '{date_key}' 버튼을 찾을 수 없음")
-                    if found_dates:
-                        print(f"     발견된 날짜 목록: {', '.join(found_dates[:10])}")  # 처음 10개만 출력
-                        continue
+                    continue
                 
                 # 날짜 버튼 클릭
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
-                time.sleep(0.1)
                 driver.execute_script("arguments[0].click();", target_button)
                 
-                # 날짜 선택 완료 확인
-                wait_for_date_fully_loaded(driver, date_key, max_wait=1.0)
+                # 날짜 선택 완료 확인 (최적화: 타임아웃 단축)
+                wait_for_date_fully_loaded(driver, date_key, max_wait=0.5)
                 
-                # 상영시간 로딩 대기
-                wait_for_showtimes_fully_loaded(driver, max_wait=2.0, strict=True)
-                time.sleep(0.3)  # 추가 안정화 대기
+                # 상영시간 로딩 대기 (최적화: non-strict로 빠른 확인)
+                wait_for_showtimes_fully_loaded(driver, max_wait=1.0, strict=False)
                 
-                # 이중 수집 검증: 두 번 수집하여 일관성 확인
-                shows_first = scrape_imax_shows(driver, date_key, strict_mode=True)
-                time.sleep(0.5)  # 두 번째 수집 전 대기
-                shows_second = scrape_imax_shows(driver, date_key, strict_mode=True)
+                # 빠른 경로: 첫 수집 (non-strict 모드로 빠르게)
+                shows_first = scrape_imax_shows(driver, date_key, strict_mode=False)
                 
-                # 두 결과 비교 함수
-                def compare_shows(shows1, shows2):
-                    """두 수집 결과를 비교하여 일치 여부 확인"""
-                    if len(shows1) != len(shows2):
-                        return False
-                    
-                    # 영화별로 매칭하여 비교
-                    shows1_dict = {}
-                    for s in shows1:
-                        key = create_movie_key(s)
-                        shows1_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
-                    
-                    shows2_dict = {}
-                    for s in shows2:
-                        key = create_movie_key(s)
-                        shows2_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
-                    
-                    if set(shows1_dict.keys()) != set(shows2_dict.keys()):
-                        return False
-                    
-                    for key in shows1_dict:
-                        if shows1_dict[key] != shows2_dict[key]:
-                            return False
-                    
-                    return True
-                
-                # 결과 선택: 일치하면 첫 번째 사용, 불일치하면 더 많은 데이터를 가진 것 사용
-                if compare_shows(shows_first, shows_second):
+                # 빠른 경로 우선: 첫 수집이 완전해 보이면 두 번째 생략
+                # (영화가 1개 이상이고 상영시간이 있으면 유효하다고 간주)
+                if shows_first and all(len(m.get('times', [])) > 0 for m in shows_first):
+                    # 추가 안정화 대기 없이 바로 사용
                     shows = shows_first
+                    needs_verification = False
                 else:
-                    # 불일치 시 더 많은 영화/상영시간을 가진 결과 사용
-                    first_total = sum(len(s.get('times', [])) for s in shows_first)
-                    second_total = sum(len(s.get('times', [])) for s in shows_second)
+                    # 첫 수집이 불완전하면 strict 모드로 재수집
+                    time.sleep(0.3)
+                    shows_second = scrape_imax_shows(driver, date_key, strict_mode=True)
+                    # 더 많은 데이터를 가진 결과 사용
+                    first_total = sum(len(s.get('times', [])) for s in shows_first) if shows_first else 0
+                    second_total = sum(len(s.get('times', [])) for s in shows_second) if shows_second else 0
+                    shows = shows_second if second_total >= first_total else shows_first
+                    needs_verification = True
+                
+                # 검증 필요 시에만 상세 비교
+                if needs_verification:
+                    def compare_shows(shows1, shows2):
+                        """두 수집 결과를 비교하여 일치 여부 확인"""
+                        if not shows1 or not shows2:
+                            return False
+                        if len(shows1) != len(shows2):
+                            return False
+                        
+                        # 영화별로 매칭하여 비교
+                        shows1_dict = {}
+                        for s in shows1:
+                            key = create_movie_key(s)
+                            shows1_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
+                        
+                        shows2_dict = {}
+                        for s in shows2:
+                            key = create_movie_key(s)
+                            shows2_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
+                        
+                        if set(shows1_dict.keys()) != set(shows2_dict.keys()):
+                            return False
+                        
+                        for key in shows1_dict:
+                            if shows1_dict[key] != shows2_dict[key]:
+                                return False
+                        
+                        return True
                     
-                    if second_total > first_total:
-                        shows = shows_second
-                        print(f"  ⚠️ 데이터 불일치: 두 번째 결과 사용 ({len(shows_second)}개 영화, {second_total}개 상영시간)")
-                    else:
+                    if shows_first and shows_second and compare_shows(shows_first, shows_second):
                         shows = shows_first
-                        print(f"  ⚠️ 데이터 불일치: 첫 번째 결과 사용 ({len(shows_first)}개 영화, {first_total}개 상영시간)")
+                    else:
+                        print(f"  ⚠️ 데이터 검증 필요: 더 많은 결과 사용 ({len(shows)}개 영화)")
                 
                 if shows:
                     # 날짜 키 정규화
