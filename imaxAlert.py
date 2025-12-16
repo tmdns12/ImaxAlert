@@ -658,6 +658,36 @@ def normalize_string(s):
     # 앞뒤 공백 제거 및 여러 공백을 하나로
     return " ".join(str(s).strip().split())
 
+def normalize_date_key(date_key):
+    """날짜 키 정규화: '오늘'과 실제 요일을 동일하게 처리"""
+    if not date_key:
+        return ""
+    
+    normalized = normalize_string(date_key)
+    
+    # "오늘"이 포함된 경우 날짜 번호만 추출하여 비교
+    # 예: "오늘 16" -> "16", "화 16" -> "화 16"
+    # 하지만 같은 날짜 번호를 가진 다른 날짜와 구분하기 위해
+    # 날짜 번호만으로 비교하는 것은 위험할 수 있음
+    # 대신, 이전 상태와 현재 상태 모두에서 "오늘"을 날짜 번호로 변환하여 비교
+    
+    # 날짜 번호 추출
+    parts = normalized.split()
+    date_num = None
+    for part in parts:
+        if part.isdigit():
+            date_num = part
+            break
+    
+    # "오늘"이 포함된 경우 날짜 번호만 반환 (다른 날짜와 매칭하기 위해)
+    if "오늘" in normalized or "today" in normalized.lower():
+        if date_num:
+            return date_num  # 날짜 번호만 반환
+        return normalized
+    
+    # 일반 날짜는 그대로 반환 (예: "화 16")
+    return normalized
+
 def extract_time_only(time_str):
     """시간대 문자열에서 시간 부분만 추출 (좌석수 제외, 정규화)"""
     if not time_str:
@@ -692,8 +722,8 @@ def extract_time_only(time_str):
     return time_part
 
 def create_movie_key(movie):
-    """영화 키 생성"""
-    date = normalize_string(movie.get('date', ''))
+    """영화 키 생성 (날짜 정규화 포함)"""
+    date = normalize_date_key(movie.get('date', ''))
     title = normalize_string(movie.get('title', ''))
     theater_info = normalize_string(movie.get('theater_info', ''))
     return f"{date}|{title}|{theater_info}"
@@ -702,11 +732,13 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
     """특정 날짜의 새로운 상영시간 찾기"""
     new_showtimes = []
     prev_movie_times = {}
-    normalized_target_date = normalize_string(target_date_key)
+    # 날짜 키 정규화 (오늘 처리 포함)
+    normalized_target_date = normalize_date_key(target_date_key)
     
     # 이전 상태에서 해당 날짜의 영화 정보만 가져오기
     for movie in previous_movies:
-        movie_date = normalize_string(movie.get('date', ''))
+        movie_date = normalize_date_key(movie.get('date', ''))
+        # 날짜 번호만 비교 (오늘 처리)
         if movie_date != normalized_target_date:
             continue
         
@@ -721,7 +753,7 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
     
     # 현재 상태와 비교
     for movie in current_shows:
-        movie_date = normalize_string(movie.get('date', ''))
+        movie_date = normalize_date_key(movie.get('date', ''))
         if movie_date != normalized_target_date:
             continue
         
@@ -810,11 +842,11 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
         print(f"활성화된 날짜 {len(enabled_dates)}개를 빠르게 클릭하며 수집 중...")
         all_movies_data = []
         
-        # 이전 상태에서 날짜별로 영화 정보 분리 (정규화된 날짜 사용)
+        # 이전 상태에서 날짜별로 영화 정보 분리 (정규화된 날짜 사용, 오늘 처리 포함)
         prev_movies_by_date = {}
         if previous_state and 'movies' in previous_state:
             for movie in previous_state['movies']:
-                date = normalize_string(movie.get('date', ''))
+                date = normalize_date_key(movie.get('date', ''))
                 if date and date not in prev_movies_by_date:
                     prev_movies_by_date[date] = []
                 if date:
@@ -940,10 +972,10 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                         print(f"  ⚠️ 데이터 검증 필요: 더 많은 결과 사용 ({len(shows)}개 영화)")
                 
                 if shows:
-                    # 날짜 키 정규화
-                    normalized_date_key = normalize_string(date_key)
+                    # 날짜 키 정규화 (오늘 처리 포함)
+                    normalized_date_key = normalize_date_key(date_key)
                     
-                    # 수집한 모든 데이터의 날짜를 강제로 현재 날짜로 설정 (중요!)
+                    # 수집한 모든 데이터의 날짜를 강제로 정규화된 날짜로 설정 (중요!)
                     for show in shows:
                         show['date'] = normalized_date_key
                     
