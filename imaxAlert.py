@@ -976,90 +976,11 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 date_key = date_info['date']
                 normalized_date_key = normalize_date_key(date_key)
                 
-                # target_button 변수 초기화 (빠른 체크와 정상 처리 모두에서 사용)
+                # target_button 변수 초기화
                 target_button = None
                 
-                # 최적화: 이전 상태 확인하여 스킵 가능 여부 판단
-                should_skip = False
-                if previous_state:
-                    prev_movies = prev_movies_by_date.get(normalized_date_key, [])
-                    if prev_movies:
-                        # 이전 상태의 총 상영시간 개수 계산
-                        total_prev_times = sum(len(m.get('times', [])) for m in prev_movies)
-                        total_prev_movies = len(prev_movies)
-                        
-                        # 날짜 버튼을 먼저 찾기 (아직 클릭 전)
-                        # target_button은 이미 위에서 None으로 초기화됨
-                        if date_info.get('button'):
-                            try:
-                                btn = date_info['button']
-                                btn.is_displayed()
-                                target_button = btn
-                            except:
-                                pass
-                        
-                        if not target_button:
-                            try:
-                                parts = date_key.split()
-                                if len(parts) >= 2:
-                                    day_txt, day_num = parts[0], parts[1]
-                                    target_button = driver.find_element(
-                                        By.XPATH,
-                                        f"//button[contains(@class, 'dayScroll_scrollItem__IZ35T') and .//span[@class='dayScroll_txt__GEtA0' and text()='{day_txt}'] and .//span[@class='dayScroll_number__o8i9s' and text()='{day_num}'] and not(contains(@class, 'dayScroll_disabled__t8HIQ')) and not(@disabled)]"
-                                    )
-                            except:
-                                pass
-                        
-                        # 빠른 체크: 날짜 클릭 → 아코디언 열기 → 개수만 확인
-                        if target_button:
-                            try:
-                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
-                                driver.execute_script("arguments[0].click();", target_button)
-                                time.sleep(0.3)  # 날짜 선택 대기
-                                
-                                # 아코디언 열기
-                                containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                                for container in containers:
-                                    try:
-                                        btn = container.find_element(By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button")
-                                        if btn.get_attribute("aria-expanded") != "true":
-                                            driver.execute_script("arguments[0].click();", btn)
-                                    except:
-                                        continue
-                                
-                                time.sleep(0.5)  # 짧은 대기 (DOM 안정화)
-                                
-                                # 상영시간 개수만 빠르게 확인
-                                total_current_times = 0
-                                current_movie_count = 0
-                                for container in containers:
-                                    try:
-                                        # 영화 제목 확인
-                                        title = container.find_element(By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2").text.strip()
-                                        if title:
-                                            current_movie_count += 1
-                                        
-                                        # 상영시간 개수 확인
-                                        time_items = container.find_elements(
-                                            By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
-                                        )
-                                        total_current_times += len(time_items)
-                                    except:
-                                        continue
-                                
-                                # 영화 개수와 상영시간 개수가 모두 같으면 스킵
-                                if total_current_times == total_prev_times and current_movie_count == total_prev_movies and total_current_times > 0:
-                                    print(f"[{idx+1}/{len(enabled_dates)}] 날짜 '{date_key}' 스킵 (변화 없음, {current_movie_count}개 영화, {total_current_times}개 상영시간)")
-                                    # 이전 상태를 그대로 사용
-                                    for prev_movie in prev_movies:
-                                        all_movies_data.append(prev_movie.copy())
-                                    should_skip = True
-                            except Exception as e:
-                                # 빠른 체크 실패 시 정상 처리 계속
-                                pass
-                
-                if should_skip:
-                    continue
+                # 빠른 체크 제거: 데이터 수집 불안정으로 인한 잘못된 스킵 방지
+                # 모든 날짜를 정확하게 수집하여 비교
                 
                 print(f"[{idx+1}/{len(enabled_dates)}] 날짜 '{date_key}' 처리 중...")
                 
