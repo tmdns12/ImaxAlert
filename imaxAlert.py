@@ -976,6 +976,9 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 date_key = date_info['date']
                 normalized_date_key = normalize_date_key(date_key)
                 
+                # target_button 변수 초기화 (빠른 체크와 정상 처리 모두에서 사용)
+                target_button = None
+                
                 # 최적화: 이전 상태 확인하여 스킵 가능 여부 판단
                 should_skip = False
                 if previous_state:
@@ -986,7 +989,7 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                         total_prev_movies = len(prev_movies)
                         
                         # 날짜 버튼을 먼저 찾기 (아직 클릭 전)
-                        target_button = None
+                        # target_button은 이미 위에서 None으로 초기화됨
                         if date_info.get('button'):
                             try:
                                 btn = date_info['button']
