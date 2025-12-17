@@ -583,8 +583,8 @@ def scrape_imax_shows(driver, date_key=None):
         else:
             current_date = date_key
         
-        # 각 영화별 아코디언 컨테이너 찾기
-        movie_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+        # 각 영화별 아코디언 컨테이너 찾기 (아코디언을 열기 전에 찾음)
+        # 나중에 다시 찾아서 stale element 방지
 
         # 1단계: 모든 아코디언을 JavaScript로 한 번에 펼치기
         try:
@@ -599,7 +599,8 @@ def scrape_imax_shows(driver, date_key=None):
             """)
         except:
             # JavaScript 실패 시 기존 방식으로 폴백
-            for idx, container in enumerate(movie_containers):
+            containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+            for idx, container in enumerate(containers):
                 try:
                     accordion_btn = container.find_element(
                         By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
@@ -611,11 +612,70 @@ def scrape_imax_shows(driver, date_key=None):
                     continue
         
         # 2단계: MutationObserver를 사용하여 DOM이 안정화될 때까지 대기
-        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=500, max_wait=3000)
+        # 안정화 시간을 늘려서 모든 데이터가 완전히 로드될 때까지 대기
+        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=1000, max_wait=5000)
+        
+        # 3단계: 상영시간 개수가 안정화될 때까지 대기 (더 확실한 방법)
+        # 상영시간 개수가 일정 시간 동안 변하지 않으면 안정화된 것으로 간주
+        stable_count_checks = 3  # 연속으로 같은 개수가 나와야 함
+        stable_count = None
+        stable_iterations = 0
+        
+        for check_iter in range(10):  # 최대 10번 확인
+            containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+            if not containers:
+                time.sleep(0.2)
+                continue
+            
+            # 모든 컨테이너의 상영시간 개수 합계 계산
+            total_count = 0
+            all_valid = True
+            for container in containers:
+                try:
+                    time_items = container.find_elements(
+                        By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
+                    )
+                    if time_items:
+                        # 첫 번째 아이템의 시간 형식 검증
+                        try:
+                            start_elem = time_items[0].find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu")
+                            start_text = start_elem.text.strip()
+                            if not re.match(r'^\d{2}:\d{2}$', start_text):
+                                all_valid = False
+                                break
+                        except:
+                            all_valid = False
+                            break
+                    total_count += len(time_items)
+                except:
+                    all_valid = False
+                    break
+            
+            if not all_valid:
+                time.sleep(0.2)
+                continue
+            
+            # 개수가 이전과 같으면 안정화 카운트 증가
+            if stable_count == total_count:
+                stable_iterations += 1
+                if stable_iterations >= stable_count_checks:
+                    break  # 안정화 완료
+            else:
+                stable_count = total_count
+                stable_iterations = 1
+            
+            time.sleep(0.2)
+        
+        # 최종 확인: 컨테이너가 있는지 확인
+        final_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+        if not final_containers:
+            return []
 
         movies_data = []
-        # 3단계: 모든 영화 데이터 수집 (이미 모두 펼쳐진 상태)
-        for idx, container in enumerate(movie_containers):
+        # 4단계: 모든 영화 데이터 수집 (이미 모두 펼쳐진 상태)
+        # 컨테이너를 다시 찾아서 최신 상태로 업데이트
+        final_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+        for idx, container in enumerate(final_containers):
             try:
                 # 영화 제목 저장
                 try:
