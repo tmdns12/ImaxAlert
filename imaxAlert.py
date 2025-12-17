@@ -918,58 +918,68 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 # 상영시간 로딩 대기 (최적화: non-strict로 빠른 확인)
                 wait_for_showtimes_fully_loaded(driver, max_wait=1.0, strict=False)
                 
-                # 빠른 경로: 첫 수집 (non-strict 모드로 빠르게)
+                def compare_shows(shows1, shows2):
+                    """두 수집 결과를 비교하여 일치 여부 확인"""
+                    if not shows1 or not shows2:
+                        return False
+                    if len(shows1) != len(shows2):
+                        return False
+                    
+                    # 영화별로 매칭하여 비교
+                    shows1_dict = {}
+                    for s in shows1:
+                        key = create_movie_key(s)
+                        shows1_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
+                    
+                    shows2_dict = {}
+                    for s in shows2:
+                        key = create_movie_key(s)
+                        shows2_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
+                    
+                    if set(shows1_dict.keys()) != set(shows2_dict.keys()):
+                        return False
+                    
+                    for key in shows1_dict:
+                        if shows1_dict[key] != shows2_dict[key]:
+                            return False
+                    
+                    return True
+                
+                # 항상 이중 수집을 수행하여 정확성 보장
                 shows_first = scrape_imax_shows(driver, date_key, strict_mode=False)
                 
-                # 빠른 경로 우선: 첫 수집이 완전해 보이면 두 번째 생략
-                # (영화가 1개 이상이고 상영시간이 있으면 유효하다고 간주)
-                if shows_first and all(len(m.get('times', [])) > 0 for m in shows_first):
-                    # 추가 안정화 대기 없이 바로 사용
-                    shows = shows_first
-                    needs_verification = False
-                else:
-                    # 첫 수집이 불완전하면 strict 모드로 재수집
-                    time.sleep(0.3)
-                    shows_second = scrape_imax_shows(driver, date_key, strict_mode=True)
-                    # 더 많은 데이터를 가진 결과 사용
-                    first_total = sum(len(s.get('times', [])) for s in shows_first) if shows_first else 0
-                    second_total = sum(len(s.get('times', [])) for s in shows_second) if shows_second else 0
-                    shows = shows_second if second_total >= first_total else shows_first
-                    needs_verification = True
+                # 두 번째 수집을 위한 추가 대기
+                time.sleep(0.3)
+                shows_second = scrape_imax_shows(driver, date_key, strict_mode=False)
                 
-                # 검증 필요 시에만 상세 비교
-                if needs_verification:
-                    def compare_shows(shows1, shows2):
-                        """두 수집 결과를 비교하여 일치 여부 확인"""
-                        if not shows1 or not shows2:
-                            return False
-                        if len(shows1) != len(shows2):
-                            return False
-                        
-                        # 영화별로 매칭하여 비교
-                        shows1_dict = {}
-                        for s in shows1:
-                            key = create_movie_key(s)
-                            shows1_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
-                        
-                        shows2_dict = {}
-                        for s in shows2:
-                            key = create_movie_key(s)
-                            shows2_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
-                        
-                        if set(shows1_dict.keys()) != set(shows2_dict.keys()):
-                            return False
-                        
-                        for key in shows1_dict:
-                            if shows1_dict[key] != shows2_dict[key]:
-                                return False
-                        
-                        return True
+                # 두 결과가 완전히 일치하면 사용
+                if compare_shows(shows_first, shows_second):
+                    shows = shows_first
+                else:
+                    # 일치하지 않으면 더 긴 대기 후 재수집
+                    print(f"  ⚠️ 데이터 불일치 감지, 재수집 중...")
+                    time.sleep(0.5)
+                    shows_third = scrape_imax_shows(driver, date_key, strict_mode=True)
                     
-                    if shows_first and shows_second and compare_shows(shows_first, shows_second):
+                    # 세 번째 결과와 비교하여 일치하는 쌍 찾기
+                    if compare_shows(shows_first, shows_third):
                         shows = shows_first
+                    elif compare_shows(shows_second, shows_third):
+                        shows = shows_second
                     else:
-                        print(f"  ⚠️ 데이터 검증 필요: 더 많은 결과 사용 ({len(shows)}개 영화)")
+                        # 모두 불일치하면 가장 많은 데이터를 가진 결과 사용
+                        first_total = sum(len(s.get('times', [])) for s in shows_first) if shows_first else 0
+                        second_total = sum(len(s.get('times', [])) for s in shows_second) if shows_second else 0
+                        third_total = sum(len(s.get('times', [])) for s in shows_third) if shows_third else 0
+                        
+                        if third_total >= second_total and third_total >= first_total:
+                            shows = shows_third
+                        elif second_total >= first_total:
+                            shows = shows_second
+                        else:
+                            shows = shows_first
+                        
+                        print(f"  ⚠️ 데이터 불안정 감지: 최대 데이터 결과 사용 ({len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간)")
                 
                 if shows:
                     # 날짜 키 정규화 (오늘 처리 포함)
