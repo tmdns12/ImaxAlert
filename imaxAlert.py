@@ -493,11 +493,82 @@ def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1.5, st
     return verify_showtimes_loaded(driver, container_idx, check_all=True)
 
 
-def scrape_imax_shows(driver, date_key=None, strict_mode=False):
-    """현재 선택된 날짜의 IMAX 상영 정보 수집
+def wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=500, max_wait=3000):
+    """MutationObserver를 사용하여 DOM이 안정화될 때까지 대기
     
     Args:
-        strict_mode: True면 모든 아이템 검증, False면 샘플링 (기본값: False)
+        driver: Selenium WebDriver
+        selector: 관찰할 요소의 CSS 선택자
+        stable_time: DOM 변경이 없어야 하는 시간 (ms)
+        max_wait: 최대 대기 시간 (ms)
+    
+    Returns:
+        bool: DOM이 안정화되었는지 여부
+    """
+    try:
+        result = driver.execute_async_script(f"""
+            var callback = arguments[arguments.length - 1];
+            var selector = '{selector}';
+            var stableTime = {stable_time};
+            var maxWait = {max_wait};
+            
+            var targetNode = document.querySelector(selector) || document.body;
+            var stableTimeout = null;
+            var maxWaitTimeout = null;
+            var observer = null;
+            var isResolved = false;
+            
+            function resolve(result) {{
+                if (isResolved) return;
+                isResolved = true;
+                if (stableTimeout) clearTimeout(stableTimeout);
+                if (maxWaitTimeout) clearTimeout(maxWaitTimeout);
+                if (observer) observer.disconnect();
+                callback(result);
+            }}
+            
+            observer = new MutationObserver(function(mutations) {{
+                // 안정화 타이머 재시작
+                if (stableTimeout) clearTimeout(stableTimeout);
+                stableTimeout = setTimeout(function() {{
+                    resolve(true);
+                }}, stableTime);
+            }});
+            
+            // DOM 변경 관찰 시작
+            observer.observe(targetNode, {{
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeOldValue: false,
+                characterData: true,
+                characterDataOldValue: false
+            }});
+            
+            // 초기 안정화 타이머 설정 (DOM이 이미 안정화된 경우)
+            stableTimeout = setTimeout(function() {{
+                resolve(true);
+            }}, stableTime);
+            
+            // 최대 대기 시간 설정
+            maxWaitTimeout = setTimeout(function() {{
+                resolve(false);
+            }}, maxWait);
+        """)
+        return result
+    except Exception as e:
+        # MutationObserver 실패 시 fallback: 짧은 대기
+        print(f"  ⚠️ DOM 안정화 검증 실패: {e}, fallback 대기")
+        time.sleep(stable_time / 1000.0)
+        return True
+
+
+def scrape_imax_shows(driver, date_key=None):
+    """현재 선택된 날짜의 IMAX 상영 정보 수집 (MutationObserver로 DOM 안정화 보장)
+    
+    Args:
+        driver: Selenium WebDriver
+        date_key: 날짜 키 (None이면 현재 선택된 날짜 사용)
     """
     try:
         try:
@@ -515,7 +586,7 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
         # 각 영화별 아코디언 컨테이너 찾기
         movie_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
 
-        # 1단계: 모든 아코디언을 JavaScript로 한 번에 펼치기 (속도 최적화)
+        # 1단계: 모든 아코디언을 JavaScript로 한 번에 펼치기
         try:
             driver.execute_script("""
                 var containers = document.querySelectorAll('div.accordion_container__W7nEs');
@@ -539,17 +610,8 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                 except:
                     continue
         
-        # 2단계: 모든 아코디언이 펼쳐질 때까지 대기 (최적화)
-        time.sleep(0.3)  # 기본 대기 시간 단축
-        if strict_mode:
-            # strict 모드: 샘플링 검증으로 빠르게 확인 (처음과 마지막만)
-            if len(movie_containers) > 0:
-                # 첫 번째와 마지막 컨테이너만 빠르게 검증
-                wait_for_showtimes_fully_loaded(driver, container_idx=0, max_wait=0.8, strict=False)
-                if len(movie_containers) > 1:
-                    wait_for_showtimes_fully_loaded(driver, container_idx=len(movie_containers)-1, max_wait=0.8, strict=False)
-        else:
-            time.sleep(0.2)  # non-strict 모드에서는 짧은 대기
+        # 2단계: MutationObserver를 사용하여 DOM이 안정화될 때까지 대기
+        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=500, max_wait=3000)
 
         movies_data = []
         # 3단계: 모든 영화 데이터 수집 (이미 모두 펼쳐진 상태)
@@ -605,11 +667,10 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                         start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
                         end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
                         
-                        # strict_mode일 때 시간 형식 검증 (빠른 검증만)
-                        if strict_mode:
-                            start_normalized = normalize_string(start)
-                            if not re.match(r'^\d{2}:\d{2}$', start_normalized):
-                                continue  # 유효하지 않은 시간은 건너뛰기
+                        # 시간 형식 검증
+                        start_normalized = normalize_string(start)
+                        if not re.match(r'^\d{2}:\d{2}$', start_normalized):
+                            continue  # 유효하지 않은 시간은 건너뛰기
                         
                         try:
                             status_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_status__lT4zd")
@@ -628,8 +689,6 @@ def scrape_imax_shows(driver, date_key=None, strict_mode=False):
                         show_times.append(f"{start} ~ {end} | {seat_info}")
                     except Exception as e:
                         # stale element 발생 시 해당 아이템만 건너뛰기
-                        if strict_mode:
-                            print(f"    ⚠️ 상영시간 아이템 {item_idx+1} 건너뛰기: {e}")
                         continue
                 
                 if show_times:
@@ -915,71 +974,8 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                 # 날짜 선택 완료 확인 (최적화: 타임아웃 단축)
                 wait_for_date_fully_loaded(driver, date_key, max_wait=0.5)
                 
-                # 상영시간 로딩 대기 (최적화: non-strict로 빠른 확인)
-                wait_for_showtimes_fully_loaded(driver, max_wait=1.0, strict=False)
-                
-                def compare_shows(shows1, shows2):
-                    """두 수집 결과를 비교하여 일치 여부 확인"""
-                    if not shows1 or not shows2:
-                        return False
-                    if len(shows1) != len(shows2):
-                        return False
-                    
-                    # 영화별로 매칭하여 비교
-                    shows1_dict = {}
-                    for s in shows1:
-                        key = create_movie_key(s)
-                        shows1_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
-                    
-                    shows2_dict = {}
-                    for s in shows2:
-                        key = create_movie_key(s)
-                        shows2_dict[key] = set(extract_time_only(t) for t in s.get('times', []))
-                    
-                    if set(shows1_dict.keys()) != set(shows2_dict.keys()):
-                        return False
-                    
-                    for key in shows1_dict:
-                        if shows1_dict[key] != shows2_dict[key]:
-                            return False
-                    
-                    return True
-                
-                # 항상 이중 수집을 수행하여 정확성 보장
-                shows_first = scrape_imax_shows(driver, date_key, strict_mode=False)
-                
-                # 두 번째 수집을 위한 추가 대기
-                time.sleep(0.3)
-                shows_second = scrape_imax_shows(driver, date_key, strict_mode=False)
-                
-                # 두 결과가 완전히 일치하면 사용
-                if compare_shows(shows_first, shows_second):
-                    shows = shows_first
-                else:
-                    # 일치하지 않으면 더 긴 대기 후 재수집
-                    print(f"  ⚠️ 데이터 불일치 감지, 재수집 중...")
-                    time.sleep(0.5)
-                    shows_third = scrape_imax_shows(driver, date_key, strict_mode=True)
-                    
-                    # 세 번째 결과와 비교하여 일치하는 쌍 찾기
-                    if compare_shows(shows_first, shows_third):
-                        shows = shows_first
-                    elif compare_shows(shows_second, shows_third):
-                        shows = shows_second
-                    else:
-                        # 모두 불일치하면 가장 많은 데이터를 가진 결과 사용
-                        first_total = sum(len(s.get('times', [])) for s in shows_first) if shows_first else 0
-                        second_total = sum(len(s.get('times', [])) for s in shows_second) if shows_second else 0
-                        third_total = sum(len(s.get('times', [])) for s in shows_third) if shows_third else 0
-                        
-                        if third_total >= second_total and third_total >= first_total:
-                            shows = shows_third
-                        elif second_total >= first_total:
-                            shows = shows_second
-                        else:
-                            shows = shows_first
-                        
-                        print(f"  ⚠️ 데이터 불안정 감지: 최대 데이터 결과 사용 ({len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간)")
+                # MutationObserver로 DOM 안정화 후 단일 수집 (이중/삼중 수집 제거)
+                shows = scrape_imax_shows(driver, date_key)
                 
                 if shows:
                     # 날짜 키 정규화 (오늘 처리 포함)
