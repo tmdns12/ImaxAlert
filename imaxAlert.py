@@ -847,6 +847,64 @@ def create_movie_key(movie):
     theater_info = normalize_string(movie.get('theater_info', ''))
     return f"{date}|{title}|{theater_info}"
 
+def compare_shows_completely(current_shows, previous_movies, target_date_key):
+    """현재 수집한 데이터와 이전 상태를 완전히 비교하여 일치 여부 확인
+    
+    Returns:
+        bool: 완전히 일치하면 True, 다르면 False
+    """
+    normalized_target_date = normalize_date_key(target_date_key)
+    
+    # 이전 상태에서 해당 날짜의 영화 정보만 가져오기
+    prev_movies_dict = {}
+    for movie in previous_movies:
+        movie_date = normalize_date_key(movie.get('date', ''))
+        if movie_date != normalized_target_date:
+            continue
+        
+        key = create_movie_key(movie)
+        prev_times_set = set()
+        for time_str in movie.get('times', []):
+            time_only = extract_time_only(time_str)
+            if time_only:
+                prev_times_set.add(time_only)
+        if prev_times_set:
+            prev_movies_dict[key] = prev_times_set
+    
+    # 현재 상태와 비교
+    current_movies_dict = {}
+    for movie in current_shows:
+        movie_date = normalize_date_key(movie.get('date', ''))
+        if movie_date != normalized_target_date:
+            continue
+        
+        key = create_movie_key(movie)
+        current_times_set = set()
+        for time_str in movie.get('times', []):
+            time_only = extract_time_only(time_str)
+            if time_only:
+                current_times_set.add(time_only)
+        if current_times_set:
+            current_movies_dict[key] = current_times_set
+    
+    # 영화 개수 확인
+    if len(prev_movies_dict) != len(current_movies_dict):
+        return False
+    
+    # 모든 영화의 상영시간이 일치하는지 확인
+    for key in prev_movies_dict:
+        if key not in current_movies_dict:
+            return False
+        if prev_movies_dict[key] != current_movies_dict[key]:
+            return False
+    
+    # 새로운 영화가 있는지 확인
+    for key in current_movies_dict:
+        if key not in prev_movies_dict:
+            return False
+    
+    return True
+
 def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key):
     """특정 날짜의 새로운 상영시간 찾기"""
     new_showtimes = []
@@ -1071,20 +1129,34 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     for show in shows:
                         show['date'] = normalized_date_key
                     
-                    all_movies_data.extend(shows)
-                    print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간")
-                    
-                    # 즉시 변화 감지 및 알림 (첫 실행이 아닌 경우만)
+                    # 최적화: 이전 상태와 완전히 일치하면 이전 상태 재사용 (속도 향상)
                     if previous_state:
                         prev_movies = prev_movies_by_date.get(normalized_date_key, [])
                         
+                        # 완전히 일치하는지 빠르게 확인
+                        if prev_movies and compare_shows_completely(shows, prev_movies, date_key):
+                            print(f"  ✓ 날짜 '{date_key}' 변화 없음 (이전 상태 재사용)")
+                            # 이전 상태를 그대로 사용 (이미 수집한 데이터는 버림)
+                            for prev_movie in prev_movies:
+                                all_movies_data.append(prev_movie.copy())
+                            continue  # 다음 날짜로 바로 넘어감
+                        
+                        # 일치하지 않으면 상세 비교 및 알림
                         new_showtimes = find_new_showtimes_for_date(shows, prev_movies, date_key)
                         
                         if new_showtimes:
                             print(f"  🔔 알림 대상 발견: {len(new_showtimes)}개 영화에 새로운 상영시간")
                             send_notification_for_date(date_key, new_showtimes)
+                            # 새로운 상영시간이 있으면 수집한 데이터 사용
+                            all_movies_data.extend(shows)
                         else:
-                            print(f"  ✓ 변화 없음")
+                            print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간 (변화 없음)")
+                            # 변화 없지만 완전 일치하지 않았으므로 수집한 데이터 사용
+                            all_movies_data.extend(shows)
+                    else:
+                        # 첫 실행이면 그냥 저장
+                        all_movies_data.extend(shows)
+                        print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간")
                 else:
                     print(f"  ⚠️ 날짜 '{date_key}' 데이터 없음")
                     
