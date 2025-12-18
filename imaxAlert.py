@@ -564,299 +564,141 @@ def wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stabl
 
 
 def scrape_imax_shows(driver, date_key=None):
-    """현재 선택된 날짜의 IMAX 상영 정보 수집 (MutationObserver로 DOM 안정화 보장)
+    """현재 선택된 날짜의 IMAX 상영 정보 수집 (JavaScript로 직접 추출 - 빠르고 안정적)
     
     Args:
         driver: Selenium WebDriver
         date_key: 날짜 키 (None이면 현재 선택된 날짜 사용)
     """
     try:
+        # 컨테이너 존재 확인
         try:
             WebDriverWait(driver, 5).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
             )
         except:
-            time.sleep(0.5)  # fallback
+            return []
         
         if date_key is None:
             current_date = get_selected_date(driver)
         else:
             current_date = date_key
         
-        # 각 영화별 아코디언 컨테이너 찾기 (아코디언을 열기 전에 찾음)
-        # 나중에 다시 찾아서 stale element 방지
-
         # 1단계: 모든 아코디언을 JavaScript로 한 번에 펼치기
-        try:
-            driver.execute_script("""
-                var containers = document.querySelectorAll('div.accordion_container__W7nEs');
-                for (var i = 0; i < containers.length; i++) {
-                    var btn = containers[i].querySelector('h2.accordion_accordionTitleArea__AmnDj button');
-                    if (btn && btn.getAttribute('aria-expanded') !== 'true') {
-                        btn.click();
-                    }
+        driver.execute_script("""
+            var containers = document.querySelectorAll('div.accordion_container__W7nEs');
+            for (var i = 0; i < containers.length; i++) {
+                var btn = containers[i].querySelector('h2.accordion_accordionTitleArea__AmnDj button');
+                if (btn && btn.getAttribute('aria-expanded') !== 'true') {
+                    btn.click();
                 }
-            """)
-        except:
-            # JavaScript 실패 시 기존 방식으로 폴백
-            containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-            for idx, container in enumerate(containers):
-                try:
-                    accordion_btn = container.find_element(
-                        By.CSS_SELECTOR, "h2.accordion_accordionTitleArea__AmnDj button"
-                    )
-                    is_expanded = accordion_btn.get_attribute("aria-expanded") == "true"
-                    if not is_expanded:
-                        driver.execute_script("arguments[0].click();", accordion_btn)
-                except:
-                    continue
+            }
+        """)
         
-        # 2단계: MutationObserver를 사용하여 DOM이 안정화될 때까지 대기 (최적화)
-        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=600, max_wait=3000)
+        # 2단계: DOM 안정화 대기 (짧게)
+        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=400, max_wait=2000)
         
-        # 3단계: 상영시간 개수 빠른 안정화 확인 (스마트 조기 종료)
-        stable_count_checks = 2  # 연속 2회만 확인하면 충분 (빠른 조기 종료)
-        stable_count = None
-        stable_iterations = 0
+        # 3단계: JavaScript로 모든 데이터를 한 번에 추출 (Selenium 요소 찾기 완전 제거)
+        movies_data_raw = driver.execute_script("""
+            var containers = document.querySelectorAll('div.accordion_container__W7nEs');
+            var results = [];
+            
+            for (var i = 0; i < containers.length; i++) {
+                var container = containers[i];
+                
+                // 영화 제목 추출
+                var titleElem = container.querySelector('h2 .screenInfo_title__Eso6_ .title2');
+                if (!titleElem) continue;
+                var movieTitle = titleElem.textContent.trim();
+                
+                // IMAX 정보 추출
+                var theaterElem = container.querySelector('div.screenInfo_contentWrap__95SyT h3.screenInfo_title__Eso6_');
+                if (!theaterElem) continue;
+                var theaterFull = theaterElem.textContent.trim();
+                
+                if (theaterFull.toUpperCase().indexOf('IMAX') === -1) continue;
+                
+                var theaterInfo = theaterFull.replace('IMAX관', '').trim().replace(' / ', ', ');
+                
+                // 상영시간 추출
+                var timeItems = container.querySelectorAll('ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg');
+                var showTimes = [];
+                
+                for (var j = 0; j < timeItems.length; j++) {
+                    var item = timeItems[j];
+                    var startElem = item.querySelector('.screenInfo_start__6BZbu');
+                    var endElem = item.querySelector('.screenInfo_end__qwvX0');
+                    var statusElem = item.querySelector('.screenInfo_status__lT4zd');
+                    
+                    if (!startElem || !endElem) continue;
+                    
+                    var start = startElem.textContent.trim();
+                    var end = endElem.textContent.trim();
+                    var seatInfo = statusElem ? statusElem.textContent.trim() : '-';
+                    
+                    // 시간 형식 검증 (HH:MM)
+                    if (!/^\\d{2}:\\d{2}$/.test(start)) continue;
+                    
+                    // 종료 시간 정리
+                    if (end.startsWith('-')) {
+                        end = end.substring(1).trim();
+                    }
+                    
+                    if (!seatInfo) seatInfo = '-';
+                    showTimes.push(start + ' ~ ' + end + ' | ' + seatInfo);
+                }
+                
+                if (showTimes.length > 0) {
+                    results.push({
+                        title: movieTitle,
+                        theater_info: theaterInfo,
+                        times: showTimes
+                    });
+                }
+            }
+            
+            return results;
+        """)
         
-        for check_iter in range(6):  # 최대 6번 확인 (약 0.6초)
-            containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-            if not containers:
-                time.sleep(0.1)
-                continue
-            
-            # 모든 컨테이너의 상영시간 개수 합계 계산
-            total_count = 0
-            all_valid = True
-            for container in containers:
-                try:
-                    time_items = container.find_elements(
-                        By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
-                    )
-                    if time_items:
-                        # 첫 번째 아이템의 시간 형식 검증
-                        try:
-                            start_elem = time_items[0].find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu")
-                            start_text = start_elem.text.strip()
-                            if not re.match(r'^\d{2}:\d{2}$', start_text):
-                                all_valid = False
-                                break
-                        except:
-                            all_valid = False
-                            break
-                    total_count += len(time_items)
-                except:
-                    all_valid = False
-                    break
-            
-            if not all_valid:
-                stable_count = None
-                stable_iterations = 0
-                time.sleep(0.1)
-                continue
-            
-            # 개수가 이전과 같으면 안정화 카운트 증가
-            if stable_count == total_count:
-                stable_iterations += 1
-                if stable_iterations >= stable_count_checks:
-                    break  # 안정화 완료 (조기 종료)
-            else:
-                stable_count = total_count
-                stable_iterations = 1
-            
-            time.sleep(0.1)  # 대기 시간 단축
-        
-        # 최종 확인: 컨테이너가 있는지 확인
-        final_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-        if not final_containers:
-            return []
-
+        # 4단계: Python에서 데이터 정규화 및 반환
         movies_data = []
-        # 4단계: 모든 영화 데이터 수집 (이미 모두 펼쳐진 상태)
-        # 컨테이너를 다시 찾아서 최신 상태로 업데이트
-        final_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-        for idx, container in enumerate(final_containers):
+        for movie in movies_data_raw:
             try:
-                # 영화 제목 저장
-                try:
-                    movie_title = container.find_element(
-                        By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2"
-                    ).text.strip()
-                except:
-                    continue
+                title = normalize_string(movie.get('title', ''))
+                theater_info = normalize_string(movie.get('theater_info', ''))
+                times_raw = movie.get('times', [])
                 
-                # 컨테이너를 다시 찾기 (stale element 방지)
-                try:
-                    containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                    if idx < len(containers):
-                        container = containers[idx]  # 인덱스로 재참조
-                    else:
-                        continue
-                except:
-                    continue
-                
-                # IMAX 정보 확인 (재찾은 컨테이너 사용)
-                try:
-                    imax_theater_full = container.find_element(
-                        By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT h3.screenInfo_title__Eso6_"
-                    ).text.strip()
-                    
-                    if "IMAX" not in imax_theater_full.upper():
-                        continue
-                    
-                    imax_info_parts = imax_theater_full.replace("IMAX관", "").strip().replace(" / ", ", ")
-                except:
-                    continue
-                
-                # 상영시간 수집 (strict_mode는 이미 wait_for_showtimes_fully_loaded에서 검증됨)
-                try:
-                    # 컨테이너를 다시 찾아서 최신 상태로 업데이트 (stale element 방지)
-                    containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                    if idx < len(containers):
-                        container = containers[idx]
-                    time_items = container.find_elements(
-                        By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
-                    )
-                except:
-                    continue
-                
+                # 시간 문자열 정규화
                 show_times = []
-                for item_idx, item in enumerate(time_items):
-                    try:
-                        # 각 아이템도 stale 방지를 위해 텍스트만 빠르게 추출
-                        start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
-                        end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
+                for time_str in times_raw:
+                    # JavaScript에서 이미 정규화했지만, Python에서도 한 번 더 정규화
+                    parts = time_str.split(' | ')
+                    if len(parts) >= 2:
+                        time_part = parts[0].strip()
+                        seat_part = parts[1].strip() if len(parts) > 1 else '-'
                         
-                        # 시간 형식 검증
-                        start_normalized = normalize_string(start)
-                        if not re.match(r'^\d{2}:\d{2}$', start_normalized):
-                            continue  # 유효하지 않은 시간은 건너뛰기
-                        
-                        try:
-                            status_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_status__lT4zd")
-                            seat_info = status_elem.text.strip() or "-"
-                        except:
-                            seat_info = "-"
-                        
-                        # 시간 문자열 정규화
-                        start = normalize_string(start)
-                        end = normalize_string(end)
-                        # 종료 시간에서 앞의 "-" 제거 ("- 16:38" -> "16:38")
-                        if end.startswith("-"):
-                            end = end[1:].strip()
-                        end = normalize_string(end)
-                        seat_info = normalize_string(seat_info) if seat_info != "-" else "-"
-                        show_times.append(f"{start} ~ {end} | {seat_info}")
-                    except Exception as e:
-                        # stale element 발생 시 해당 아이템만 건너뛰기
-                        continue
+                        # 시간 부분 정규화
+                        if ' ~ ' in time_part:
+                            start, end = time_part.split(' ~ ', 1)
+                            start = normalize_string(start.strip())
+                            end = normalize_string(end.strip())
+                            if end.startswith('-'):
+                                end = end[1:].strip()
+                            end = normalize_string(end)
+                            seat_part = normalize_string(seat_part) if seat_part != '-' else '-'
+                            show_times.append(f"{start} ~ {end} | {seat_part}")
                 
                 if show_times:
                     movies_data.append({
                         'date': normalize_string(current_date),
-                        'title': normalize_string(movie_title),
-                        'theater_info': normalize_string(imax_info_parts),
+                        'title': title,
+                        'theater_info': theater_info,
                         'times': show_times
                     })
-                    print(f"  수집: {movie_title} - {len(show_times)}개 상영")
+                    print(f"  수집: {title} - {len(show_times)}개 상영")
             except Exception as e:
-                print(f"영화 정보 파싱 중 오류: {e}")
+                print(f"영화 데이터 처리 중 오류: {e}")
                 continue
-        
-        # 5단계: 수집 후 빠른 일관성 검증 (스마트 재수집)
-        if movies_data:
-            collected_total = sum(len(m.get('times', [])) for m in movies_data)
-            
-            # 빠르게 한 번만 확인하여 일관성 검증
-            try:
-                verification_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                verification_total = 0
-                for container in verification_containers:
-                    try:
-                        time_items = container.find_elements(
-                            By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
-                        )
-                        verification_total += len(time_items)
-                    except:
-                        continue
-                
-                # 개수가 일치하거나 차이가 1개 이하면 완료 (정상 범위)
-                if abs(collected_total - verification_total) <= 1:
-                    return movies_data  # 일관성 확인, 재수집 불필요
-                
-                # 큰 차이(2개 이상)가 있을 때만 재수집 (최대 1번만)
-                if abs(collected_total - verification_total) >= 2:
-                    print(f"  🔄 데이터 불일치: 수집 {collected_total}개 vs 확인 {verification_total}개, 재수집 중...")
-                    time.sleep(0.3)  # 짧은 대기
-                    
-                    # 재수집 (1번만)
-                    retry_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                    if retry_containers:
-                        retry_movies_data = []
-                        for idx, container in enumerate(retry_containers):
-                            try:
-                                movie_title = container.find_element(
-                                    By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2"
-                                ).text.strip()
-                                
-                                imax_theater_full = container.find_element(
-                                    By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT h3.screenInfo_title__Eso6_"
-                                ).text.strip()
-                                
-                                if "IMAX" not in imax_theater_full.upper():
-                                    continue
-                                
-                                imax_info_parts = imax_theater_full.replace("IMAX관", "").strip().replace(" / ", ", ")
-                                
-                                containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                                if idx < len(containers):
-                                    container = containers[idx]
-                                time_items = container.find_elements(
-                                    By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
-                                )
-                                
-                                show_times = []
-                                for item in time_items:
-                                    try:
-                                        start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
-                                        end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
-                                        
-                                        start_normalized = normalize_string(start)
-                                        if not re.match(r'^\d{2}:\d{2}$', start_normalized):
-                                            continue
-                                        
-                                        try:
-                                            status_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_status__lT4zd")
-                                            seat_info = status_elem.text.strip() or "-"
-                                        except:
-                                            seat_info = "-"
-                                        
-                                        start = normalize_string(start)
-                                        end = normalize_string(end)
-                                        if end.startswith("-"):
-                                            end = end[1:].strip()
-                                        end = normalize_string(end)
-                                        seat_info = normalize_string(seat_info) if seat_info != "-" else "-"
-                                        show_times.append(f"{start} ~ {end} | {seat_info}")
-                                    except:
-                                        continue
-                                
-                                if show_times:
-                                    retry_movies_data.append({
-                                        'date': normalize_string(current_date),
-                                        'title': normalize_string(movie_title),
-                                        'theater_info': normalize_string(imax_info_parts),
-                                        'times': show_times
-                                    })
-                            except:
-                                continue
-                        
-                        retry_count = sum(len(m.get('times', [])) for m in retry_movies_data)
-                        # 재수집 결과가 더 많거나 같으면 사용
-                        if retry_count >= collected_total:
-                            return retry_movies_data
-            except:
-                pass  # 검증 실패 시 원본 데이터 반환
         
         return movies_data
 
