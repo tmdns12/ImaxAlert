@@ -611,18 +611,18 @@ def scrape_imax_shows(driver, date_key=None):
                 except:
                     continue
         
-        # 2단계: MutationObserver를 사용하여 DOM이 안정화될 때까지 대기
-        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=1000, max_wait=5000)
+        # 2단계: MutationObserver를 사용하여 DOM이 안정화될 때까지 대기 (최적화)
+        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=600, max_wait=3000)
         
-        # 3단계: 상영시간 개수가 안정화될 때까지 대기 (정확도 강화)
-        stable_count_checks = 4  # 연속으로 같은 개수가 나와야 함 (3 -> 4로 증가)
+        # 3단계: 상영시간 개수 빠른 안정화 확인 (스마트 조기 종료)
+        stable_count_checks = 2  # 연속 2회만 확인하면 충분 (빠른 조기 종료)
         stable_count = None
         stable_iterations = 0
         
-        for check_iter in range(12):  # 최대 12번 확인 (약 2.4초)
+        for check_iter in range(6):  # 최대 6번 확인 (약 0.6초)
             containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
             if not containers:
-                time.sleep(0.2)
+                time.sleep(0.1)
                 continue
             
             # 모든 컨테이너의 상영시간 개수 합계 계산
@@ -652,22 +652,19 @@ def scrape_imax_shows(driver, date_key=None):
             if not all_valid:
                 stable_count = None
                 stable_iterations = 0
-                time.sleep(0.2)
+                time.sleep(0.1)
                 continue
             
             # 개수가 이전과 같으면 안정화 카운트 증가
             if stable_count == total_count:
                 stable_iterations += 1
                 if stable_iterations >= stable_count_checks:
-                    break  # 안정화 완료
+                    break  # 안정화 완료 (조기 종료)
             else:
                 stable_count = total_count
                 stable_iterations = 1
             
-            time.sleep(0.2)
-        
-        # 안정화 확인 후 추가 대기 (데이터 완전 로드 보장)
-        time.sleep(0.3)
+            time.sleep(0.1)  # 대기 시간 단축
         
         # 최종 확인: 컨테이너가 있는지 확인
         final_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
@@ -766,15 +763,8 @@ def scrape_imax_shows(driver, date_key=None):
                 print(f"영화 정보 파싱 중 오류: {e}")
                 continue
         
-        # 5단계: 수집 후 일관성 검증 및 재수집 (정확도 강화)
-        # 여러 번 수집해서 가장 많은 데이터를 사용
-        best_movies_data = movies_data
-        best_count = sum(len(m.get('times', [])) for m in movies_data) if movies_data else 0
-        
-        for retry in range(2):  # 최대 2번 재수집
-            if not movies_data:
-                break
-            
+        # 5단계: 수집 후 빠른 일관성 검증 (스마트 재수집)
+        if movies_data:
             collected_total = sum(len(m.get('times', [])) for m in movies_data)
             
             # 빠르게 한 번만 확인하여 일관성 검증
@@ -790,21 +780,18 @@ def scrape_imax_shows(driver, date_key=None):
                     except:
                         continue
                 
-                # 개수가 일치하면 완료
-                if collected_total == verification_total and collected_total > 0:
-                    break
+                # 개수가 일치하거나 차이가 1개 이하면 완료 (정상 범위)
+                if abs(collected_total - verification_total) <= 1:
+                    return movies_data  # 일관성 확인, 재수집 불필요
                 
-                # 개수가 다르면 재수집 (더 많은 데이터를 얻기 위해)
-                if abs(collected_total - verification_total) > 0:
-                    if retry < 1:  # 마지막 재시도가 아니면
-                        print(f"  🔄 데이터 불일치: 수집 {collected_total}개 vs 확인 {verification_total}개, 재수집 중...")
-                        time.sleep(0.5)
-                        
-                        # 재수집
-                        retry_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                        if not retry_containers:
-                            break
-                        
+                # 큰 차이(2개 이상)가 있을 때만 재수집 (최대 1번만)
+                if abs(collected_total - verification_total) >= 2:
+                    print(f"  🔄 데이터 불일치: 수집 {collected_total}개 vs 확인 {verification_total}개, 재수집 중...")
+                    time.sleep(0.3)  # 짧은 대기
+                    
+                    # 재수집 (1번만)
+                    retry_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
+                    if retry_containers:
                         retry_movies_data = []
                         for idx, container in enumerate(retry_containers):
                             try:
@@ -865,15 +852,13 @@ def scrape_imax_shows(driver, date_key=None):
                                 continue
                         
                         retry_count = sum(len(m.get('times', [])) for m in retry_movies_data)
-                        if retry_count > best_count:
-                            best_movies_data = retry_movies_data
-                            best_count = retry_count
-                        
-                        movies_data = retry_movies_data
+                        # 재수집 결과가 더 많거나 같으면 사용
+                        if retry_count >= collected_total:
+                            return retry_movies_data
             except:
-                break
+                pass  # 검증 실패 시 원본 데이터 반환
         
-        return best_movies_data
+        return movies_data
 
     except Exception as e:
         print("IMAX 정보 파싱 실패:", e)
