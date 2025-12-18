@@ -612,19 +612,17 @@ def scrape_imax_shows(driver, date_key=None):
                     continue
         
         # 2단계: MutationObserver를 사용하여 DOM이 안정화될 때까지 대기
-        # 안정화 시간을 늘려서 모든 데이터가 완전히 로드될 때까지 대기
-        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=1500, max_wait=6000)
+        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=800, max_wait=4000)
         
-        # 3단계: 상영시간 개수가 안정화될 때까지 대기 (더 확실한 방법)
-        # 상영시간 개수가 일정 시간 동안 변하지 않으면 안정화된 것으로 간주
-        stable_count_checks = 5  # 연속으로 같은 개수가 나와야 함 (3 -> 5로 증가)
+        # 3단계: 상영시간 개수가 안정화될 때까지 대기 (속도와 정확도 균형)
+        stable_count_checks = 3  # 연속으로 같은 개수가 나와야 함
         stable_count = None
         stable_iterations = 0
         
-        for check_iter in range(15):  # 최대 15번 확인 (10 -> 15로 증가)
+        for check_iter in range(8):  # 최대 8번 확인 (약 1.6초)
             containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
             if not containers:
-                time.sleep(0.3)
+                time.sleep(0.2)
                 continue
             
             # 모든 컨테이너의 상영시간 개수 합계 계산
@@ -652,9 +650,9 @@ def scrape_imax_shows(driver, date_key=None):
                     break
             
             if not all_valid:
-                stable_count = None  # 유효하지 않으면 카운트 리셋
+                stable_count = None
                 stable_iterations = 0
-                time.sleep(0.3)
+                time.sleep(0.2)
                 continue
             
             # 개수가 이전과 같으면 안정화 카운트 증가
@@ -666,10 +664,7 @@ def scrape_imax_shows(driver, date_key=None):
                 stable_count = total_count
                 stable_iterations = 1
             
-            time.sleep(0.3)  # 0.2 -> 0.3으로 증가
-        
-        # 4단계: 안정화 확인 후 추가 대기 (데이터 완전 로드 보장)
-        time.sleep(0.5)
+            time.sleep(0.2)
         
         # 최종 확인: 컨테이너가 있는지 확인
         final_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
@@ -768,88 +763,29 @@ def scrape_imax_shows(driver, date_key=None):
                 print(f"영화 정보 파싱 중 오류: {e}")
                 continue
         
-        # 5단계: 수집 후 일관성 검증 (데이터가 안정적인지 확인)
+        # 5단계: 수집 후 간단한 일관성 검증 (속도 최적화, 재수집 제거)
         if movies_data:
             # 수집한 데이터의 상영시간 개수 확인
             collected_total = sum(len(m.get('times', [])) for m in movies_data)
             
-            # 다시 한 번 상영시간 개수 확인하여 일관성 검증
-            verification_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-            verification_total = 0
-            for container in verification_containers:
-                try:
-                    time_items = container.find_elements(
-                        By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
-                    )
-                    verification_total += len(time_items)
-                except:
-                    continue
-            
-            # 개수가 다르면 불안정한 것으로 간주하고 재수집
-            if collected_total != verification_total:
-                print(f"  ⚠️ 데이터 불일치 감지: 수집 {collected_total}개 vs 확인 {verification_total}개, 재수집 중...")
-                time.sleep(1.0)  # 추가 대기
-                # 재수집 (간단하게 상영시간만 다시 수집)
-                movies_data = []
+            # 빠르게 한 번만 확인하여 일관성 검증
+            try:
                 verification_containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                for idx, container in enumerate(verification_containers):
+                verification_total = 0
+                for container in verification_containers:
                     try:
-                        movie_title = container.find_element(
-                            By.CSS_SELECTOR, "h2 .screenInfo_title__Eso6_ .title2"
-                        ).text.strip()
-                        
-                        imax_theater_full = container.find_element(
-                            By.CSS_SELECTOR, "div.screenInfo_contentWrap__95SyT h3.screenInfo_title__Eso6_"
-                        ).text.strip()
-                        
-                        if "IMAX" not in imax_theater_full.upper():
-                            continue
-                        
-                        imax_info_parts = imax_theater_full.replace("IMAX관", "").strip().replace(" / ", ", ")
-                        
-                        containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-                        if idx < len(containers):
-                            container = containers[idx]
                         time_items = container.find_elements(
                             By.CSS_SELECTOR, "ul.screenInfo_timeWrap__7GTHr li.screenInfo_timeItem__y8ZXg"
                         )
-                        
-                        show_times = []
-                        for item in time_items:
-                            try:
-                                start = item.find_element(By.CSS_SELECTOR, ".screenInfo_start__6BZbu").text
-                                end = item.find_element(By.CSS_SELECTOR, ".screenInfo_end__qwvX0").text
-                                
-                                start_normalized = normalize_string(start)
-                                if not re.match(r'^\d{2}:\d{2}$', start_normalized):
-                                    continue
-                                
-                                try:
-                                    status_elem = item.find_element(By.CSS_SELECTOR, ".screenInfo_status__lT4zd")
-                                    seat_info = status_elem.text.strip() or "-"
-                                except:
-                                    seat_info = "-"
-                                
-                                start = normalize_string(start)
-                                end = normalize_string(end)
-                                if end.startswith("-"):
-                                    end = end[1:].strip()
-                                end = normalize_string(end)
-                                seat_info = normalize_string(seat_info) if seat_info != "-" else "-"
-                                show_times.append(f"{start} ~ {end} | {seat_info}")
-                            except:
-                                continue
-                        
-                        if show_times:
-                            movies_data.append({
-                                'date': normalize_string(current_date),
-                                'title': normalize_string(movie_title),
-                                'theater_info': normalize_string(imax_info_parts),
-                                'times': show_times
-                            })
-                            print(f"  수집 (재검증): {movie_title} - {len(show_times)}개 상영")
+                        verification_total += len(time_items)
                     except:
                         continue
+                
+                # 개수가 크게 다르면 경고만 (재수집 제거로 속도 향상)
+                if abs(collected_total - verification_total) > 2:  # 2개 이상 차이나면 경고만
+                    print(f"  ⚠️ 데이터 불일치 가능성: 수집 {collected_total}개 vs 확인 {verification_total}개 (무시하고 진행)")
+            except:
+                pass  # 검증 실패 시 그냥 진행
         
         return movies_data
 
