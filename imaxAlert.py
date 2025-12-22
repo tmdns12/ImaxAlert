@@ -403,7 +403,7 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
                 )
                 
                 if not time_items:
-                    continue
+                        continue
                 
                 if check_all:
                     # 모든 아이템 검증 (정확하지만 느림)
@@ -419,7 +419,7 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
                                 return False
                             if not (end_text and (re.match(r'^\d{2}:\d{2}$', end_text) or re.match(r'^-\s*\d{2}:\d{2}$', end_text))):
                                 return False
-                        except:
+                except:
                             return False  # 하나라도 실패하면 아직 로딩 중
                     
                     return True
@@ -445,8 +445,8 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
                     # 샘플 검증이 모두 성공하면 로드된 것으로 간주
                     if valid_count == len(check_indices):
                         return True
-            except:
-                continue
+                    except:
+                        continue
         
         return False
     except:
@@ -710,7 +710,7 @@ def scrape_imax_shows(driver, date_key=None):
             except Exception as e:
                 print(f"영화 데이터 처리 중 오류: {e}")
                 continue
-        
+
         return movies_data
 
     except Exception as e:
@@ -908,9 +908,10 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
                     'new_times': new_times_full
                 })
         else:
-            # 새로운 영화인 경우 - 모든 시간대가 새로 추가된 것이므로 알림
+            # 새로운 영화인 경우 - 이전 상태가 있으면 알림 (첫 배포가 아님)
+            # previous_state가 None이면 첫 배포이므로 알림 안 보냄 (호출부에서 처리)
             if current_times_set:
-                print(f"  ✅ 새로운 영화 발견: {movie.get('title')} - {len(current_times_set)}개 상영시간 추가")
+                print(f"  ✅ 새로운 영화 발견: {movie.get('title')} - {len(current_times_set)}개 상영시간")
                 print(f"     추가된 시간: {sorted(current_times_set)}")
                 new_times_full = [current_times_full[t] for t in current_times_set]
                 new_showtimes.append({
@@ -1005,20 +1006,20 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                             target_button = btn
                         except:
                             pass
-                    
+                        
                     # 저장된 버튼이 유효하지 않으면 빠르게 다시 찾기 (fallback)
                     if not target_button:
                         # XPath로 빠르게 찾기 시도 (텍스트 기반)
                         try:
                             parts = date_key.split()
-                            if len(parts) >= 2:
+                                    if len(parts) >= 2:
                                 day_txt, day_num = parts[0], parts[1]
                                 # XPath로 직접 찾기
                                 target_button = driver.find_element(
                                     By.XPATH,
                                     f"//button[contains(@class, 'dayScroll_scrollItem__IZ35T') and .//span[@class='dayScroll_txt__GEtA0' and text()='{day_txt}'] and .//span[@class='dayScroll_number__o8i9s' and text()='{day_num}'] and not(contains(@class, 'dayScroll_disabled__t8HIQ')) and not(@disabled)]"
                                 )
-                        except:
+                            except:
                             # XPath 실패 시 기존 방식으로 폴백 (디버깅용 정보 포함)
                             date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
                             found_dates = []
@@ -1029,19 +1030,19 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                                     day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
                                     day_txt = day_txt_elem.text.strip()
                                     day_num = day_num_elem.text.strip()
-                                    
-                                    if day_txt and day_num:
-                                        btn_date_key = f"{day_txt} {day_num}"
+                        
+                        if day_txt and day_num:
+                            btn_date_key = f"{day_txt} {day_num}"
                                         found_dates.append(btn_date_key)
-                                        
-                                        if btn_date_key == date_key:
-                                            class_attr = btn.get_attribute("class") or ""
+                            
+                            if btn_date_key == date_key:
+                                class_attr = btn.get_attribute("class") or ""
                                             is_disabled = "dayScroll_disabled__t8HIQ" in class_attr or btn.get_attribute("disabled") is not None
                                             if not is_disabled:
-                                                target_button = btn
-                                                break
-                                except:
-                                    continue
+                                    target_button = btn
+                                    break
+                    except:
+                        continue
                 
                 if not target_button:
                     print(f"  ⚠️ 날짜 '{date_key}' 버튼을 찾을 수 없음")
@@ -1060,13 +1061,13 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     current_date = normalize_string(f"{day_txt} {day_num}")
                     if current_date == normalized_date_key:
                         already_clicked = True
-                except:
-                    pass
-                
+                        except:
+                            pass
+                    
                 # 빠른 체크에서 클릭하지 않았으면 클릭
                 if not already_clicked:
-                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
-                    driver.execute_script("arguments[0].click();", target_button)
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
+                driver.execute_script("arguments[0].click();", target_button)
                     # 날짜 선택 완료 확인 (최적화: 타임아웃 단축)
                     wait_for_date_fully_loaded(driver, date_key, max_wait=0.5)
                 
@@ -1112,8 +1113,8 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                             all_movies_data.extend(shows)
                     else:
                         # 첫 실행이면 그냥 저장
-                        all_movies_data.extend(shows)
-                        print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간")
+                    all_movies_data.extend(shows)
+                    print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간")
                 else:
                     print(f"  ⚠️ 날짜 '{date_key}' 데이터 없음")
                     
@@ -1192,9 +1193,9 @@ def get_all_date_info(driver):
                             }
                         """, swiper_container, slide_idx)
                         time.sleep(0.02)  # 슬라이드 이동 대기 시간 최소화
-                    except:
-                        pass
-                
+        except:
+            pass
+        
                 # 모든 슬라이드를 순회한 후 첫 번째 슬라이드로 돌아가기
                 try:
                     driver.execute_script("""
@@ -1264,7 +1265,7 @@ def get_all_date_info(driver):
                 # 방법 2: 요소를 찾지 못했으면 버튼의 전체 텍스트에서 추출
                 if not day_txt or not day_num:
                     try:
-                        btn_text = btn.text.strip()
+                    btn_text = btn.text.strip()
                         # 버튼 텍스트 예: "오늘\n08" 또는 "화 09"
                         lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
                         if len(lines) >= 2:
@@ -1273,7 +1274,7 @@ def get_all_date_info(driver):
                         elif len(lines) == 1:
                             # 공백으로 구분된 경우: "화 09"
                             parts = lines[0].split()
-                            if len(parts) >= 2:
+                    if len(parts) >= 2:
                                 day_txt = parts[0]
                                 day_num = parts[1]
                     except Exception as parse_error:
@@ -1431,7 +1432,7 @@ def main():
             return main()
     
     driver = _global_driver
-    
+
     all_date_info = get_all_date_info(driver)
     print(f"전체 날짜 수: {len(all_date_info)}개")
     
@@ -1462,7 +1463,7 @@ def main():
     
     save_current_state(current_date_states, all_movies_current)
     print("상태 저장 완료")
-    
+
     # 드라이버 유지 (quit 제거)
 
 
