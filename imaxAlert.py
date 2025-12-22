@@ -908,10 +908,17 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
                     'new_times': new_times_full
                 })
         else:
-            # 새로운 영화인 경우 - 첫 배포와 구분하기 어려우므로 알림하지 않음 (로그만)
-            # 실제로는 기존 영화에 새 시간이 추가된 경우만 알림
+            # 새로운 영화인 경우 - 모든 시간대가 새로 추가된 것이므로 알림
             if current_times_set:
-                print(f"  ℹ️ 새로운 영화 발견: {movie.get('title')} - {len(current_times_set)}개 상영시간 (알림 없음 - 첫 배포일 수 있음)")
+                print(f"  ✅ 새로운 영화 발견: {movie.get('title')} - {len(current_times_set)}개 상영시간 추가")
+                print(f"     추가된 시간: {sorted(current_times_set)}")
+                new_times_full = [current_times_full[t] for t in current_times_set]
+                new_showtimes.append({
+                    'date': movie_date,
+                    'title': normalize_string(movie.get('title', '')),
+                    'theater_info': normalize_string(movie.get('theater_info', '')),
+                    'new_times': new_times_full
+                })
     
     return new_showtimes
 
