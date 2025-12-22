@@ -403,7 +403,7 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
                 )
                 
                 if not time_items:
-                        continue
+                    continue
                 
                 if check_all:
                     # 모든 아이템 검증 (정확하지만 느림)
@@ -419,7 +419,7 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
                                 return False
                             if not (end_text and (re.match(r'^\d{2}:\d{2}$', end_text) or re.match(r'^-\s*\d{2}:\d{2}$', end_text))):
                                 return False
-                except:
+                        except:
                             return False  # 하나라도 실패하면 아직 로딩 중
                     
                     return True
@@ -445,8 +445,8 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
                     # 샘플 검증이 모두 성공하면 로드된 것으로 간주
                     if valid_count == len(check_indices):
                         return True
-                    except:
-                        continue
+            except:
+                continue
         
         return False
     except:
@@ -1159,7 +1159,7 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                             all_movies_data.extend(shows)
                     else:
                         # 첫 실행이면 그냥 저장
-                    all_movies_data.extend(shows)
+                        all_movies_data.extend(shows)
                     print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간")
                 else:
                     print(f"  ⚠️ 날짜 '{date_key}' 데이터 없음")
@@ -1239,9 +1239,9 @@ def get_all_date_info(driver):
                             }
                         """, swiper_container, slide_idx)
                         time.sleep(0.02)  # 슬라이드 이동 대기 시간 최소화
-        except:
-            pass
-        
+                    except:
+                        pass
+                
                 # 모든 슬라이드를 순회한 후 첫 번째 슬라이드로 돌아가기
                 try:
                     driver.execute_script("""
@@ -1311,7 +1311,7 @@ def get_all_date_info(driver):
                 # 방법 2: 요소를 찾지 못했으면 버튼의 전체 텍스트에서 추출
                 if not day_txt or not day_num:
                     try:
-                    btn_text = btn.text.strip()
+                        btn_text = btn.text.strip()
                         # 버튼 텍스트 예: "오늘\n08" 또는 "화 09"
                         lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
                         if len(lines) >= 2:
@@ -1320,7 +1320,7 @@ def get_all_date_info(driver):
                         elif len(lines) == 1:
                             # 공백으로 구분된 경우: "화 09"
                             parts = lines[0].split()
-                    if len(parts) >= 2:
+                            if len(parts) >= 2:
                                 day_txt = parts[0]
                                 day_num = parts[1]
                     except Exception as parse_error:
