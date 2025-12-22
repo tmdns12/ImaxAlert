@@ -660,7 +660,18 @@ def scrape_imax_shows(driver, date_key=None):
             return results;
         """)
         
-        # 4단계: Python에서 데이터 정규화 및 반환
+        # 4단계: Python에서 데이터 정규화 및 반환 (날짜 검증 포함)
+        # 실제 선택된 날짜 확인
+        actual_selected_date = get_selected_date(driver)
+        normalized_actual_date = normalize_date_key(actual_selected_date)
+        normalized_expected_date = normalize_date_key(current_date)
+        
+        # 날짜 검증
+        if normalized_actual_date != normalized_expected_date:
+            print(f"  ⚠️ 날짜 불일치 경고: 요청한 날짜 '{current_date}' (정규화: {normalized_expected_date}) vs 실제 선택된 날짜 '{actual_selected_date}' (정규화: {normalized_actual_date})")
+            # 실제 선택된 날짜로 수정
+            current_date = actual_selected_date
+        
         movies_data = []
         for movie in movies_data_raw:
             try:
@@ -690,12 +701,12 @@ def scrape_imax_shows(driver, date_key=None):
                 
                 if show_times:
                     movies_data.append({
-                        'date': normalize_string(current_date),
+                        'date': normalize_date_key(current_date),  # 정규화된 날짜 사용
                         'title': title,
                         'theater_info': theater_info,
                         'times': show_times
                     })
-                    print(f"  수집: {title} - {len(show_times)}개 상영")
+                    print(f"  수집: {title} - {len(show_times)}개 상영 (날짜: {normalize_date_key(current_date)})")
             except Exception as e:
                 print(f"영화 데이터 처리 중 오류: {e}")
                 continue
@@ -897,16 +908,10 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
                     'new_times': new_times_full
                 })
         else:
-            # 새로운 영화인 경우 모든 시간을 새로 추가된 것으로 처리
+            # 새로운 영화인 경우 - 첫 배포와 구분하기 어려우므로 알림하지 않음 (로그만)
+            # 실제로는 기존 영화에 새 시간이 추가된 경우만 알림
             if current_times_set:
-                print(f"  ✅ 새로운 영화 발견: {movie.get('title')} - {len(current_times_set)}개 상영시간")
-                new_times_full = [current_times_full[t] for t in current_times_set]
-                new_showtimes.append({
-                    'date': movie_date,
-                    'title': normalize_string(movie.get('title', '')),
-                    'theater_info': normalize_string(movie.get('theater_info', '')),
-                    'new_times': new_times_full
-                })
+                print(f"  ℹ️ 새로운 영화 발견: {movie.get('title')} - {len(current_times_set)}개 상영시간 (알림 없음 - 첫 배포일 수 있음)")
     
     return new_showtimes
 
@@ -926,9 +931,12 @@ def extract_start_time(time_str):
     return 0  # 파싱 실패 시 맨 앞에
 
 def send_notification_for_date(date_key, new_showtimes):
-    """특정 날짜의 새로운 상영시간 알림 전송 (상영시간 순서대로 정렬)"""
+    """새로 생긴 상영시간만 알림 전송 (날짜 전체가 아닌 새로 추가된 시간만)"""
+    if not new_showtimes:
+        return
+    
     msg_parts = []
-    msg_parts.append("⏰ 새로운 상영시간이 추가되었습니다!\n")
+    msg_parts.append("⏰ 새로운 상영시간 추가!")
     msg_parts.append(f"📅 {date_key}\n")
     
     # 영화별로 정렬 (제목 순)
@@ -936,19 +944,19 @@ def send_notification_for_date(date_key, new_showtimes):
     
     for item in sorted_items:
         if item['theater_info']:
-            msg_parts.append(f"{item['title']} ({item['theater_info']})")
+            msg_parts.append(f"🎬 {item['title']} ({item['theater_info']})")
         else:
-            msg_parts.append(item['title'])
+            msg_parts.append(f"🎬 {item['title']}")
         
-        # 상영시간을 시작 시간 순서로 정렬
+        # 새로 추가된 상영시간만 표시 (시작 시간 순서로 정렬)
         sorted_times = sorted(item['new_times'], key=lambda t: extract_start_time(t))
         for time_info in sorted_times:
-            msg_parts.append(f"  {time_info}")
+            msg_parts.append(f"  ✨ {time_info}")
         msg_parts.append("")
     
     msg = "\n".join(msg_parts).strip()
     send_telegram_message(msg)
-    print(f"⚡ 즉시 알림 전송: {date_key}")
+    print(f"⚡ 알림 전송: {date_key} (새 상영시간 {sum(len(item['new_times']) for item in new_showtimes)}개)")
 
 def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
     """각 날짜를 빠르게 클릭하면서 모든 날짜의 데이터 수집 및 즉시 알림 (스마트 대기 적용)"""
@@ -1062,8 +1070,13 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     # 날짜 키 정규화 (오늘 처리 포함)
                     # normalized_date_key는 이미 위에서 계산됨
                     
-                    # 수집한 모든 데이터의 날짜를 강제로 정규화된 날짜로 설정 (중요!)
+                    # 수집한 데이터의 날짜 검증 및 정규화
                     for show in shows:
+                        collected_date = show.get('date', '')
+                        normalized_collected = normalize_date_key(collected_date)
+                        # 날짜가 일치하는지 확인
+                        if normalized_collected != normalized_date_key:
+                            print(f"  ⚠️ 날짜 불일치 수정: '{collected_date}' -> '{normalized_date_key}'")
                         show['date'] = normalized_date_key
                     
                     # 최적화: 이전 상태와 완전히 일치하면 이전 상태 재사용 (속도 향상)
