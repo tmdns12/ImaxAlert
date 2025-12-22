@@ -644,8 +644,20 @@ def scrape_imax_shows(driver, date_key=None):
                         end = end.substring(1).trim();
                     }
                     
-                    if (!seatInfo) seatInfo = '-';
-                    showTimes.push(start + ' ~ ' + end + ' | ' + seatInfo);
+                    // 좌석 상태 확인: "예매 준비중", "준비중", "예매대기" 등이 있으면 제외
+                    // 실제 좌석 수가 있는 경우만 포함 (숫자/숫자석 형식)
+                    var isSeatOpen = false;
+                    if (seatInfo && seatInfo !== '-') {
+                        // 숫자가 포함되어 있고, "준비중", "대기" 같은 텍스트가 없으면 좌석 오픈
+                        var hasNumber = /\\d/.test(seatInfo);
+                        var hasNotReady = /준비|대기|오픈전|예매전/i.test(seatInfo);
+                        isSeatOpen = hasNumber && !hasNotReady;
+                    }
+                    
+                    // 좌석이 오픈된 경우만 추가
+                    if (isSeatOpen) {
+                        showTimes.push(start + ' ~ ' + end + ' | ' + seatInfo);
+                    }
                 }
                 
                 if (showTimes.length > 0) {
@@ -687,6 +699,10 @@ def scrape_imax_shows(driver, date_key=None):
                     if len(parts) >= 2:
                         time_part = parts[0].strip()
                         seat_part = parts[1].strip() if len(parts) > 1 else '-'
+                        
+                        # 좌석 상태 확인 (Python에서도 한 번 더 확인)
+                        if not is_seat_open(seat_part):
+                            continue  # 좌석 미오픈이면 제외
                         
                         # 시간 부분 정규화
                         if ' ~ ' in time_part:
@@ -754,6 +770,25 @@ def normalize_date_key(date_key):
     
     # 일반 날짜는 그대로 반환 (예: "화 16")
     return normalized
+
+def is_seat_open(seat_info):
+    """좌석이 실제로 오픈되었는지 확인 (예매 준비중이 아닌지)"""
+    if not seat_info or seat_info == '-':
+        return False
+    
+    seat_info_lower = seat_info.lower()
+    
+    # "준비중", "대기", "오픈전", "예매전" 등의 키워드가 있으면 좌석 미오픈
+    not_ready_keywords = ['준비', '대기', '오픈전', '예매전', '예매 준비']
+    if any(keyword in seat_info_lower for keyword in not_ready_keywords):
+        return False
+    
+    # 숫자가 포함되어 있으면 좌석 오픈 (예: "361/387석", "잔여석 42")
+    import re
+    if re.search(r'\d', seat_info):
+        return True
+    
+    return False
 
 def extract_time_only(time_str):
     """시간대 문자열에서 시간 부분만 추출 (좌석수 제외, 정규화)"""
@@ -887,6 +922,17 @@ def find_new_showtimes_for_date(current_shows, previous_movies, target_date_key)
         current_times_set = set()
         current_times_full = {}
         for time_str in movie.get('times', []):
+            # 좌석 정보 추출
+            seat_info = '-'
+            if " | " in time_str:
+                seat_info = time_str.split(" | ", 1)[1] if len(time_str.split(" | ")) > 1 else '-'
+            elif "|" in time_str:
+                seat_info = time_str.split("|", 1)[1] if len(time_str.split("|")) > 1 else '-'
+            
+            # 좌석이 오픈된 경우만 포함
+            if not is_seat_open(seat_info):
+                continue
+            
             time_only = extract_time_only(time_str)
             if time_only:
                 current_times_set.add(time_only)
@@ -1012,14 +1058,14 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                         # XPath로 빠르게 찾기 시도 (텍스트 기반)
                         try:
                             parts = date_key.split()
-                                    if len(parts) >= 2:
+                            if len(parts) >= 2:
                                 day_txt, day_num = parts[0], parts[1]
                                 # XPath로 직접 찾기
                                 target_button = driver.find_element(
                                     By.XPATH,
                                     f"//button[contains(@class, 'dayScroll_scrollItem__IZ35T') and .//span[@class='dayScroll_txt__GEtA0' and text()='{day_txt}'] and .//span[@class='dayScroll_number__o8i9s' and text()='{day_num}'] and not(contains(@class, 'dayScroll_disabled__t8HIQ')) and not(@disabled)]"
                                 )
-                            except:
+                        except:
                             # XPath 실패 시 기존 방식으로 폴백 (디버깅용 정보 포함)
                             date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
                             found_dates = []
@@ -1030,19 +1076,19 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                                     day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
                                     day_txt = day_txt_elem.text.strip()
                                     day_num = day_num_elem.text.strip()
-                        
-                        if day_txt and day_num:
-                            btn_date_key = f"{day_txt} {day_num}"
+                                    
+                                    if day_txt and day_num:
+                                        btn_date_key = f"{day_txt} {day_num}"
                                         found_dates.append(btn_date_key)
-                            
-                            if btn_date_key == date_key:
-                                class_attr = btn.get_attribute("class") or ""
+                                        
+                                        if btn_date_key == date_key:
+                                            class_attr = btn.get_attribute("class") or ""
                                             is_disabled = "dayScroll_disabled__t8HIQ" in class_attr or btn.get_attribute("disabled") is not None
                                             if not is_disabled:
-                                    target_button = btn
-                                    break
-                    except:
-                        continue
+                                                target_button = btn
+                                                break
+                                except:
+                                    continue
                 
                 if not target_button:
                     print(f"  ⚠️ 날짜 '{date_key}' 버튼을 찾을 수 없음")
@@ -1061,13 +1107,13 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     current_date = normalize_string(f"{day_txt} {day_num}")
                     if current_date == normalized_date_key:
                         already_clicked = True
-                        except:
-                            pass
-                    
+                except:
+                    pass
+                
                 # 빠른 체크에서 클릭하지 않았으면 클릭
                 if not already_clicked:
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
-                driver.execute_script("arguments[0].click();", target_button)
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
+                    driver.execute_script("arguments[0].click();", target_button)
                     # 날짜 선택 완료 확인 (최적화: 타임아웃 단축)
                     wait_for_date_fully_loaded(driver, date_key, max_wait=0.5)
                 
