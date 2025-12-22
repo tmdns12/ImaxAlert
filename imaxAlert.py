@@ -644,6 +644,31 @@ def scrape_imax_shows(driver, date_key=None):
                         end = end.substring(1).trim();
                     }
                     
+                    // 종료 시간 형식 검증
+                    if (!/^\\d{2}:\\d{2}$/.test(end)) continue;
+                    
+                    // 시간 범위 검증: 종료 시간이 시작 시간보다 이후인지 확인
+                    var startParts = start.split(':');
+                    var endParts = end.split(':');
+                    if (startParts.length !== 2 || endParts.length !== 2) continue;
+                    
+                    var startHour = parseInt(startParts[0], 10);
+                    var startMin = parseInt(startParts[1], 10);
+                    var endHour = parseInt(endParts[0], 10);
+                    var endMin = parseInt(endParts[1], 10);
+                    
+                    var startTotal = startHour * 60 + startMin;
+                    var endTotal = endHour * 60 + endMin;
+                    
+                    // 다음날인 경우 고려
+                    if (endTotal < startTotal) {
+                        endTotal += 24 * 60;
+                    }
+                    
+                    // 상영 시간이 너무 짧거나 길면 제외 (10분 미만 또는 5시간 초과)
+                    var duration = endTotal - startTotal;
+                    if (duration < 10 || duration > 300) continue;
+                    
                     // 좌석 상태 확인: "예매 준비중", "준비중", "예매대기" 등이 있으면 제외
                     // 실제 좌석 수가 있는 경우만 포함 (숫자/숫자석 형식)
                     var isSeatOpen = false;
@@ -678,53 +703,64 @@ def scrape_imax_shows(driver, date_key=None):
         normalized_actual_date = normalize_date_key(actual_selected_date)
         normalized_expected_date = normalize_date_key(current_date)
         
-        # 날짜 검증
+        # 날짜 검증 (강화): 불일치하면 데이터 수집 중단
         if normalized_actual_date != normalized_expected_date:
-            print(f"  ⚠️ 날짜 불일치 경고: 요청한 날짜 '{current_date}' (정규화: {normalized_expected_date}) vs 실제 선택된 날짜 '{actual_selected_date}' (정규화: {normalized_actual_date})")
-            # 실제 선택된 날짜로 수정
-            current_date = actual_selected_date
+            print(f"  ❌ 날짜 불일치: 요청한 날짜 '{current_date}' (정규화: {normalized_expected_date}) vs 실제 선택된 날짜 '{actual_selected_date}' (정규화: {normalized_actual_date})")
+            print(f"  ⚠️ 날짜 불일치로 인해 데이터 수집 중단 (잘못된 날짜의 데이터 수집 방지)")
+            return []  # 날짜가 불일치하면 빈 배열 반환 (데이터 수집 중단)
         
         movies_data = []
+        seen_times = set()  # 중복 제거를 위한 set
+        
         for movie in movies_data_raw:
             try:
                 title = normalize_string(movie.get('title', ''))
                 theater_info = normalize_string(movie.get('theater_info', ''))
                 times_raw = movie.get('times', [])
                 
-                # 시간 문자열 정규화
+                # 기본 검증: 제목과 상영관 정보가 있는지 확인
+                if not title or not theater_info:
+                    print(f"  ⚠️ 데이터 누락: 제목='{title}', 상영관='{theater_info}' - 건너뜀")
+                    continue
+                
+                # 시간 문자열 검증 및 정규화
                 show_times = []
                 for time_str in times_raw:
-                    # JavaScript에서 이미 정규화했지만, Python에서도 한 번 더 정규화
-                    parts = time_str.split(' | ')
-                    if len(parts) >= 2:
-                        time_part = parts[0].strip()
-                        seat_part = parts[1].strip() if len(parts) > 1 else '-'
-                        
-                        # 좌석 상태 확인 (Python에서도 한 번 더 확인)
-                        if not is_seat_open(seat_part):
-                            continue  # 좌석 미오픈이면 제외
-                        
-                        # 시간 부분 정규화
-                        if ' ~ ' in time_part:
-                            start, end = time_part.split(' ~ ', 1)
-                            start = normalize_string(start.strip())
-                            end = normalize_string(end.strip())
-                            if end.startswith('-'):
-                                end = end[1:].strip()
-                            end = normalize_string(end)
-                            seat_part = normalize_string(seat_part) if seat_part != '-' else '-'
-                            show_times.append(f"{start} ~ {end} | {seat_part}")
+                    # 검증 및 정규화
+                    normalized_time = validate_and_normalize_showtime(time_str)
+                    if not normalized_time:
+                        continue  # 검증 실패 시 제외
+                    
+                    # 중복 제거 (같은 시간대가 여러 번 수집되는 것 방지)
+                    time_key = extract_time_only(normalized_time)  # 시간만 추출하여 비교
+                    if time_key in seen_times:
+                        continue  # 중복 제거
+                    seen_times.add(time_key)
+                    
+                    show_times.append(normalized_time)
                 
-                if show_times:
-                    movies_data.append({
-                        'date': normalize_date_key(current_date),  # 정규화된 날짜 사용
-                        'title': title,
-                        'theater_info': theater_info,
-                        'times': show_times
-                    })
-                    print(f"  수집: {title} - {len(show_times)}개 상영 (날짜: {normalize_date_key(current_date)})")
+                # 상영시간이 없으면 건너뛰기
+                if not show_times:
+                    print(f"  ⚠️ 유효한 상영시간 없음: {title} - 건너뜀")
+                    continue
+                
+                # 최종 데이터 객체 생성
+                movie_data = {
+                    'date': normalize_date_key(current_date),  # 정규화된 날짜 사용
+                    'title': title,
+                    'theater_info': theater_info,
+                    'times': show_times
+                }
+                
+                # 최종 검증
+                if not validate_movie_data(movie_data):
+                    print(f"  ⚠️ 데이터 검증 실패: {title} - 건너뜀")
+                    continue
+                
+                movies_data.append(movie_data)
+                print(f"  수집: {title} - {len(show_times)}개 상영 (날짜: {normalize_date_key(current_date)})")
             except Exception as e:
-                print(f"영화 데이터 처리 중 오류: {e}")
+                print(f"  ⚠️ 영화 데이터 처리 중 오류: {e}")
                 continue
 
         return movies_data
@@ -784,11 +820,119 @@ def is_seat_open(seat_info):
         return False
     
     # 숫자가 포함되어 있으면 좌석 오픈 (예: "361/387석", "잔여석 42")
-    import re
     if re.search(r'\d', seat_info):
         return True
     
     return False
+
+def validate_time_format(time_str):
+    """시간 형식 검증 (HH:MM)"""
+    if not time_str:
+        return False
+    return bool(re.match(r'^\d{2}:\d{2}$', time_str.strip()))
+
+def validate_time_range(start_time, end_time):
+    """시간 범위 검증: 종료 시간이 시작 시간보다 이후인지 확인"""
+    try:
+        start_parts = start_time.split(':')
+        end_parts = end_time.split(':')
+        
+        if len(start_parts) != 2 or len(end_parts) != 2:
+            return False
+        
+        start_hour = int(start_parts[0])
+        start_min = int(start_parts[1])
+        end_hour = int(end_parts[0])
+        end_min = int(end_parts[1])
+        
+        # 시간 범위 검증 (24시간 넘어가는 경우도 고려)
+        start_total = start_hour * 60 + start_min
+        end_total = end_hour * 60 + end_min
+        
+        # 종료 시간이 시작 시간보다 이후여야 함 (다음날인 경우도 고려)
+        if end_total < start_total:
+            # 다음날인 경우 (예: 23:00 ~ 01:00)
+            end_total += 24 * 60
+        
+        # 상영 시간이 너무 짧거나 길면 이상 (10분 미만 또는 5시간 초과)
+        duration = end_total - start_total
+        if duration < 10 or duration > 300:
+            return False
+        
+        return True
+    except:
+        return False
+
+def validate_movie_data(movie_data):
+    """영화 데이터 검증"""
+    # 필수 필드 확인
+    if not movie_data:
+        return False
+    
+    title = movie_data.get('title', '').strip()
+    theater_info = movie_data.get('theater_info', '').strip()
+    times = movie_data.get('times', [])
+    date = movie_data.get('date', '').strip()
+    
+    # 제목이 비어있으면 무효
+    if not title or len(title) < 1:
+        return False
+    
+    # 상영관 정보가 비어있으면 무효
+    if not theater_info:
+        return False
+    
+    # 날짜가 비어있으면 무효
+    if not date:
+        return False
+    
+    # 상영시간이 없으면 무효
+    if not times or len(times) == 0:
+        return False
+    
+    return True
+
+def validate_and_normalize_showtime(time_str):
+    """상영시간 문자열 검증 및 정규화"""
+    if not time_str:
+        return None
+    
+    # 형식: "HH:MM ~ HH:MM | 좌석정보"
+    parts = time_str.split(' | ')
+    if len(parts) < 2:
+        return None
+    
+    time_part = parts[0].strip()
+    seat_part = parts[1].strip() if len(parts) > 1 else '-'
+    
+    # 좌석 상태 확인
+    if not is_seat_open(seat_part):
+        return None
+    
+    # 시간 부분 파싱
+    if ' ~ ' not in time_part:
+        return None
+    
+    start, end = time_part.split(' ~ ', 1)
+    start = normalize_string(start.strip())
+    end = normalize_string(end.strip())
+    
+    # "-" 제거
+    if end.startswith('-'):
+        end = end[1:].strip()
+    end = normalize_string(end)
+    
+    # 시간 형식 검증
+    if not validate_time_format(start) or not validate_time_format(end):
+        return None
+    
+    # 시간 범위 검증
+    if not validate_time_range(start, end):
+        return None
+    
+    # 정규화된 형식으로 반환
+    seat_part = normalize_string(seat_part) if seat_part != '-' else '-'
+    return f"{start} ~ {end} | {seat_part}"
 
 def extract_time_only(time_str):
     """시간대 문자열에서 시간 부분만 추출 (좌석수 제외, 정규화)"""
