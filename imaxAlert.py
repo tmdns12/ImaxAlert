@@ -800,13 +800,14 @@ def scrape_imax_shows(driver, date_key=None):
         return []
 
 
-def scrape_imax_shows_with_verification(driver, date_key, max_retries=3):
+def scrape_imax_shows_with_verification(driver, date_key, max_retries=3, previous_state_for_date=None):
     """데이터 수집 후 일관성 검증 (여러 번 수집하여 일치하는 결과가 나올 때까지)
     
     Args:
         driver: Selenium WebDriver
         date_key: 날짜 키
         max_retries: 최대 재시도 횟수 (기본값: 3)
+        previous_state_for_date: 해당 날짜의 이전 상태 데이터 (있으면 비교하여 최적화)
     
     Returns:
         list: 검증된 영화 데이터 리스트
@@ -832,6 +833,13 @@ def scrape_imax_shows_with_verification(driver, date_key, max_retries=3):
         if not results:
             results = current_shows
             last_result_count = current_count
+            
+            # [최적화] 이전 상태와 완전히 일치하면 추가 검증 없이 즉시 반환 (낙관적 검증)
+            if previous_state_for_date and attempt == 0:
+                if compare_shows_completely(current_shows, previous_state_for_date, date_key):
+                    # print(f"  ⚡ 이전 상태와 일치 (빠른 통과)")
+                    return current_shows
+            
             if max_retries > 1:
                 time.sleep(0.3)  # 다음 수집을 위한 짧은 대기
             continue
@@ -1445,8 +1453,13 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     print(f"  ❌ 최종 날짜 확인 실패: 기대 '{date_key}' (정규화: {normalized_date_key}), 실제 '{final_check_date}' (정규화: {final_check_normalized}) - 건너뜀")
                     continue
                 
-                # MutationObserver로 DOM 안정화 후 데이터 수집 (일관성 검증 포함)
-                shows = scrape_imax_shows_with_verification(driver, date_key)
+                # 이전 상태에서 해당 날짜의 영화 정보만 추출
+                prev_movies_for_date = []
+                if previous_state:
+                    prev_movies_for_date = prev_movies_by_date.get(normalized_date_key, [])
+                
+                # MutationObserver로 DOM 안정화 후 데이터 수집 (일관성 검증 포함, 이전 상태와 비교하여 최적화)
+                shows = scrape_imax_shows_with_verification(driver, date_key, previous_state_for_date=prev_movies_for_date)
                 
                 if shows:
                     # 날짜 키 정규화 (오늘 처리 포함)
