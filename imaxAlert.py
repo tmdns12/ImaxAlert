@@ -624,8 +624,9 @@ def scrape_imax_shows(driver, date_key=None):
             }
         """)
         
-        # 2단계: DOM 안정화 대기 (짧게)
-        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=400, max_wait=2000)
+        # 2단계: DOM 안정화 대기 (강화: 더 긴 대기 시간)
+        wait_for_dom_stable(driver, selector="div.accordion_container__W7nEs", stable_time=800, max_wait=3000)
+        time.sleep(0.3)  # 추가 안정화 대기
         
         # 3단계: JavaScript로 모든 데이터를 한 번에 추출 (Selenium 요소 찾기 완전 제거)
         movies_data_raw = driver.execute_script("""
@@ -797,6 +798,99 @@ def scrape_imax_shows(driver, date_key=None):
     except Exception as e:
         print("IMAX 정보 파싱 실패:", e)
         return []
+
+
+def scrape_imax_shows_with_verification(driver, date_key, max_retries=3):
+    """데이터 수집 후 일관성 검증 (여러 번 수집하여 일치하는 결과가 나올 때까지)
+    
+    Args:
+        driver: Selenium WebDriver
+        date_key: 날짜 키
+        max_retries: 최대 재시도 횟수 (기본값: 3)
+    
+    Returns:
+        list: 검증된 영화 데이터 리스트
+    """
+    results = []
+    last_result_count = 0
+    
+    for attempt in range(max_retries):
+        # 데이터 수집
+        current_shows = scrape_imax_shows(driver, date_key)
+        
+        # 현재 수집 결과의 총 상영시간 개수 계산
+        current_count = sum(len(movie.get('times', [])) for movie in current_shows)
+        
+        if not current_shows:
+            # 데이터가 없으면 짧은 대기 후 재시도
+            if attempt < max_retries - 1:
+                time.sleep(0.5)
+                continue
+            return []
+        
+        # 첫 번째 수집이면 결과 저장
+        if not results:
+            results = current_shows
+            last_result_count = current_count
+            if max_retries > 1:
+                time.sleep(0.3)  # 다음 수집을 위한 짧은 대기
+            continue
+        
+        # 이전 결과와 비교
+        # 상영시간 개수가 같으면 상세 비교
+        if current_count == last_result_count:
+            # 영화별 상영시간 개수 비교
+            current_dict = {}
+            for movie in current_shows:
+                key = create_movie_key(movie)
+                current_dict[key] = len(movie.get('times', []))
+            
+            results_dict = {}
+            for movie in results:
+                key = create_movie_key(movie)
+                results_dict[key] = len(movie.get('times', []))
+            
+            # 영화별 상영시간 개수가 모두 일치하면 검증 성공
+            if current_dict == results_dict:
+                # 마지막으로 상영시간 내용까지 비교
+                current_times_set = set()
+                for movie in current_shows:
+                    for time_str in movie.get('times', []):
+                        time_only = extract_time_only(time_str)
+                        if time_only:
+                            current_times_set.add(time_only)
+                
+                results_times_set = set()
+                for movie in results:
+                    for time_str in movie.get('times', []):
+                        time_only = extract_time_only(time_str)
+                        if time_only:
+                            results_times_set.add(time_only)
+                
+                if current_times_set == results_times_set:
+                    if attempt > 0:
+                        print(f"  ✓ 데이터 일관성 검증 성공 (재시도 {attempt + 1}회)")
+                    return current_shows  # 검증된 결과 반환
+        else:
+            # 상영시간 개수가 다르면 재시도
+            if attempt < max_retries - 1:
+                print(f"  ⚠️ 데이터 불일치 감지: 이전 {last_result_count}개, 현재 {current_count}개 - 재수집 중...")
+                results = current_shows
+                last_result_count = current_count
+                time.sleep(0.5)  # 재시도를 위한 대기
+                continue
+        
+        # 일치하지 않으면 재시도
+        if attempt < max_retries - 1:
+            print(f"  ⚠️ 데이터 불일치 감지 (재시도 {attempt + 1}/{max_retries})")
+            results = current_shows
+            last_result_count = current_count
+            time.sleep(0.5)  # 재시도를 위한 대기
+    
+    # 최대 재시도 횟수 도달 시 마지막 결과 반환
+    if max_retries > 1:
+        print(f"  ⚠️ 최대 재시도 횟수 도달, 마지막 수집 결과 사용 (총 {last_result_count}개 상영시간)")
+    return results
 
 
 def normalize_string(s):
@@ -1351,8 +1445,8 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     print(f"  ❌ 최종 날짜 확인 실패: 기대 '{date_key}' (정규화: {normalized_date_key}), 실제 '{final_check_date}' (정규화: {final_check_normalized}) - 건너뜀")
                     continue
                 
-                # MutationObserver로 DOM 안정화 후 단일 수집 (이중/삼중 수집 제거)
-                shows = scrape_imax_shows(driver, date_key)
+                # MutationObserver로 DOM 안정화 후 데이터 수집 (일관성 검증 포함)
+                shows = scrape_imax_shows_with_verification(driver, date_key)
                 
                 if shows:
                     # 날짜 키 정규화 (오늘 처리 포함)
