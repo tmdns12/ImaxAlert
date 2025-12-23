@@ -374,10 +374,9 @@ def verify_date_selected(driver, expected_date_key):
         # 정규화된 날짜로 비교 (오늘 처리 포함)
         if selected_date_normalized != normalized_expected:
             return False
-        
-        # 조건 2: DOM 요소가 존재하는지만 확인 (네트워크 체크 제거)
-        containers = driver.find_elements(By.CSS_SELECTOR, "div.accordion_container__W7nEs")
-        return len(containers) > 0
+            
+        # 영화가 없어도 날짜 텍스트가 일치하면 선택된 것으로 간주
+        return True
     except:
         return False
 
