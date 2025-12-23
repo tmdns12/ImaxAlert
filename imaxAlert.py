@@ -358,8 +358,8 @@ def get_selected_date(driver):
 
 
 def verify_date_selected(driver, expected_date_key):
-    """날짜가 실제로 선택되었는지 확인"""
-    normalized_expected = normalize_string(expected_date_key)
+    """날짜가 실제로 선택되었는지 확인 (정규화된 날짜로 비교)"""
+    normalized_expected = normalize_date_key(expected_date_key)
     
     try:
         active_btn = driver.find_element(
@@ -368,9 +368,11 @@ def verify_date_selected(driver, expected_date_key):
         )
         day_num = active_btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text.strip()
         day_txt = active_btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text.strip()
-        selected_date = normalize_string(f"{day_txt} {day_num}")
+        selected_date_raw = f"{day_txt} {day_num}"
+        selected_date_normalized = normalize_date_key(selected_date_raw)
         
-        if selected_date != normalized_expected:
+        # 정규화된 날짜로 비교 (오늘 처리 포함)
+        if selected_date_normalized != normalized_expected:
             return False
         
         # 조건 2: DOM 요소가 존재하는지만 확인 (네트워크 체크 제거)
@@ -403,7 +405,7 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
                 )
                 
                 if not time_items:
-                    continue
+                        continue
                 
                 if check_all:
                     # 모든 아이템 검증 (정확하지만 느림)
@@ -445,27 +447,54 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
                     # 샘플 검증이 모두 성공하면 로드된 것으로 간주
                     if valid_count == len(check_indices):
                         return True
-            except:
-                continue
-        
+                except:
+                    continue
+                
         return False
     except:
         return False
 
 
-def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=0.5):
-    """날짜 선택 완료까지 확인 (최적화: 빠른 경로 우선)"""
+def wait_for_date_fully_loaded(driver, expected_date_key, max_wait=2.0):
+    """날짜 선택 완료까지 확인 (강화: 더 긴 대기 시간 및 재시도)"""
+    normalized_expected = normalize_date_key(expected_date_key)
+    
+    # 즉시 확인
     if verify_date_selected(driver, expected_date_key):
         return True
     
-    # 빠른 경로 실패 시에만 대기
+    # 대기 및 재확인
     start_time = time.time()
+    check_count = 0
     while time.time() - start_time < max_wait:
+        time.sleep(0.1)
+        check_count += 1
+        
         if verify_date_selected(driver, expected_date_key):
+            if check_count > 1:
+                print(f"  ✓ 날짜 '{expected_date_key}' 선택 확인 완료 (재시도 {check_count}회)")
             return True
-        time.sleep(0.05)
-    # 타임아웃 시에도 한 번 더 확인 (안정성)
-    return verify_date_selected(driver, expected_date_key)
+        
+        # 0.5초마다 현재 선택된 날짜 출력 (디버깅)
+        if check_count % 5 == 0:
+            try:
+                actual = get_selected_date(driver)
+                actual_normalized = normalize_date_key(actual)
+                if actual_normalized != normalized_expected:
+                    print(f"  ⏳ 날짜 선택 대기 중... 현재: '{actual}' (정규화: {actual_normalized}), 기대: '{expected_date_key}' (정규화: {normalized_expected})")
+            except:
+                pass
+    
+    # 타임아웃 시 최종 확인
+    final_result = verify_date_selected(driver, expected_date_key)
+    if not final_result:
+        try:
+            actual = get_selected_date(driver)
+            actual_normalized = normalize_date_key(actual)
+            print(f"  ❌ 날짜 선택 실패: 기대 '{expected_date_key}' (정규화: {normalized_expected}), 실제 '{actual}' (정규화: {actual_normalized})")
+        except:
+            print(f"  ❌ 날짜 선택 실패: 기대 '{expected_date_key}' (정규화: {normalized_expected})")
+    return final_result
 
 
 def wait_for_showtimes_fully_loaded(driver, container_idx=None, max_wait=1.5, strict=True):
@@ -576,7 +605,7 @@ def scrape_imax_shows(driver, date_key=None):
             WebDriverWait(driver, 5).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
             )
-        except:
+                        except:
             return []
         
         if date_key is None:
@@ -721,7 +750,7 @@ def scrape_imax_shows(driver, date_key=None):
                 # 기본 검증: 제목과 상영관 정보가 있는지 확인
                 if not title or not theater_info:
                     print(f"  ⚠️ 데이터 누락: 제목='{title}', 상영관='{theater_info}' - 건너뜀")
-                    continue
+                        continue
                 
                 # 시간 문자열 검증 및 정규화
                 show_times = []
@@ -749,7 +778,7 @@ def scrape_imax_shows(driver, date_key=None):
                     'date': normalize_date_key(current_date),  # 정규화된 날짜 사용
                     'title': title,
                     'theater_info': theater_info,
-                    'times': show_times
+                        'times': show_times
                 }
                 
                 # 최종 검증
@@ -778,34 +807,44 @@ def normalize_string(s):
     return " ".join(str(s).strip().split())
 
 def normalize_date_key(date_key):
-    """날짜 키 정규화: '오늘'과 실제 요일을 동일하게 처리"""
+    """날짜 키 정규화: '오늘'과 실제 요일을 동일하게 처리 (요일 + 날짜 번호 형식으로 통일)"""
     if not date_key:
         return ""
     
     normalized = normalize_string(date_key)
     
-    # "오늘"이 포함된 경우 날짜 번호만 추출하여 비교
-    # 예: "오늘 16" -> "16", "화 16" -> "화 16"
-    # 하지만 같은 날짜 번호를 가진 다른 날짜와 구분하기 위해
-    # 날짜 번호만으로 비교하는 것은 위험할 수 있음
-    # 대신, 이전 상태와 현재 상태 모두에서 "오늘"을 날짜 번호로 변환하여 비교
-    
-    # 날짜 번호 추출
+    # 날짜 번호 및 요일 추출
     parts = normalized.split()
     date_num = None
-    for part in parts:
-        if part.isdigit():
-            date_num = part
-            break
+    day_txt = None
     
-    # "오늘"이 포함된 경우 날짜 번호만 반환 (다른 날짜와 매칭하기 위해)
+    # 요일 추출 (월, 화, 수, 목, 금, 토, 일)
+    day_names = ['월', '화', '수', '목', '금', '토', '일']
+    for part in parts:
+        if part in day_names:
+            day_txt = part
+        elif part.isdigit():
+            date_num = part
+    
+    # "오늘"이 포함된 경우: 날짜 번호만 반환 (요일 정보 제거하여 다른 날짜와 매칭)
+    # 하지만 이는 위험할 수 있으므로, 요일 정보도 함께 반환하도록 개선
     if "오늘" in normalized or "today" in normalized.lower():
         if date_num:
+            # 날짜 번호만 반환 (기존 로직 유지하되, 요일 정보가 있으면 함께 반환)
+            if day_txt:
+                return f"{day_txt} {date_num}"  # "오늘 16" -> "화 16" (실제 요일 포함)
             return date_num  # 날짜 번호만 반환
         return normalized
     
-    # 일반 날짜는 그대로 반환 (예: "화 16")
-    return normalized
+    # 일반 날짜는 "요일 날짜번호" 형식으로 통일 (예: "화 16")
+    if day_txt and date_num:
+        return f"{day_txt} {date_num}"
+    elif date_num:
+        # 날짜 번호만 있는 경우
+        return date_num
+    else:
+        # 그 외는 원본 반환
+        return normalized
 
 def is_seat_open(seat_info):
     """좌석이 실제로 오픈되었는지 확인 (예매 준비중이 아닌지)"""
@@ -1202,14 +1241,14 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                         # XPath로 빠르게 찾기 시도 (텍스트 기반)
                         try:
                             parts = date_key.split()
-                            if len(parts) >= 2:
+                                    if len(parts) >= 2:
                                 day_txt, day_num = parts[0], parts[1]
                                 # XPath로 직접 찾기
                                 target_button = driver.find_element(
                                     By.XPATH,
                                     f"//button[contains(@class, 'dayScroll_scrollItem__IZ35T') and .//span[@class='dayScroll_txt__GEtA0' and text()='{day_txt}'] and .//span[@class='dayScroll_number__o8i9s' and text()='{day_num}'] and not(contains(@class, 'dayScroll_disabled__t8HIQ')) and not(@disabled)]"
                                 )
-                        except:
+                            except:
                             # XPath 실패 시 기존 방식으로 폴백 (디버깅용 정보 포함)
                             date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
                             found_dates = []
@@ -1249,17 +1288,68 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                     day_num = active_btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s").text.strip()
                     day_txt = active_btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0").text.strip()
                     current_date = normalize_string(f"{day_txt} {day_num}")
-                    if current_date == normalized_date_key:
+                    normalized_current = normalize_date_key(current_date)
+                    if normalized_current == normalized_date_key:
                         already_clicked = True
                 except:
                     pass
-                
+                    
                 # 빠른 체크에서 클릭하지 않았으면 클릭
                 if not already_clicked:
                     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button)
+                    time.sleep(0.1)  # 스크롤 후 잠시 대기
                     driver.execute_script("arguments[0].click();", target_button)
-                    # 날짜 선택 완료 확인 (최적화: 타임아웃 단축)
-                    wait_for_date_fully_loaded(driver, date_key, max_wait=0.5)
+                    time.sleep(0.2)  # 클릭 후 DOM 업데이트 대기
+                
+                # 날짜 선택 완료 확인 (강화: 더 긴 대기 시간)
+                if not wait_for_date_fully_loaded(driver, date_key, max_wait=2.0):
+                    # 날짜 선택 실패 시 재시도 (최대 2회)
+                    print(f"  ⚠️ 날짜 '{date_key}' 선택 실패, 재시도 중...")
+                    for retry in range(2):
+                        try:
+                            # 버튼 다시 찾기
+                            target_button_retry = None
+                            date_buttons_retry = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
+                            for btn in date_buttons_retry:
+                                try:
+                                    day_txt_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_txt__GEtA0")
+                                    day_num_elem = btn.find_element(By.CSS_SELECTOR, ".dayScroll_number__o8i9s")
+                                    day_txt = day_txt_elem.text.strip()
+                                    day_num = day_num_elem.text.strip()
+                                    if day_txt and day_num:
+                                        btn_date_key = f"{day_txt} {day_num}"
+                                        if normalize_date_key(btn_date_key) == normalized_date_key:
+                                            class_attr = btn.get_attribute("class") or ""
+                                            is_disabled = "dayScroll_disabled__t8HIQ" in class_attr or btn.get_attribute("disabled") is not None
+                                            if not is_disabled:
+                                                target_button_retry = btn
+                                                break
+                                except:
+                                    continue
+                            
+                            if target_button_retry:
+                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_button_retry)
+                                time.sleep(0.1)
+                                driver.execute_script("arguments[0].click();", target_button_retry)
+                                time.sleep(0.3)
+                                
+                                if wait_for_date_fully_loaded(driver, date_key, max_wait=2.0):
+                                    print(f"  ✓ 날짜 '{date_key}' 재시도 성공")
+                                    break
+                        except Exception as e:
+                            print(f"  ⚠️ 재시도 {retry + 1} 실패: {e}")
+                    
+                    # 재시도 후에도 실패하면 건너뛰기
+                    if not verify_date_selected(driver, date_key):
+                        print(f"  ❌ 날짜 '{date_key}' 선택 실패로 인해 건너뜀")
+                        continue
+                
+                # 데이터 수집 전 최종 날짜 확인
+                final_check_date = get_selected_date(driver)
+                final_check_normalized = normalize_date_key(final_check_date)
+                if final_check_normalized != normalized_date_key:
+                    print(f"  ❌ 최종 날짜 확인 실패: 기대 '{date_key}' (정규화: {normalized_date_key}), 실제 '{final_check_date}' (정규화: {final_check_normalized}) - 건너뜀")
+                    continue
                 
                 # MutationObserver로 DOM 안정화 후 단일 수집 (이중/삼중 수집 제거)
                 shows = scrape_imax_shows(driver, date_key)
@@ -1303,7 +1393,7 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                             all_movies_data.extend(shows)
                     else:
                         # 첫 실행이면 그냥 저장
-                        all_movies_data.extend(shows)
+                    all_movies_data.extend(shows)
                     print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간")
                 else:
                     print(f"  ⚠️ 날짜 '{date_key}' 데이터 없음")
@@ -1383,9 +1473,9 @@ def get_all_date_info(driver):
                             }
                         """, swiper_container, slide_idx)
                         time.sleep(0.02)  # 슬라이드 이동 대기 시간 최소화
-                    except:
-                        pass
-                
+        except:
+            pass
+        
                 # 모든 슬라이드를 순회한 후 첫 번째 슬라이드로 돌아가기
                 try:
                     driver.execute_script("""
@@ -1455,7 +1545,7 @@ def get_all_date_info(driver):
                 # 방법 2: 요소를 찾지 못했으면 버튼의 전체 텍스트에서 추출
                 if not day_txt or not day_num:
                     try:
-                        btn_text = btn.text.strip()
+                    btn_text = btn.text.strip()
                         # 버튼 텍스트 예: "오늘\n08" 또는 "화 09"
                         lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
                         if len(lines) >= 2:
@@ -1464,7 +1554,7 @@ def get_all_date_info(driver):
                         elif len(lines) == 1:
                             # 공백으로 구분된 경우: "화 09"
                             parts = lines[0].split()
-                            if len(parts) >= 2:
+                    if len(parts) >= 2:
                                 day_txt = parts[0]
                                 day_num = parts[1]
                     except Exception as parse_error:
