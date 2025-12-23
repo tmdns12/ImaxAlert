@@ -447,9 +447,9 @@ def verify_showtimes_loaded(driver, container_idx=None, check_all=False):
                     # 샘플 검증이 모두 성공하면 로드된 것으로 간주
                     if valid_count == len(check_indices):
                         return True
-                except:
-                    continue
-                
+            except:
+                continue
+        
         return False
     except:
         return False
@@ -605,7 +605,7 @@ def scrape_imax_shows(driver, date_key=None):
             WebDriverWait(driver, 5).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div.accordion_container__W7nEs"))
             )
-                        except:
+        except:
             return []
         
         if date_key is None:
@@ -750,7 +750,7 @@ def scrape_imax_shows(driver, date_key=None):
                 # 기본 검증: 제목과 상영관 정보가 있는지 확인
                 if not title or not theater_info:
                     print(f"  ⚠️ 데이터 누락: 제목='{title}', 상영관='{theater_info}' - 건너뜀")
-                        continue
+                    continue
                 
                 # 시간 문자열 검증 및 정규화
                 show_times = []
@@ -1241,14 +1241,14 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                         # XPath로 빠르게 찾기 시도 (텍스트 기반)
                         try:
                             parts = date_key.split()
-                                    if len(parts) >= 2:
+                            if len(parts) >= 2:
                                 day_txt, day_num = parts[0], parts[1]
                                 # XPath로 직접 찾기
                                 target_button = driver.find_element(
                                     By.XPATH,
                                     f"//button[contains(@class, 'dayScroll_scrollItem__IZ35T') and .//span[@class='dayScroll_txt__GEtA0' and text()='{day_txt}'] and .//span[@class='dayScroll_number__o8i9s' and text()='{day_num}'] and not(contains(@class, 'dayScroll_disabled__t8HIQ')) and not(@disabled)]"
                                 )
-                            except:
+                        except:
                             # XPath 실패 시 기존 방식으로 폴백 (디버깅용 정보 포함)
                             date_buttons = driver.find_elements(By.CSS_SELECTOR, ".dayScroll_container__e9cLv button.dayScroll_scrollItem__IZ35T")
                             found_dates = []
@@ -1393,7 +1393,7 @@ def scrape_all_dates_from_html(driver, enabled_dates, previous_state=None):
                             all_movies_data.extend(shows)
                     else:
                         # 첫 실행이면 그냥 저장
-                    all_movies_data.extend(shows)
+                        all_movies_data.extend(shows)
                     print(f"  ✓ 날짜 '{date_key}' 체크 완료: {len(shows)}개 영화, 총 {sum(len(s.get('times', [])) for s in shows)}개 상영시간")
                 else:
                     print(f"  ⚠️ 날짜 '{date_key}' 데이터 없음")
@@ -1473,9 +1473,9 @@ def get_all_date_info(driver):
                             }
                         """, swiper_container, slide_idx)
                         time.sleep(0.02)  # 슬라이드 이동 대기 시간 최소화
-        except:
-            pass
-        
+                    except:
+                        pass
+                
                 # 모든 슬라이드를 순회한 후 첫 번째 슬라이드로 돌아가기
                 try:
                     driver.execute_script("""
@@ -1545,7 +1545,7 @@ def get_all_date_info(driver):
                 # 방법 2: 요소를 찾지 못했으면 버튼의 전체 텍스트에서 추출
                 if not day_txt or not day_num:
                     try:
-                    btn_text = btn.text.strip()
+                        btn_text = btn.text.strip()
                         # 버튼 텍스트 예: "오늘\n08" 또는 "화 09"
                         lines = [line.strip() for line in btn_text.split('\n') if line.strip()]
                         if len(lines) >= 2:
@@ -1554,7 +1554,7 @@ def get_all_date_info(driver):
                         elif len(lines) == 1:
                             # 공백으로 구분된 경우: "화 09"
                             parts = lines[0].split()
-                    if len(parts) >= 2:
+                            if len(parts) >= 2:
                                 day_txt = parts[0]
                                 day_num = parts[1]
                     except Exception as parse_error:
